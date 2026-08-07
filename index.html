@@ -2346,9 +2346,13 @@
 
       <div class="form-seccion">Datos del cliente</div>
       <div class="form-grid">
-        <div class="form-group span2"><label>Nombre / Empresa *</label><input type="text" id="aa_cliente"
-            placeholder="Ej: SERPROMAN SL"></div>
-        <div class="form-group"><label>NIF</label><input type="text" id="aa_nif" placeholder="B10059640"></div>
+        <div class="form-group span2 ac-wrap">
+          <label>Nombre / Empresa *</label>
+          <input type="text" id="aa_cliente" placeholder="Escribe el nombre para buscar...">
+          <input type="hidden" id="aa_cliente_id">
+        </div>
+        <div class="form-group"><label>NIF</label><input type="text" id="aa_nif" readonly style="background:#f7f0f5">
+        </div>
         <div class="form-group span2"><label>Dirección</label><input type="text" id="aa_direccion"
             placeholder="Ronda de Buenavista nº 39, Portal 8, Local"></div>
         <div class="form-group"><label>Población</label><input type="text" id="aa_poblacion" placeholder="Toledo"></div>
@@ -7776,14 +7780,16 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     // AUTOCOMPLETADO DE CLIENTES (para albaranes de venta)
-    function setupClienteVentaAC(inputNombreId, inputNifId, inputIdId) {
+    let clienteAltaSelId = null;
+
+    function setupClienteAltaAC(inputNombreId, inputNifId, inputIdId) {
       const inpN = document.getElementById(inputNombreId);
       const inpF = document.getElementById(inputNifId);
       const inpId = document.getElementById(inputIdId);
       if (!inpN || !inpF || !inpId) return;
 
       inpN.parentElement.style.position = 'relative';
-      const lista = _crearLista('ac_cliente_' + inputNombreId, inpN.parentElement);
+      const lista = _crearLista('ac_alta_' + inputNombreId, inpN.parentElement);
 
       function filtrar(q) {
         return clientesDB.filter(c =>
@@ -7795,7 +7801,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         inpN.value = c.nombre || '';
         inpF.value = c.nif || '';
         inpId.value = c.id;
-        clienteVentaSelId = c.id;
+        clienteAltaSelId = c.id;
+        document.getElementById('aa_direccion').value = c.domicilio || '';
+        document.getElementById('aa_poblacion').value = c.poblacion || '';
+        document.getElementById('aa_cp').value = c.codigo_postal || '';
+        document.getElementById('aa_provincia').value = c.provincia || '';
         lista.style.display = 'none';
       }
       function render(items) {
@@ -7815,7 +7825,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         });
       }
       inpN.addEventListener('input', () => {
-        inpId.value = ''; clienteVentaSelId = null; // obliga a re-seleccionar si cambia el texto
+        inpId.value = ''; clienteAltaSelId = null;
         render(filtrar(inpN.value.toLowerCase().trim()));
       });
       inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim())); });
@@ -8366,13 +8376,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById('aa_total').value = (base + iva).toFixed(2);
     }
 
-    function abrirModalAlta() {
+    async function abrirModalAlta() {
       altaAlquilerEditId = null;
+      clienteAltaSelId = null;
       document.getElementById('altaAlquilerTitulo').textContent = 'Nueva Alta de Alquiler';
       document.getElementById('aa_fecha').value = hoy();
       document.getElementById('aa_hora').value = '';
-      document.getElementById('aa_num').value = '';
       document.getElementById('aa_cliente').value = '';
+      document.getElementById('aa_cliente_id').value = '';
       document.getElementById('aa_nif').value = '';
       document.getElementById('aa_direccion').value = '';
       document.getElementById('aa_poblacion').value = '';
@@ -8386,7 +8397,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       lineasAltaCount = 0;
       addLineaAlta();
       recalcTotalAlta();
+
+      // El número lo asigna Supabase al guardar (comparte numeración con los
+      // albaranes de venta), aquí solo dejamos el placeholder.
+      document.getElementById('aa_num').value = '';
+
       document.getElementById('modalAltaAlquiler').classList.add('visible');
+      setTimeout(() => setupClienteAltaAC('aa_cliente', 'aa_nif', 'aa_cliente_id'), 50);
     }
 
     async function guardarAltaAlquiler() {
@@ -8402,6 +8419,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const total = parseFloat(document.getElementById('aa_total').value || 0);
 
       const payload = {
+        cliente_id: clienteAltaSelId || null,
         fecha,
         hora_retirada: document.getElementById('aa_hora').value || null,
         cliente_nombre,
@@ -8419,22 +8437,33 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         total
       };
 
+      // Al editar sí mandamos el número (ya asignado); al crear, lo deja vacío
+      // para que lo rellene el trigger de Supabase.
+      if (altaAlquilerEditId) {
+        payload.numero_albaran = document.getElementById('aa_num').value.trim() || null;
+      }
+
       try {
         let headerId;
+        let numeroAsignado = null;
+
         if (altaAlquilerEditId) {
           await apiPatch('alquileres', altaAlquilerEditId, payload);
           headerId = altaAlquilerEditId;
+          numeroAsignado = payload.numero_albaran;
           const antiguas = await apiGet('alquileres_items', `alquiler_id=eq.${headerId}`);
           for (const a of antiguas) await apiDelete('alquileres_items', a.id);
         } else {
           payload.creado_por = currentPersona;
           const [header] = await apiPost('alquileres', payload);
           headerId = header.id;
+          numeroAsignado = header.numero_albaran;
+          document.getElementById('aa_num').value = numeroAsignado || '';
         }
 
         await apiPost('alquileres_items', lineas.map(l => ({ ...l, alquiler_id: headerId })));
 
-        toast('Alta de alquiler guardada correctamente');
+        toast(`Alta de alquiler guardada — Nº ${numeroAsignado || ''}`);
         cerrarModal('modalAltaAlquiler');
         altaAlquilerEditId = null;
       } catch (e) {

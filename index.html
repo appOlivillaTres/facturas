@@ -2589,6 +2589,7 @@
   <datalist id="dl_productos"></datalist>
   <datalist id="dl_materiales_exclusivos"></datalist>
   <datalist id="dl_obras"></datalist>
+  <datalist id="dl_maquinaria"></datalist>
   <div class="barra-scroll-fija" id="barraScrollFija">
     <div id="barraScrollFijaInner"></div>
   </div>
@@ -3031,6 +3032,7 @@
 
     let registros = [];
     let inventarioDB = [];
+    let maquinariaDB = [];
     let clientesDB = [];
     let proveedoresDB = [];
     let obrasDB = [];
@@ -3189,8 +3191,12 @@
     async function entrarEnApp() {
       document.getElementById('loginView').style.display = 'none';  // oculta la pagina de logi
       document.getElementById('appView').style.display = 'none';  // y el panel
-      if (!cachesIniciales) { // mira si es la primera vez que entra y no hay datos guardados 
-        cachesIniciales = Promise.all([cargarInventarioCache(), cargarClientesCache(), cargarProveedoresCache(), cargarObrasCache(), cargarMaterialesExclusivosCache()]); // descarga las cuatro listas
+      if (!cachesIniciales) {
+        cachesIniciales = Promise.all([
+          cargarInventarioCache(), cargarClientesCache(), cargarProveedoresCache(),
+          cargarObrasCache(), cargarMaterialesExclusivosCache(),
+          cargarMaquinariaCache()   // ← nueva
+        ]);
       }
       await cachesIniciales;
       mostrarSelectorPanel(); // muestra el panel
@@ -4183,6 +4189,52 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     async function cargarClientesCache() { clientesDB = await apiGetAll('clientes', 'order=nombre'); }
     async function cargarProveedoresCache() { proveedoresDB = await apiGet('proveedores', 'order=nombre'); }
     async function cargarObrasCache() { obrasDB = await apiGetAll('obras', 'order=nombre'); actualizarDatalistObras(); }
+    async function cargarMaquinariaCache() {
+      maquinariaDB = await apiGetAll('maquinaria', 'order=codigo');
+      actualizarDatalistMaquinaria();
+    }
+
+    function actualizarDatalistMaquinaria() {
+      const dl = document.getElementById('dl_maquinaria');
+      if (!dl) return;
+      dl.innerHTML = maquinariaDB.map(m =>
+        `<option value="${(m.codigo || '').replace(/"/g, '&quot;')}">${(m.nombre || '').replace(/"/g, '&quot;')}</option>`
+      ).join('');
+    }
+
+    function buscarMaquinaPorCodigo(codigo) {
+      const norm = s => (s || '').toLowerCase().trim();
+      return maquinariaDB.find(m => norm(m.codigo) === norm(codigo)) || null;
+    }
+
+    function autocompletarMaquinaLinea(idx) {
+      const inpCod = document.getElementById(`la_cod_${idx}`);
+      const inpDesc = document.getElementById(`la_desc_${idx}`);
+      const inpPrecio = document.getElementById(`la_precio_${idx}`);
+      if (!inpCod) return;
+      const maquina = buscarMaquinaPorCodigo(inpCod.value);
+      if (maquina) {
+        if (inpDesc) inpDesc.value = maquina.nombre || '';
+        if (inpPrecio && maquina.precio_dia != null) inpPrecio.value = maquina.precio_dia;
+        recalcTotalAlta();
+      }
+    }
+
+    async function crearMaquinaRapida(idx) {
+      const codigo = document.getElementById(`la_cod_${idx}`).value.trim();
+      if (!codigo) { toast('Escribe primero el código', 'err'); return; }
+      if (buscarMaquinaPorCodigo(codigo)) { toast(`El código "${codigo}" ya existe`, 'err'); return; }
+      const nombre = document.getElementById(`la_desc_${idx}`).value.trim();
+      if (!nombre) { toast('Escribe el nombre en Descripción antes de crear la máquina', 'err'); return; }
+      try {
+        const [nueva] = await apiPost('maquinaria', { codigo, nombre });
+        maquinariaDB.push(nueva);
+        actualizarDatalistMaquinaria();
+        toast(`Máquina "${nombre}" (${codigo}) añadida al catálogo`, 'ok');
+      } catch (e) {
+        toast('No se pudo crear la máquina: ' + e.message, 'err');
+      }
+    }
 
     function actualizarDatalistObras() {
       const dl = document.getElementById('dl_obras');
@@ -8321,11 +8373,17 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const div = document.createElement('div');
       div.id = `la_${idx}`;
       div.className = 'linea-prod';
-      div.style.gridTemplateColumns = '90px 1fr 90px 100px 70px auto';
+      div.style.gridTemplateColumns = '110px 1fr 90px 100px 70px auto';
       div.innerHTML = `
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Código</label>
-      <input type="text" id="la_cod_${idx}" placeholder="MAQ008">
+      <div style="display:flex;gap:4px">
+        <input type="text" id="la_cod_${idx}" list="dl_maquinaria" placeholder="MAQ008" style="width:100%" oninput="autocompletarMaquinaLinea(${idx})">
+        <button type="button" title="Añadir máquina nueva al catálogo" onclick="crearMaquinaRapida(${idx})"
+          style="background:#2d7a4f;border:none;color:#fff;border-radius:6px;width:28px;flex-shrink:0;cursor:pointer">
+          <i class="fa-solid fa-plus" style="font-size:.7rem"></i>
+        </button>
+      </div>
     </div>
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Descripción</label>

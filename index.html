@@ -2153,7 +2153,7 @@
           <option value="">Todas las obras</option>
         </select>
         <button class="btn-nueva" id="btnNuevo" onclick="abrirNuevoRegistro()"><i class="fa-solid fa-plus"></i><span
-    id="btnNuevaTxt">Añadir Nuevo</span></button>
+            id="btnNuevaTxt">Añadir Nuevo</span></button>
         <button class="btn-exportar" id="btnExportar" onclick="abrirModalExportar()" style="display:none"><i
             class="fa-solid fa-file-excel"></i>Exportar Excel</button>
         <button class="btn-exportar" id="btnDescargarArchivos" onclick="abrirModalExportarArchivos()"
@@ -2308,26 +2308,86 @@
     </div>
   </div>
   <!-- MODAL TIPO ALBARÁN VENTA -->
-<div class="modal-overlay" id="modalTipoAlbaranVenta">
-  <div class="modal-box-sm">
-    <h3><i class="fa-solid fa-file-invoice" style="color:#b53987"></i>Nuevo Albarán de Venta</h3>
-    <p style="font-size:.85rem;color:#888;margin-bottom:14px">¿Qué tipo de albarán quieres crear?</p>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <button class="btn-nueva" style="justify-content:center" onclick="cerrarModal('modalTipoAlbaranVenta'); abrirModalNuevo('albaranes_venta')">
-        <i class="fa-solid fa-cart-shopping"></i> Venta
-      </button>
-      <button class="btn-nueva" style="justify-content:center;background:#2d7a4f" onclick="seleccionarTipoAlbaranVentaProximamente('Alta')">
-        <i class="fa-solid fa-plus"></i> Alta
-      </button>
-      <button class="btn-nueva" style="justify-content:center;background:#c0392b" onclick="seleccionarTipoAlbaranVentaProximamente('Baja')">
-        <i class="fa-solid fa-minus"></i> Baja
-      </button>
-    </div>
-    <div class="modal-btns">
-      <button class="btn-cancelar" onclick="cerrarModal('modalTipoAlbaranVenta')">Cancelar</button>
+  <div class="modal-overlay" id="modalTipoAlbaranVenta">
+    <div class="modal-box-sm">
+      <h3><i class="fa-solid fa-file-invoice" style="color:#b53987"></i>Nuevo Albarán de Venta</h3>
+      <p style="font-size:.85rem;color:#888;margin-bottom:14px">¿Qué tipo de albarán quieres crear?</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn-nueva" style="justify-content:center"
+          onclick="cerrarModal('modalTipoAlbaranVenta'); abrirModalNuevo('albaranes_venta')">
+          <i class="fa-solid fa-cart-shopping"></i> Venta
+        </button>
+        <button class="btn-nueva" style="justify-content:center;background:#2d7a4f"
+          onclick="seleccionarTipoAlbaranVentaProximamente('Alta')">
+          <i class="fa-solid fa-plus"></i> Alta
+        </button>
+        <button class="btn-nueva" style="justify-content:center;background:#c0392b"
+          onclick="seleccionarTipoAlbaranVentaProximamente('Baja')">
+          <i class="fa-solid fa-minus"></i> Baja
+        </button>
+      </div>
+      <div class="modal-btns">
+        <button class="btn-cancelar" onclick="cerrarModal('modalTipoAlbaranVenta')">Cancelar</button>
+      </div>
     </div>
   </div>
-</div>
+  <!-- MODAL ALTA DE ALQUILER -->
+  <div class="modal-overlay" id="modalAltaAlquiler">
+    <div class="modal-box" style="max-width:820px">
+      <h3><i class="fa-solid fa-toolbox" style="color:#b53987"></i><span id="altaAlquilerTitulo">Nueva Alta de
+          Alquiler</span></h3>
+
+      <div class="form-grid">
+        <div class="form-group"><label>Fecha *</label><input type="date" id="aa_fecha"></div>
+        <div class="form-group"><label>Hora de retirada</label><input type="time" id="aa_hora"></div>
+        <div class="form-group"><label>Nº Albarán</label><input type="text" id="aa_num" readonly
+            style="background:#f7f0f5;font-weight:600" placeholder="Automático al guardar"></div>
+      </div>
+
+      <div class="form-seccion">Datos del cliente</div>
+      <div class="form-grid">
+        <div class="form-group span2"><label>Nombre / Empresa *</label><input type="text" id="aa_cliente"
+            placeholder="Ej: SERPROMAN SL"></div>
+        <div class="form-group"><label>NIF</label><input type="text" id="aa_nif" placeholder="B10059640"></div>
+        <div class="form-group span2"><label>Dirección</label><input type="text" id="aa_direccion"
+            placeholder="Ronda de Buenavista nº 39, Portal 8, Local"></div>
+        <div class="form-group"><label>Población</label><input type="text" id="aa_poblacion" placeholder="Toledo"></div>
+        <div class="form-group"><label>Código postal</label><input type="text" id="aa_cp" placeholder="45005"></div>
+        <div class="form-group"><label>Provincia</label><input type="text" id="aa_provincia" placeholder="Toledo"></div>
+        <div class="form-group span2"><label>Obra</label><input type="text" id="aa_obra" list="dl_obras"
+            placeholder="Ej: Mentrida"></div>
+      </div>
+
+      <div class="form-seccion">Quién retira el material</div>
+      <div class="form-grid">
+        <div class="form-group span2"><label>Nombre y apellidos</label><input type="text" id="aa_operario"
+            placeholder="Ej: Carlos García Jiménez"></div>
+        <div class="form-group"><label>DNI / NIE</label><input type="text" id="aa_dni_operario"
+            placeholder="53.045.572-F"></div>
+      </div>
+
+      <div class="form-seccion">Material alquilado</div>
+      <div id="lineasAlta"></div>
+      <button type="button" class="btn-add-linea" onclick="addLineaAlta()">
+        <i class="fa-solid fa-plus me-1"></i>Añadir artículo
+      </button>
+
+      <div class="form-grid" style="margin-top:14px;padding-top:12px;border-top:1.5px solid #ede5f5">
+        <div class="form-group"><label>% IVA</label><input type="number" id="aa_pct_iva" step="0.01" value="21"
+            oninput="recalcTotalAlta()"></div>
+        <div class="form-group"><label>Base imponible (€)</label><input type="number" id="aa_base" readonly
+            style="background:#f7f0f5"></div>
+        <div class="form-group"><label>Total (€)</label><input type="number" id="aa_total" readonly
+            style="background:#f7f0f5;font-weight:700"></div>
+      </div>
+
+      <div class="modal-btns">
+        <button class="btn-cancelar" onclick="cerrarModal('modalAltaAlquiler')">Cancelar</button>
+        <button class="btn-guardar" onclick="guardarAltaAlquiler()"><i
+            class="fa-solid fa-floppy-disk me-1"></i>Guardar</button>
+      </div>
+    </div>
+  </div>
   <!-- MODAL COMPRA CLIENTE -->
   <div class="modal-overlay" id="modalPuntos">
     <div class="modal-box-sm">
@@ -2665,9 +2725,9 @@
 
     // Primero mira si hay un modal abierto, y si lo hay, no hace nada (para no romper lo que se está editando en ese momento).
     function hayModalAbierto() {
-  return ['modalNueva', 'modalMaterialObra', 'modalDetalle', 'modalExportar', 'modalExportarMateriales', 'modalCita', 'modalPuntos', 'modalEvento', 'modalCobros', 'modalTipoAlbaranVenta']
-    .some(id => document.getElementById(id)?.classList.contains('visible'));
-}
+      return ['modalNueva', 'modalMaterialObra', 'modalDetalle', 'modalExportar', 'modalExportarMateriales', 'modalCita', 'modalPuntos', 'modalEvento', 'modalCobros', 'modalTipoAlbaranVenta']
+        .some(id => document.getElementById(id)?.classList.contains('visible'));
+    }
 
     let _refrescoTrasModal = false;
 
@@ -3731,17 +3791,26 @@
     }
 
     function abrirNuevoRegistro() {
-  if (tablaActual === 'albaranes_venta') {
-    document.getElementById('modalTipoAlbaranVenta').classList.add('visible');
-    return;
-  }
-  abrirModalNuevo();
-}
+      if (tablaActual === 'albaranes_venta') {
+        document.getElementById('modalTipoAlbaranVenta').classList.add('visible');
+        return;
+      }
+      abrirModalNuevo();
+    }
 
-function seleccionarTipoAlbaranVentaProximamente(tipo) {
-  cerrarModal('modalTipoAlbaranVenta');
-  toast(`El tipo "${tipo}" estará disponible próximamente`, 'ok');
-}
+    function seleccionarTipoAlbaranVentaProximamente(tipo) {
+      cerrarModal('modalTipoAlbaranVenta');
+      if (tipo === 'Alta') {
+        abrirModalAlta();
+        return;
+      }
+      toast(`El tipo "${tipo}" estará disponible próximamente`, 'ok');
+    }
+
+    function hayModalAbierto() {
+      return ['modalNueva', 'modalMaterialObra', 'modalDetalle', 'modalExportar', 'modalExportarMateriales', 'modalCita', 'modalPuntos', 'modalEvento', 'modalCobros', 'modalTipoAlbaranVenta', 'modalAltaAlquiler']
+        .some(id => document.getElementById(id)?.classList.contains('visible'));
+    }
 
     async function guardarEventoCalendario() {   // se guarda el evento 
       if (!['angel', 'emilio'].includes(currentPersona)) return;
@@ -8225,6 +8294,289 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         recalcBaseDesdeLineasAlbaranVenta();
       }
     }
+
+
+
+
+
+
+
+
+    let lineasAltaCount = 0;
+    let altaAlquilerEditId = null;
+
+    function addLineaAlta() {
+      lineasAltaCount++;
+      const idx = lineasAltaCount;
+      const div = document.createElement('div');
+      div.id = `la_${idx}`;
+      div.className = 'linea-prod';
+      div.style.gridTemplateColumns = '90px 1fr 90px 100px 70px auto';
+      div.innerHTML = `
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Código</label>
+      <input type="text" id="la_cod_${idx}" placeholder="MAQ008">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Descripción</label>
+      <input type="text" id="la_desc_${idx}" placeholder="Ej: Hilti-Martillo rompedor (por día)" oninput="recalcTotalAlta()">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Cantidad</label>
+      <input type="number" id="la_cant_${idx}" value="1" min="0.01" step="0.01" oninput="recalcTotalAlta()">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Precio Ud. (€)</label>
+      <input type="number" id="la_precio_${idx}" step="0.01" min="0" value="0" oninput="recalcTotalAlta()">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Dto. %</label>
+      <input type="number" id="la_dto_${idx}" step="0.01" min="0" max="100" value="0" oninput="recalcTotalAlta()">
+    </div>
+    <button type="button" onclick="document.getElementById('la_${idx}').remove(); recalcTotalAlta();"
+      style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
+      <i class="fa-solid fa-xmark"></i>
+    </button>`;
+      document.getElementById('lineasAlta').appendChild(div);
+    }
+
+    function _leerLineasAlta() {
+      const lineas = [];
+      document.querySelectorAll('[id^="la_desc_"]').forEach(inp => {
+        const desc = inp.value.trim();
+        if (!desc) return;
+        const idx = inp.id.split('_')[2];
+        const cod = document.getElementById(`la_cod_${idx}`)?.value.trim() || '';
+        const cant = parseFloat(document.getElementById(`la_cant_${idx}`)?.value || 0);
+        const precio = parseFloat(document.getElementById(`la_precio_${idx}`)?.value || 0);
+        const dto = parseFloat(document.getElementById(`la_dto_${idx}`)?.value || 0);
+        const subtotal = cant * precio;
+        const totalLinea = subtotal - (subtotal * dto / 100);
+        lineas.push({ articulo_codigo: cod || null, descripcion: desc, cantidad: cant, precio_unitario: precio, dto_pct: dto, total_linea: +totalLinea.toFixed(2) });
+      });
+      return lineas;
+    }
+
+    function recalcTotalAlta() {
+      const lineas = _leerLineasAlta();
+      const base = lineas.reduce((s, l) => s + l.total_linea, 0);
+      const pctIva = parseFloat(document.getElementById('aa_pct_iva')?.value || 0);
+      const iva = base * pctIva / 100;
+      document.getElementById('aa_base').value = base.toFixed(2);
+      document.getElementById('aa_total').value = (base + iva).toFixed(2);
+    }
+
+    function abrirModalAlta() {
+      altaAlquilerEditId = null;
+      document.getElementById('altaAlquilerTitulo').textContent = 'Nueva Alta de Alquiler';
+      document.getElementById('aa_fecha').value = hoy();
+      document.getElementById('aa_hora').value = '';
+      document.getElementById('aa_num').value = '';
+      document.getElementById('aa_cliente').value = '';
+      document.getElementById('aa_nif').value = '';
+      document.getElementById('aa_direccion').value = '';
+      document.getElementById('aa_poblacion').value = '';
+      document.getElementById('aa_cp').value = '';
+      document.getElementById('aa_provincia').value = '';
+      document.getElementById('aa_obra').value = '';
+      document.getElementById('aa_operario').value = '';
+      document.getElementById('aa_dni_operario').value = '';
+      document.getElementById('aa_pct_iva').value = 21;
+      document.getElementById('lineasAlta').innerHTML = '';
+      lineasAltaCount = 0;
+      addLineaAlta();
+      recalcTotalAlta();
+      document.getElementById('modalAltaAlquiler').classList.add('visible');
+    }
+
+    async function guardarAltaAlquiler() {
+      const fecha = document.getElementById('aa_fecha').value;
+      const cliente_nombre = document.getElementById('aa_cliente').value.trim();
+      if (!fecha || !cliente_nombre) { toast('Fecha y cliente son obligatorios', 'err'); return; }
+
+      const lineas = _leerLineasAlta();
+      if (!lineas.length) { toast('Añade al menos un artículo', 'err'); return; }
+
+      const base = parseFloat(document.getElementById('aa_base').value || 0);
+      const pctIva = parseFloat(document.getElementById('aa_pct_iva').value || 0);
+      const total = parseFloat(document.getElementById('aa_total').value || 0);
+
+      const payload = {
+        fecha,
+        hora_retirada: document.getElementById('aa_hora').value || null,
+        cliente_nombre,
+        nif: document.getElementById('aa_nif').value.trim() || null,
+        direccion: document.getElementById('aa_direccion').value.trim() || null,
+        poblacion: document.getElementById('aa_poblacion').value.trim() || null,
+        codigo_postal: document.getElementById('aa_cp').value.trim() || null,
+        provincia: document.getElementById('aa_provincia').value.trim() || null,
+        obra: document.getElementById('aa_obra').value.trim() || null,
+        nombre_operario: document.getElementById('aa_operario').value.trim() || null,
+        dni_operario: document.getElementById('aa_dni_operario').value.trim() || null,
+        base_imponible: base,
+        pct_iva: pctIva,
+        importe_iva: +(total - base).toFixed(2),
+        total
+      };
+
+      try {
+        let headerId;
+        if (altaAlquilerEditId) {
+          await apiPatch('alquileres', altaAlquilerEditId, payload);
+          headerId = altaAlquilerEditId;
+          const antiguas = await apiGet('alquileres_items', `alquiler_id=eq.${headerId}`);
+          for (const a of antiguas) await apiDelete('alquileres_items', a.id);
+        } else {
+          payload.creado_por = currentPersona;
+          const [header] = await apiPost('alquileres', payload);
+          headerId = header.id;
+        }
+
+        await apiPost('alquileres_items', lineas.map(l => ({ ...l, alquiler_id: headerId })));
+
+        toast('Alta de alquiler guardada correctamente');
+        cerrarModal('modalAltaAlquiler');
+        altaAlquilerEditId = null;
+      } catch (e) {
+        toast('Error al guardar: ' + e.message, 'err');
+      }
+    }
+
+    // IMPRIMIR / DESCARGAR PDF DEL ALTA DE ALQUILER
+    async function imprimirAltaAlquiler(id) {
+      let f;
+      try {
+        const [reg] = await apiGet('alquileres', `id=eq.${id}`);
+        if (!reg) { toast('No se ha encontrado el alta', 'err'); return; }
+        f = reg;
+        f._items = await apiGet('alquileres_items', `alquiler_id=eq.${id}`);
+      } catch (e) { toast('Error al cargar: ' + e.message, 'err'); return; }
+
+      const filas = (f._items || []).map(i => `
+    <tr>
+      <td>${i.articulo_codigo || ''}</td>
+      <td>${i.descripcion || ''}</td>
+      <td style="text-align:right">${fmtStock(i.cantidad)}</td>
+      <td style="text-align:right">${fmtN(i.precio_unitario)}</td>
+      <td style="text-align:right">${fmtN(i.cantidad * i.precio_unitario)}</td>
+      <td style="text-align:right">${i.dto_pct ? i.dto_pct + '%' : '—'}</td>
+      <td style="text-align:right">${fmtN(i.total_linea)}</td>
+    </tr>`).join('');
+
+      const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Albarán de alta de alquiler ${f.numero_albaran || ''}</title>
+  <style>
+    body{font-family:Arial,sans-serif;color:#222;padding:36px;font-size:.72rem}
+    .cabecera{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
+    .cabecera img{height:80px}
+    .caja{border:1.5px solid #333;border-radius:10px;padding:12px 16px;margin-bottom:6px}
+    .datos-cliente h3{margin:0 0 6px;font-size:.85rem}
+    .doc-info{display:flex;gap:10px;margin-top:14px}
+    .doc-info div{border:1.5px solid #333;border-radius:8px;padding:8px 14px;text-align:center;font-size:.78rem}
+    .doc-info div b{display:block;font-size:.85rem;margin-top:2px}
+    h1{font-size:1.4rem;margin:18px 0 10px}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{border-bottom:1px solid #ccc;padding:6px;text-align:left;font-size:.7rem}
+    th{background:#f7f0f5;font-weight:500}
+    .condiciones{font-size:.62rem;line-height:1.5;margin-top:20px;color:#333}
+    .condiciones h4{font-size:.75rem;margin-bottom:6px}
+    .pie{display:flex;justify-content:space-between;gap:16px;margin-top:20px;align-items:flex-start}
+    .iva-tabla{border:1.5px solid #333;border-radius:10px;padding:10px 14px;font-size:.7rem}
+    .iva-tabla table{margin:0}
+    .iva-tabla th,.iva-tabla td{border:none;padding:4px 10px}
+    .total-box{border:1.5px solid #333;border-radius:10px;padding:14px 24px;font-weight:700;display:flex;justify-content:space-between;gap:20px;align-items:center;min-width:200px}
+    .firma-box{border:1.5px solid #333;border-radius:10px;padding:14px 16px;margin-top:20px}
+    .firma-linea{margin-top:40px;border-top:1px solid #999;width:220px}
+    .btn-imprimir{position:fixed;top:16px;right:16px}
+    @media print{.btn-imprimir{display:none}}
+  </style></head><body>
+  <div class="cabecera">
+    <img src="logo.png" alt="Olivilla Tres" onerror="this.style.display='none'">
+    <div class="datos-cliente" style="text-align:right">
+      <h3>DATOS DEL CLIENTE</h3>
+      <b>${f.cliente_nombre || '—'}</b><br>
+      ${f.direccion || ''}<br>
+      ${[f.codigo_postal, f.poblacion].filter(Boolean).join(' ')}<br>
+      ${f.provincia || ''}<br>
+      <b>N.I.F.</b> ${f.nif || '—'}
+    </div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px">
+    <div class="caja" style="max-width:320px">
+      <b>OLIVILLA TRES S.L.U</b><br>
+      Avenida de Madrid, 41<br>
+      45003 TOLEDO<br>
+      B45813284<br>
+      925233454<br>
+      info@olivillatres.com
+    </div>
+    <div class="doc-info">
+      <div>DOCUMENTO<br><b>Albarán</b></div>
+      <div>NÚMERO<br><b>${f.numero_albaran || '—'}</b></div>
+      <div>PÁGINA<br><b>1</b></div>
+      <div>FECHA<br><b>${fmtF(f.fecha)}</b></div>
+    </div>
+  </div>
+  <p style="margin-top:14px"><b>HORA DE RETIRADA:</b> ${f.hora_retirada || '—'}</p>
+  <h1>Albarán de alta de alquiler</h1>
+  <table>
+    <thead><tr><th>ARTÍCULO</th><th>DESCRIPCIÓN</th><th style="text-align:right">CANTIDAD</th><th style="text-align:right">PRECIO UD.</th><th style="text-align:right">SUBTOTAL</th><th style="text-align:right">DTO.</th><th style="text-align:right">TOTAL</th></tr></thead>
+    <tbody>${filas || '<tr><td colspan="7">Sin líneas</td></tr>'}</tbody>
+  </table>
+  <div class="condiciones">
+    <h4>CONDICIONES GENERALES</h4>
+    1. OLIVILLA TRES, S.L.U. cede en arrendamiento, al arrendatario según datos adjuntos en el presente contrato, el bien detallado en el presente contrato, a partir de la fecha indicada, quedando finalizado el día de la devolución, con los pertinentes documentos de retirada y entrega.<br>
+    2. En el presente documento aparece reflejado el precio del arrendamiento de los bienes descritos, incluyendo en el mismo sus servicios de mantenimiento básicos.<br>
+    3. No están incluidos el transporte, reposición de llaves, gestión medioambiental, cobertura por siniestro, montaje y desmontaje y reparaciones por malos usos.<br>
+    4. El precio del arrendamiento será calculado por día natural.<br>
+    5. La facturación se emitirá el último día del mes, aunque los bienes no hayan sido devueltos a OLIVILLA TRES, S.L.U.<br>
+    6. El impago la factura, faculta a OLIVILLA TRES, S.L.U., tras comunicar dicho impago al arrendatario, por burofax, retirar inmediatamente los bienes arrendados y la concurrencia de todos los gastos inherentes al impago al arrendatario.<br>
+    7. Los bienes arrendados se entregarán en las instalaciones de OLIVILLA TRES, S.L.U. en Calle Río Valdecelada 7 de Toledo, en perfecto estado.<br>
+    8. Los albaranes de entrega y retirada serán suscritos por el arrendatario o por la persona que recoja la maquinaria en su nombre, haciendo constar en el mismo nombre y DNI y obra para la cual se va a utilizar.<br>
+    9. La aceptación del albarán por parte del arrendatario supone la aceptación del correcto estado de los bienes arrendados.<br>
+    10. Toda avería ocasionada en el bien arrendado, por mal uso del arrendatario del mantenimiento preventivo, será a su cargo.<br>
+    11. El arrendador se hace cargo de la gestión medioambiental de componentes y recambios de la maquinaria arrendada.<br>
+    12. El arrendatario renuncia expresamente a realizar reclamación de daños, pérdidas o lucro cesante por causa de averías mecánicas de los bienes arrendados.<br>
+    13. El arrendatario devolverá los bienes arrendados en perfecto estado de uso y limpieza. En caso de no ser así los gastos ocasionados se facturarán por cuenta del arrendatario. Todo bien arrendado no devuelto será facturado al arrendatario según precio de reposición a nuevo.<br>
+    14. De producirse la sustracción o pérdida de una máquina, el arrendatario tiene la obligación de presentar inmediatamente denuncia e informar al arrendador dentro de las 24 horas siguientes a la ocurrencia del siniestro, haciendo constar las circunstancias, fecha, hora y lugar del incidente, así como la identificación completa del bien arrendado. El alquiler se cobrará hasta la fecha de entrega de la denuncia.<br>
+    15. En los casos de sustracción, pérdida o actos vandálicos sobre los bienes cedidos en régimen de arrendamiento, el arrendatario debe reponer el mismo bien a nuevo o el importe correspondiente.<br>
+    16. El arrendatario no podrá bajo ningún concepto subarrendar el bien arrendado.<br>
+    17. El arrendamiento podrá resolverse por alguna de las siguientes causas: A. Por finalización del periodo de arrendamiento señalado. B. Por mal uso a mala conservación de los bienes, a juicio del arrendador. C. Por impago de alguna de las cantidades estipuladas. D. Por mutuo acuerdo entre arrendador y arrendatario. E. Por avería irreparable de los bienes arrendados.<br>
+    18. Toda comunicación entre las partes relativas del contrato deberá hacerse por escrito, enviadas a las direcciones especificadas en el encabezamiento del presente contrato.<br>
+    19. Las partes se someten para cualquier cuestión derivada del presente contrato a los Juzgados y Tribunales de Toledo, con renuncia expresa a cualquier otro fuero que pudiera corresponderles.
+  </div>
+  <div class="pie">
+    <div class="iva-tabla">
+      <table>
+        <thead><tr><th>TIPO</th><th>IMPORTE</th><th>DESCUENTO</th><th>BASE</th><th>I.V.A.</th></tr></thead>
+        <tbody><tr>
+          <td>${fmtN(f.pct_iva)}</td>
+          <td>${fmtN(f.base_imponible)}</td>
+          <td>—</td>
+          <td>${fmtN(f.base_imponible)}</td>
+          <td>${fmtN(f.importe_iva)}</td>
+        </tr></tbody>
+      </table>
+    </div>
+    <div class="total-box"><span>TOTAL:</span><span>${fmt(f.total)}</span></div>
+  </div>
+  <div class="firma-box">
+    <b>NOMBRE:</b> ${f.nombre_operario || '—'}<br><br>
+    <b>D.N.I./N.I.E.:</b> ${f.dni_operario || '—'}<br><br>
+    <b>OBRA:</b> ${f.obra || '—'}<br><br>
+    <b>FIRMA:</b>
+    <div class="firma-linea"></div>
+  </div>
+  <button class="btn-imprimir" onclick="window.print()" style="padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
+  </body></html>`;
+      const w = window.open('', '_blank');
+      w.document.write(html);
+      w.document.close();
+    }
+
+
+
+
+
 
 
 

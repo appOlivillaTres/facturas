@@ -7352,7 +7352,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const obraSel = document.getElementById('exportObraSelect').value;
       const filtrados = (obraSel ? registros.filter(r => r.nombre_obra === obraSel) : registros)
         .slice()
-        .sort((a, b) => (a.fecha || '').localeCompare(b.fecha || '')); // más antigua primero
+        .sort((a, b) => {
+          const fa = a.fecha || '';
+          const fb = b.fecha || '';
+          const cmp = fa.localeCompare(fb);
+          if (cmp !== 0) return cmp;
+          return (a.id || 0) - (b.id || 0);
+        });
 
       if (!filtrados.length) { toast('No hay datos para exportar', 'err'); return; }
 
@@ -9873,7 +9879,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         }).sort((a, b) => {
           const fa = a.fecha_recibido || a.fecha || '';
           const fb = b.fecha_recibido || b.fecha || '';
-          return fa.localeCompare(fb); // más antigua primero
+          const cmp = fa.localeCompare(fb);
+          if (cmp !== 0) return cmp;
+          return (a.id || 0) - (b.id || 0); // desempate fijo: mismo orden siempre
         });
         if (!filtrados.length) { toast('No hay albaranes para ese filtro', 'err'); return; }
         exportarAlbaranesVentaExcel(filtrados);
@@ -10069,7 +10077,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       }).sort((a, b) => {
         const fa = a.fecha_recibido || a.fecha || '';
         const fb = b.fecha_recibido || b.fecha || '';
-        return fa.localeCompare(fb); // más antigua primero
+        const cmp = fa.localeCompare(fb);
+        if (cmp !== 0) return cmp;
+        return (a.id || 0) - (b.id || 0); // mismo criterio que exportarExcel, para que el orden coincida
       });
 
       const tareas = [];

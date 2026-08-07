@@ -2152,8 +2152,8 @@
         <select id="filtroObra" onchange="renderTabla()" style="display:none">
           <option value="">Todas las obras</option>
         </select>
-        <button class="btn-nueva" id="btnNuevo" onclick="abrirModalNuevo()"><i class="fa-solid fa-plus"></i><span
-            id="btnNuevaTxt">Añadir Nuevo</span></button>
+        <button class="btn-nueva" id="btnNuevo" onclick="abrirNuevoRegistro()"><i class="fa-solid fa-plus"></i><span
+    id="btnNuevaTxt">Añadir Nuevo</span></button>
         <button class="btn-exportar" id="btnExportar" onclick="abrirModalExportar()" style="display:none"><i
             class="fa-solid fa-file-excel"></i>Exportar Excel</button>
         <button class="btn-exportar" id="btnDescargarArchivos" onclick="abrirModalExportarArchivos()"
@@ -2307,6 +2307,27 @@
       </div>
     </div>
   </div>
+  <!-- MODAL TIPO ALBARÁN VENTA -->
+<div class="modal-overlay" id="modalTipoAlbaranVenta">
+  <div class="modal-box-sm">
+    <h3><i class="fa-solid fa-file-invoice" style="color:#b53987"></i>Nuevo Albarán de Venta</h3>
+    <p style="font-size:.85rem;color:#888;margin-bottom:14px">¿Qué tipo de albarán quieres crear?</p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button class="btn-nueva" style="justify-content:center" onclick="cerrarModal('modalTipoAlbaranVenta'); abrirModalNuevo('albaranes_venta')">
+        <i class="fa-solid fa-cart-shopping"></i> Venta
+      </button>
+      <button class="btn-nueva" style="justify-content:center;background:#2d7a4f" onclick="seleccionarTipoAlbaranVentaProximamente('Alta')">
+        <i class="fa-solid fa-plus"></i> Alta
+      </button>
+      <button class="btn-nueva" style="justify-content:center;background:#c0392b" onclick="seleccionarTipoAlbaranVentaProximamente('Baja')">
+        <i class="fa-solid fa-minus"></i> Baja
+      </button>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="cerrarModal('modalTipoAlbaranVenta')">Cancelar</button>
+    </div>
+  </div>
+</div>
   <!-- MODAL COMPRA CLIENTE -->
   <div class="modal-overlay" id="modalPuntos">
     <div class="modal-box-sm">
@@ -2644,10 +2665,9 @@
 
     // Primero mira si hay un modal abierto, y si lo hay, no hace nada (para no romper lo que se está editando en ese momento).
     function hayModalAbierto() {
-      return ['modalNueva', 'modalMaterialObra', 'modalDetalle', 'modalExportar', 'modalExportarMateriales', 'modalCita', 'modalPuntos', 'modalEvento', 'modalCobros']
-        // Mira si hay un modal abierto de la lista annterior y si hay uno o más responde true, si no, responde false
-        .some(id => document.getElementById(id)?.classList.contains('visible')); // para cada id de la lista a revisar (document.getElementById(id) busca en la pagina exactamente el que tenga ese nombre) Mira si existe, si no sigue adelante, y si existe mira si esta visible
-    }
+  return ['modalNueva', 'modalMaterialObra', 'modalDetalle', 'modalExportar', 'modalExportarMateriales', 'modalCita', 'modalPuntos', 'modalEvento', 'modalCobros', 'modalTipoAlbaranVenta']
+    .some(id => document.getElementById(id)?.classList.contains('visible'));
+}
 
     let _refrescoTrasModal = false;
 
@@ -3709,6 +3729,19 @@
 <button class="btn-guardar" onclick="guardarEventoCalendario()"><i class="fa-solid fa-floppy-disk me-1"></i>Guardar</button>`;
       document.getElementById('modalEvento').classList.add('visible');
     }
+
+    function abrirNuevoRegistro() {
+  if (tablaActual === 'albaranes_venta') {
+    document.getElementById('modalTipoAlbaranVenta').classList.add('visible');
+    return;
+  }
+  abrirModalNuevo();
+}
+
+function seleccionarTipoAlbaranVentaProximamente(tipo) {
+  cerrarModal('modalTipoAlbaranVenta');
+  toast(`El tipo "${tipo}" estará disponible próximamente`, 'ok');
+}
 
     async function guardarEventoCalendario() {   // se guarda el evento 
       if (!['angel', 'emilio'].includes(currentPersona)) return;

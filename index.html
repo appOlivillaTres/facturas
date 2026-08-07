@@ -3125,6 +3125,18 @@
     function fmtN(v) { if (v === null || v === undefined || v === '' || isNaN(parseFloat(v))) return '—'; return parseFloat(v).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
     function fmtF(f) { return f ? f.split('-').reverse().join('/') : '—'; }
     function hoy() { return new Date().toISOString().split('T')[0]; }
+    // Único criterio de orden para Excel y ZIP: por fecha y, si hay empate,
+    // por id (fijo e inmutable). Usar SIEMPRE esta misma función en los dos
+    // sitios garantiza que la fila del Excel y el archivo del ZIP coincidan.
+    function _ordenarParaExportacion(lista, campoFecha = 'fecha_recibido_o_fecha') {
+      return lista.slice().sort((a, b) => {
+        const fa = (campoFecha === 'fecha_recibido_o_fecha' ? (a.fecha_recibido || a.fecha) : a[campoFecha]) || '';
+        const fb = (campoFecha === 'fecha_recibido_o_fecha' ? (b.fecha_recibido || b.fecha) : b[campoFecha]) || '';
+        const cmp = fa.localeCompare(fb);
+        if (cmp !== 0) return cmp;
+        return (a.id || 0) - (b.id || 0);
+      });
+    }
     function nvl(v) { return (v !== null && v !== undefined && v !== '') ? v : '—'; }
 
     function toast(msg, tipo = 'ok') {
@@ -9894,7 +9906,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const meses = Array.from(document.querySelectorAll('#exportMeses input:checked')).map(i => parseInt(i.value));
       const obraFiltro = tablaActual === 'ingresos' ? document.getElementById('exportObraFiltro').value : '';
 
-      const filtrados = registros.filter(f => {
+      const filtrados = _ordenarParaExportacion(registros.filter(f => {
         const fechaRef = f.fecha_recibido || f.fecha;
         if (!fechaRef) return false;
         const [y, m] = fechaRef.split('-').map(Number);
@@ -9902,11 +9914,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         if (meses.length && !meses.includes(m)) return false;
         if (obraFiltro && f.nombre_obra !== obraFiltro) return false;
         return true;
-      }).sort((a, b) => {
-        const fa = a.fecha_recibido || a.fecha || '';
-        const fb = b.fecha_recibido || b.fecha || '';
-        return fa.localeCompare(fb); // más antigua primero
-      });
+      }));
 
       if (!filtrados.length) { toast('No hay datos para ese filtro', 'err'); return; }
 
@@ -9964,6 +9972,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
       const origenLabel = { facturas_almacen: 'Almacén', facturas_obra: 'Obra', facturas_csg: 'CSG' };
       const cabeceras = [
+        'Nº ORDEN',
         ...(esRevisadas ? ['ORIGEN'] : []),
         'NUMERACION INTERNA EMP', 'Fecha', 'NIF', 'NOMBRE', 'FACTURA', 'CONCEPTO',
         'Base 1', '%IVA1', 'Total IVA1', '%RE1', 'Total RE1', 'TASAS',
@@ -9971,7 +9980,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         'Base4', '%IVA4', 'Total IVA4', 'Base5', '%IVA5', 'Total IVA5',
         'Exento', 'DESCUENTO', 'Base Retención', '% Retención', 'Total Retención', 'Total'
       ];
-      const filas = filtrados.map(f => ({
+      const filas = filtrados.map((f, i) => ({
+        'Nº ORDEN': String(i + 1).padStart(4, '0'),
         ...(esRevisadas ? { 'ORIGEN': origenLabel[f.origen] || f.origen } : {}),
         'NUMERACION INTERNA EMP': f.numero_interno || '',
         'Fecha': f.fecha ? f.fecha.split('-').reverse().join('/') : '',
@@ -10007,7 +10017,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(filas, { header: cabeceras });
-      const anchos = [...(esRevisadas ? [12] : []), 18, 12, 14, 28, 18, 30, 10, 7, 10, 7, 10, 10, 10, 7, 10, 10, 7, 10, 10, 7, 10, 10, 7, 10, 10, 14, 12, 10, 14, 12];
+      const anchos = [8, ...(esRevisadas ? [12] : []), 18, 12, 14, 28, 18, 30, 10, 7, 10, 7, 10, 10, 10, 7, 10, 10, 7, 10, 10, 7, 10, 10, 7, 10, 10, 14, 12, 10, 14, 12];
       ws['!cols'] = anchos.map(w => ({ wch: w }));
       XLSX.utils.book_append_sheet(wb, ws, esRevisadas ? 'Revisadas y Facturadas' : esObra ? 'Facturas Obra' : esCsg ? 'Facturas CSG' : 'Facturas Almacén');
       const fecha = new Date().toISOString().split('T')[0];
@@ -10067,20 +10077,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const year = parseInt(document.getElementById('exportArchivosYear').value);
       const meses = Array.from(document.querySelectorAll('#exportArchivosMeses input:checked')).map(i => parseInt(i.value));
 
-      const filtrados = registros.filter(f => {
+      const filtrados = _ordenarParaExportacion(registros.filter(f => {
         const fechaRef = f.fecha_recibido || f.fecha;
         if (!fechaRef) return false;
         const [y, m] = fechaRef.split('-').map(Number);
         if (y !== year) return false;
         if (meses.length && !meses.includes(m)) return false;
         return true;
-      }).sort((a, b) => {
-        const fa = a.fecha_recibido || a.fecha || '';
-        const fb = b.fecha_recibido || b.fecha || '';
-        const cmp = fa.localeCompare(fb);
-        if (cmp !== 0) return cmp;
-        return (a.id || 0) - (b.id || 0); // mismo criterio que exportarExcel, para que el orden coincida
-      });
+      }));
 
       const tareas = [];
       const contadorNombres = {};

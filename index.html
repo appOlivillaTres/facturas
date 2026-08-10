@@ -2397,6 +2397,24 @@
       </div>
     </div>
   </div>
+  <!-- MODAL DEVOLVER MAQUINARIA -->
+  <div class="modal-overlay" id="modalDevolverMaquina">
+    <div class="modal-box-sm">
+      <h3><i class="fa-solid fa-rotate-left" style="color:#2d7a4f"></i>Devolver maquinaria</h3>
+      <div class="form-group">
+        <label>Obra desde la que se devuelve *</label>
+        <input type="text" id="dm_obra" list="dl_obras" placeholder="Ej: Reforma Calle Mayor 12">
+      </div>
+      <div class="form-group">
+        <label>Quién la devuelve *</label>
+        <input type="text" id="dm_persona" placeholder="Nombre y apellidos">
+      </div>
+      <div class="modal-btns">
+        <button class="btn-cancelar" onclick="cerrarModal('modalDevolverMaquina')">Cancelar</button>
+        <button class="btn-guardar" onclick="confirmarDevolucionMaquina()"><i class="fa-solid fa-check me-1"></i>Confirmar devolución</button>
+      </div>
+    </div>
+  </div>
 <!-- MODAL SALIDA DE MAQUINARIA A OBRA PROPIA (sin cliente, sin albarán) -->
   <div class="modal-overlay" id="modalSalidaMaquina">
     <div class="modal-box-sm">
@@ -2411,10 +2429,6 @@
       <div class="form-group">
         <label>Empleado *</label>
         <input type="text" id="si_empleado" placeholder="Nombre y apellidos">
-      </div>
-      <div class="form-group">
-        <label>DNI / NIE *</label>
-        <input type="text" id="si_dni" placeholder="53.045.572-F">
       </div>
       <div class="form-group">
         <label>Fecha *</label>
@@ -2922,7 +2936,7 @@
     // (en vez de "todo menos lo restringido", ven solo esto).
     const ACCESO_EXCLUSIVO = {
       jose: ['clientes', 'inventario', 'materiales_obra', 'albaranes_venta', 'maquinaria'],
-      juandavid: ['materiales_obra']
+      juandavid: ['materiales_obra', 'maquinaria']
     };
 
     const PERSONAS_ACCESO_TOTAL = ['natalia'];
@@ -3941,7 +3955,7 @@
     }
 
     function hayModalAbierto() {
-      return ['modalNueva', 'modalMaterialObra', 'modalDetalle', 'modalExportar', 'modalExportarMateriales', 'modalCita', 'modalPuntos', 'modalEvento', 'modalCobros', 'modalTipoAlbaranVenta', 'modalAltaAlquiler', 'modalBajaAlquiler']
+      return ['modalNueva', 'modalMaterialObra', 'modalDetalle', 'modalExportar', 'modalExportarMateriales', 'modalCita', 'modalPuntos', 'modalEvento', 'modalCobros', 'modalTipoAlbaranVenta', 'modalAltaAlquiler', 'modalBajaAlquiler', 'modalSalidaMaquina', 'modalDevolverMaquina']
         .some(id => document.getElementById(id)?.classList.contains('visible'));
     }
 
@@ -4365,12 +4379,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           `<i class="fa-solid fa-clock-rotate-left" style="color:#b53987"></i>Historial — ${nombre}`;
         document.getElementById('modalDetalleContenido').innerHTML = !hist.length
           ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin alquileres registrados todavía</p>`
-          : `<table class="mini-table"><thead><tr><th>Cliente</th><th>Obra</th><th>Salida</th><th>Devolución</th><th>Registrado por</th></tr></thead><tbody>
+          : `<table class="mini-table"><thead><tr><th>Cliente</th><th>Obra</th><th>Salida</th><th>Devolución</th><th>Devuelto por</th><th>Registrado por</th></tr></thead><tbody>
       ${hist.map(h => `<tr>
         <td>${h.tipo_salida === 'obra_propia' ? '<i class="fa-solid fa-user-hard-hat" style="color:#b53987" title="Uso interno"></i> ' + (h.empleado || '—') : (h.cliente_nombre || '—')}</td>
-        <td>${h.obra || '—'}</td>
+        <td>${h.obra_devolucion || h.obra || '—'}</td>
         <td>${fmtF(h.fecha_salida)}</td>
         <td>${h.fecha_devolucion ? fmtF(h.fecha_devolucion) : '<span style="color:#c47a00;font-weight:600">Sin devolver</span>'}</td>
+        <td>${h.devuelto_por || '—'}</td>
         <td>${NOMBRES_PERSONAS[h.registrado_por] || h.registrado_por || '—'}</td>
       </tr>`).join('')}
     </tbody></table>`;
@@ -4378,25 +4393,46 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       } catch (e) { toast('Error: ' + e.message, 'err'); }
     }
 
-    async function marcarMaquinaDevuelta(id) {
+    let maquinaDevolverActualId = null;
+
+    function marcarMaquinaDevuelta(id) {
       const m = registros.find(r => r.id === id) || maquinariaDB.find(r => r.id === id);
       if (!m) return;
-      if (!confirm(`¿Marcar "${m.nombre}" (${m.codigo}) como devuelta y disponible?`)) return;
+      maquinaDevolverActualId = id;
+      document.getElementById('dm_obra').value = m.obra_actual || '';
+      document.getElementById('dm_persona').value = '';
+      document.getElementById('modalDevolverMaquina').classList.add('visible');
+    }
+
+    async function confirmarDevolucionMaquina() {
+      const id = maquinaDevolverActualId;
+      const m = registros.find(r => r.id === id) || maquinariaDB.find(r => r.id === id);
+      if (!m) return;
+      const obra = document.getElementById('dm_obra').value.trim();
+      const persona = document.getElementById('dm_persona').value.trim();
+      if (!obra || !persona) { toast('Indica la obra y quién la devuelve', 'err'); return; }
       try {
         await apiPatch('maquinaria', id, {
           estado: 'disponible',
           cliente_actual_nombre: null,
+          empleado_actual: null,
           obra_actual: null,
           fecha_alquiler_actual: null,
-          alquiler_actual_id: null
+          alquiler_actual_id: null,
+          tipo_salida: null
         });
         const abiertos = await apiGetAll('historial_maquinaria', `maquinaria_id=eq.${id}&fecha_devolucion=is.null&order=fecha_salida.desc`);
         if (abiertos.length) {
-          await apiPatch('historial_maquinaria', abiertos[0].id, { fecha_devolucion: hoy() });
+          await apiPatch('historial_maquinaria', abiertos[0].id, {
+            fecha_devolucion: hoy(),
+            obra_devolucion: obra,
+            devuelto_por: persona
+          });
         }
         const mCache = maquinariaDB.find(x => x.id === id);
-        if (mCache) { mCache.estado = 'disponible'; mCache.cliente_actual_nombre = null; mCache.obra_actual = null; }
-        toast('Máquina marcada como disponible');
+        if (mCache) { mCache.estado = 'disponible'; mCache.cliente_actual_nombre = null; mCache.empleado_actual = null; mCache.obra_actual = null; }
+        toast(`Máquina "${m.nombre}" marcada como disponible`);
+        cerrarModal('modalDevolverMaquina');
         cargarDatos();
       } catch (e) { toast('Error: ' + e.message, 'err'); }
     }
@@ -4405,7 +4441,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     function abrirModalSalidaInterna() {
       document.getElementById('si_obra').value = '';
       document.getElementById('si_empleado').value = '';
-      document.getElementById('si_dni').value = '';
       document.getElementById('si_fecha').value = hoy();
       document.getElementById('lineasSalidaMaquina').innerHTML = '';
       lineasSalidaMaquinaCount = 0;
@@ -4450,9 +4485,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     async function guardarSalidaInterna() {
       const obra = document.getElementById('si_obra').value.trim();
       const empleado = document.getElementById('si_empleado').value.trim();
-      const dni = document.getElementById('si_dni').value.trim();
       const fecha = document.getElementById('si_fecha').value;
-      if (!obra || !empleado || !dni || !fecha) { toast('Obra, empleado, DNI y fecha son obligatorios', 'err'); return; }
+      if (!obra || !empleado || !fecha) { toast('Obra, empleado y fecha son obligatorios', 'err'); return; }
 
       const codigos = [...document.querySelectorAll('[id^="sim_cod_"]')].map(i => i.value.trim()).filter(Boolean);
       if (!codigos.length) { toast('Añade al menos una máquina', 'err'); return; }
@@ -4467,7 +4501,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             tipo_salida: 'obra_propia',
             cliente_actual_nombre: null,
             empleado_actual: empleado,
-            dni_empleado_actual: dni,
             obra_actual: obra,
             fecha_alquiler_actual: fecha,
             registrado_por: currentPersona
@@ -4478,7 +4511,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             nombre: maquina.nombre,
             cliente_nombre: null,
             empleado,
-            dni_empleado: dni,
             obra,
             tipo_salida: 'obra_propia',
             fecha_salida: fecha,

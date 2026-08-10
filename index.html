@@ -2166,6 +2166,9 @@
           <i class="fa-solid fa-clone"></i>Duplicados
         </button>
         <button class="btn-revisar" id="btnPorRevisar" onclick="togglePorRevisar()" style="display:none">
+          <button class="btn-nueva" id="btnSalidaInterna" onclick="abrirModalSalidaInterna()" style="display:none">
+          <i class="fa-solid fa-user-hard-hat"></i><span>Salida a obra propia</span>
+        </button>
           <i class="fa-solid fa-magnifying-glass"></i><span>Por revisar</span>
         </button>
         <button class="btn-historial" id="btnHistorial" onclick="abrirHistorialMovimientos()" style="display:none">
@@ -2394,7 +2397,36 @@
       </div>
     </div>
   </div>
-
+<!-- MODAL SALIDA DE MAQUINARIA A OBRA PROPIA (sin cliente, sin albarán) -->
+  <div class="modal-overlay" id="modalSalidaMaquina">
+    <div class="modal-box-sm">
+      <h3><i class="fa-solid fa-user-hard-hat" style="color:#b53987"></i>Salida de maquinaria a obra propia</h3>
+      <p style="font-size:.78rem;color:#888;margin-top:-8px;margin-bottom:12px">
+        <i class="fa-solid fa-info-circle me-1"></i>Para cuando un empleado se lleva maquinaria a una obra nuestra — no genera albarán ni factura.
+      </p>
+      <div class="form-group">
+        <label>Obra *</label>
+        <input type="text" id="si_obra" list="dl_obras" placeholder="Ej: Reforma Calle Mayor 12">
+      </div>
+      <div class="form-group">
+        <label>Empleado *</label>
+        <input type="text" id="si_empleado" placeholder="Nombre y apellidos">
+      </div>
+      <div class="form-group">
+        <label>Fecha *</label>
+        <input type="date" id="si_fecha">
+      </div>
+      <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">Máquinas</div>
+      <div id="lineasSalidaMaquina"></div>
+      <button type="button" class="btn-add-linea" onclick="addLineaSalidaMaquina()">
+        <i class="fa-solid fa-plus me-1"></i>Añadir máquina
+      </button>
+      <div class="modal-btns">
+        <button class="btn-cancelar" onclick="cerrarModal('modalSalidaMaquina')">Cancelar</button>
+        <button class="btn-guardar" onclick="guardarSalidaInterna()"><i class="fa-solid fa-floppy-disk me-1"></i>Guardar</button>
+      </div>
+    </div>
+  </div>
   <!-- MODAL BAJA DE ALQUILER -->
   <div class="modal-overlay" id="modalBajaAlquiler">
     <div class="modal-box" style="max-width:820px">
@@ -3469,6 +3501,7 @@
         btnRev.classList.remove('activo');
       }
       document.getElementById('btnHistorial').style.display = (sec === 'clientes' || sec === 'inventario' || sec === 'materiales_obra') ? 'flex' : 'none';
+      document.getElementById('btnSalidaInterna').style.display = (sec === 'maquinaria') ? 'flex' : 'none';
       // si estamos en revisadas no sale el boton de añadir nueva
       document.getElementById('btnNuevo').style.display = esRevisadas ? 'none' : 'flex';
 
@@ -4356,6 +4389,114 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         if (mCache) { mCache.estado = 'disponible'; mCache.cliente_actual_nombre = null; mCache.obra_actual = null; }
         toast('Máquina marcada como disponible');
         cargarDatos();
+      } catch (e) { toast('Error: ' + e.message, 'err'); }
+    }
+    let lineasSalidaMaquinaCount = 0;
+
+    function abrirModalSalidaInterna() {
+      document.getElementById('si_obra').value = '';
+      document.getElementById('si_empleado').value = '';
+      document.getElementById('si_fecha').value = hoy();
+      document.getElementById('lineasSalidaMaquina').innerHTML = '';
+      lineasSalidaMaquinaCount = 0;
+      addLineaSalidaMaquina();
+      document.getElementById('modalSalidaMaquina').classList.add('visible');
+    }
+
+    function addLineaSalidaMaquina() {
+      lineasSalidaMaquinaCount++;
+      const idx = lineasSalidaMaquinaCount;
+      const div = document.createElement('div');
+      div.id = `sim_${idx}`;
+      div.className = 'linea-prod';
+      div.style.gridTemplateColumns = '140px 1fr auto';
+      div.innerHTML = `
+        <div class="form-group" style="margin:0">
+          <label style="font-size:.75rem">Código</label>
+          <input type="text" id="sim_cod_${idx}" list="dl_maquinaria" placeholder="MAQ008" oninput="autocompletarNombreSalidaMaquina(${idx})">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:.75rem">Máquina</label>
+          <input type="text" id="sim_nombre_${idx}" readonly style="background:#f7f0f5">
+        </div>
+        <button type="button" onclick="document.getElementById('sim_${idx}').remove()"
+          style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
+          <i class="fa-solid fa-xmark"></i>
+        </button>`;
+      document.getElementById('lineasSalidaMaquina').appendChild(div);
+    }
+
+    function autocompletarNombreSalidaMaquina(idx) {
+      const inpCod = document.getElementById(`sim_cod_${idx}`);
+      const inpNombre = document.getElementById(`sim_nombre_${idx}`);
+      if (!inpCod || !inpNombre) return;
+      const maquina = buscarMaquinaPorCodigo(inpCod.value);
+      inpNombre.value = maquina ? maquina.nombre : '';
+      if (maquina && maquina.estado === 'alquilada') {
+        toast(`Aviso: "${maquina.nombre}" ya figura como alquilada/en uso`, 'err');
+      }
+    }
+
+    async function guardarSalidaInterna() {
+      const obra = document.getElementById('si_obra').value.trim();
+      const empleado = document.getElementById('si_empleado').value.trim();
+      const fecha = document.getElementById('si_fecha').value;
+      if (!obra || !empleado || !fecha) { toast('Obra, empleado y fecha son obligatorios', 'err'); return; }
+
+      const codigos = [...document.querySelectorAll('[id^="sim_cod_"]')].map(i => i.value.trim()).filter(Boolean);
+      if (!codigos.length) { toast('Añade al menos una máquina', 'err'); return; }
+
+      let algunError = false;
+      for (const cod of codigos) {
+        const maquina = buscarMaquinaPorCodigo(cod);
+        if (!maquina) { toast(`Código "${cod}" no encontrado en el catálogo`, 'err'); algunError = true; continue; }
+        try {
+          await apiPatch('maquinaria', maquina.id, {
+            estado: 'alquilada',
+            tipo_salida: 'obra_propia',
+            cliente_actual_nombre: null,
+            empleado_actual: empleado,
+            obra_actual: obra,
+            fecha_alquiler_actual: fecha
+          });
+          await apiPost('historial_maquinaria', {
+            maquinaria_id: maquina.id,
+            codigo: maquina.codigo,
+            nombre: maquina.nombre,
+            cliente_nombre: null,
+            empleado,
+            obra,
+            tipo_salida: 'obra_propia',
+            fecha_salida: fecha
+          });
+          Object.assign(maquina, { estado: 'alquilada', tipo_salida: 'obra_propia', empleado_actual: empleado, obra_actual: obra });
+        } catch (e) {
+          toast(`Error con "${cod}": ` + e.message, 'err');
+          algunError = true;
+        }
+      }
+
+      if (!algunError) toast('Máquinas asignadas a la obra (sin albarán)');
+      cerrarModal('modalSalidaMaquina');
+      cargarDatos();
+    }
+
+    async function verMaquinariaDeObra(nombreObra) {
+      try {
+        const hist = await apiGetAll('historial_maquinaria', `obra=eq.${encodeURIComponent(nombreObra)}&order=fecha_salida.desc`);
+        document.getElementById('modalDetalleTitulo').innerHTML =
+          `<i class="fa-solid fa-truck-monster" style="color:#b53987"></i>Maquinaria — ${nombreObra}`;
+        document.getElementById('modalDetalleContenido').innerHTML = !hist.length
+          ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin maquinaria registrada en esta obra</p>`
+          : `<table class="mini-table"><thead><tr><th>Máquina</th><th>Cliente/Empleado</th><th>Salida</th><th>Devolución</th></tr></thead><tbody>
+        ${hist.map(h => `<tr>
+          <td>${h.nombre || '—'}</td>
+          <td>${h.tipo_salida === 'obra_propia' ? '<i class="fa-solid fa-user-hard-hat" style="color:#b53987" title="Uso interno"></i> ' + (h.empleado || '—') : (h.cliente_nombre || '—')}</td>
+          <td>${fmtF(h.fecha_salida)}</td>
+          <td>${h.fecha_devolucion ? fmtF(h.fecha_devolucion) : '<span style="color:#c47a00;font-weight:600">Sin devolver</span>'}</td>
+        </tr>`).join('')}
+      </tbody></table>`;
+        document.getElementById('modalDetalle').classList.add('visible');
       } catch (e) { toast('Error: ' + e.message, 'err'); }
     }
 
@@ -5434,7 +5575,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           <th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th>
       <th>Obra</th><th>Dirección</th><th>Cliente</th><th>Fecha inicio</th><th>Estado</th>
       <th class="num-cell">Presupuesto</th><th class="num-cell">Facturado</th><th class="num-cell">Diferencia</th>
-      <th>Rentabilidad</th><th></th><th></th><th></th><th>Editar</th><th></th>
+      <th>Rentabilidad</th><th></th><th></th><th></th><th></th><th>Editar</th><th></th>
     </tr>`;
         const lista = registros.filter(o => {
           const mQ = [o.nombre, o.cliente, o.direccion].some(v => (v || '').toLowerCase().includes(q));
@@ -5464,6 +5605,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <td><span class="link-badge factura" onclick="verFacturasDeObra('${(o.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-folder-open"></i>Ver facturas${o._num_facturas ? ` (${o._num_facturas})` : ''}</span></td>
         <td><span class="link-badge factura" onclick="verAlbaranesDeObra('${(o.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-file-signature"></i>Ver albaranes${o._num_albaranes ? ` (${o._num_albaranes})` : ''}</span></td>
         <td><span class="link-badge factura" onclick="verMaterialExclusivoDeObra('${(o.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-boxes-stacked"></i>Material excl.</span></td>
+        <td><span class="link-badge factura" onclick="verMaquinariaDeObra('${(o.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-truck-monster"></i>Maquinaria</span></td>
         <td><button class="btn-toggle-pago pendiente" onclick="abrirModalEditar(${o.id},'obras')" title="Editar obra"><i class="fa-solid fa-pen"></i></button></td>
         <td><button class="btn-eliminar" onclick="eliminar(${o.id})"><i class="fa-solid fa-trash"></i></button></td>
       </tr>`;
@@ -5774,7 +5916,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <td class="td-nombre">${m.nombre || '—'}</td>
       <td class="num-cell">${m.precio_dia != null ? fmt(m.precio_dia) : '—'}</td>
       <td><span class="badge-estado ${alquilada ? 'badge-vencido' : 'badge-pagado'}">${alquilada ? 'ALQUILADA' : 'DISPONIBLE'}</span></td>
-      <td class="td-nombre">${m.cliente_actual_nombre || '—'}</td>
+      <td class="td-nombre">${m.tipo_salida === 'obra_propia' ? `<i class="fa-solid fa-user-hard-hat" style="color:#b53987" title="Uso interno"></i> ${m.empleado_actual || '—'}` : (m.cliente_actual_nombre || '—')}</td>
       <td>${m.obra_actual || '—'}</td>
       <td>${fmtF(m.fecha_alquiler_actual)}</td>
       <td><span class="link-badge" onclick="verHistorialMaquina(${m.id},'${(m.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-clock-rotate-left"></i>Ver</span></td>

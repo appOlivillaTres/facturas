@@ -8789,6 +8789,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const fecha = document.getElementById('aa_fecha').value;
       const cliente_nombre = document.getElementById('aa_cliente').value.trim();
       if (!fecha || !cliente_nombre) { toast('Fecha y cliente son obligatorios', 'err'); return; }
+      if (!clienteAltaSelId) { toast('Selecciona un cliente de la lista (créalo primero en Clientes si es nuevo)', 'err'); return; }
 
       const lineas = _leerLineasAlta();
       if (!lineas.length) { toast('Añade al menos un artículo', 'err'); return; }
@@ -9170,6 +9171,7 @@ async function guardarBajaAlquiler() {
   const fecha = document.getElementById('ba_fecha').value;
   const cliente_nombre = document.getElementById('ba_cliente').value.trim();
   if (!fecha || !cliente_nombre) { toast('Fecha y cliente son obligatorios', 'err'); return; }
+  if (!clienteBajaSelId) { toast('Selecciona un cliente de la lista (créalo primero en Clientes si es nuevo)', 'err'); return; }
 
   const lineas = _leerLineasBaja();
   if (!lineas.length) { toast('Añade al menos un artículo', 'err'); return; }

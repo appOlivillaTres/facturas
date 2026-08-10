@@ -4381,8 +4381,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         document.getElementById('modalDetalleTitulo').innerHTML =
           `<i class="fa-solid fa-clock-rotate-left" style="color:#b53987"></i>Historial — ${nombre}`;
         document.getElementById('modalDetalleContenido').innerHTML = !hist.length
-          ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin alquileres registrados todavía</p>`
-          : `<table class="mini-table"><thead><tr><th>Se la llevó</th><th>Obra de salida</th><th>Salida</th><th>La devolvió</th><th>Obra de devolución</th><th>Devolución</th><th>Registrado por</th></tr></thead><tbody>
+          ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin maquinaria registrada en esta obra</p>`
+          : `<div style="overflow-x:auto"><table class="mini-table"><thead><tr><th>Máquina</th><th>Se la llevó</th><th>Salida</th><th>La devolvió</th><th>Obra de devolución</th><th>Devolución</th><th>Registrado por</th></tr></thead><tbody>
       ${hist.map(h => `<tr>
         <td>${h.tipo_salida === 'obra_propia' ? '<i class="fa-solid fa-user-hard-hat" style="color:#b53987" title="Uso interno"></i> ' + (h.empleado || '—') : (h.cliente_nombre || '—')}</td>
         <td>${h.obra || '—'}</td>
@@ -4393,6 +4393,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <td>${NOMBRES_PERSONAS[h.registrado_por] || h.registrado_por || '—'}</td>
       </tr>`).join('')}
     </tbody></table>`;
+        document.querySelector('#modalDetalle .modal-box').style.maxWidth = '780px';
         document.getElementById('modalDetalle').classList.add('visible');
       } catch (e) { toast('Error: ' + e.message, 'err'); }
     }
@@ -4538,8 +4539,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         document.getElementById('modalDetalleTitulo').innerHTML =
           `<i class="fa-solid fa-truck-monster" style="color:#b53987"></i>Maquinaria — ${nombreObra}`;
         document.getElementById('modalDetalleContenido').innerHTML = !hist.length
-          ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin maquinaria registrada en esta obra</p>`
-          : `<table class="mini-table"><thead><tr><th>Máquina</th><th>Se la llevó</th><th>Salida</th><th>La devolvió</th><th>Obra de devolución</th><th>Devolución</th><th>Registrado por</th></tr></thead><tbody>
+          ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin alquileres registrados todavía</p>`
+          : `<div style="overflow-x:auto"><table class="mini-table"><thead><tr><th>Se la llevó</th><th>Obra de salida</th><th>Salida</th><th>La devolvió</th><th>Obra de devolución</th><th>Devolución</th><th>Registrado por</th></tr></thead><tbody>
         ${hist.map(h => `<tr>
           <td>${h.nombre || '—'}</td>
           <td>${h.tipo_salida === 'obra_propia' ? '<i class="fa-solid fa-user-hard-hat" style="color:#b53987" title="Uso interno"></i> ' + (h.empleado || '—') : (h.cliente_nombre || '—')}</td>
@@ -4550,6 +4551,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           <td>${NOMBRES_PERSONAS[h.registrado_por] || h.registrado_por || '—'}</td>
         </tr>`).join('')}
       </tbody></table>`;
+        document.querySelector('#modalDetalle .modal-box').style.maxWidth = '780px';
         document.getElementById('modalDetalle').classList.add('visible');
       } catch (e) { toast('Error: ' + e.message, 'err'); }
     }

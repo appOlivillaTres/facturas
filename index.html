@@ -5907,7 +5907,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       </tr>`;
         }).join('');
       } else if (tablaActual === 'albaranes_venta') {
-        hdr.innerHTML = `<tr><th>Nº Albarán</th><th>Fecha</th><th>Cliente</th><th>NIF</th><th class="num-cell">Total</th><th>Puntos</th><th>Facturar</th><th>Pagado efectivo</th><th>Documento</th><th></th></tr>`;
+        hdr.innerHTML = `<tr><th>Nº Albarán</th><th>Fecha</th><th>Cliente</th><th>NIF</th><th class="num-cell">Total</th><th>Puntos</th><th>Creado por</th><th>Facturar</th><th>Pagado efectivo</th><th>Documento</th><th></th></tr>`;
         const lista = registros.filter(f => {
           const mQ = [f.numero_albaran, f.cliente_nombre].some(v => (v || '').toLowerCase().includes(q));
           const mE = !fEst

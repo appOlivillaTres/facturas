@@ -2411,16 +2411,18 @@
       </div>
       <div class="modal-btns">
         <button class="btn-cancelar" onclick="cerrarModal('modalDevolverMaquina')">Cancelar</button>
-        <button class="btn-guardar" onclick="confirmarDevolucionMaquina()"><i class="fa-solid fa-check me-1"></i>Confirmar devolución</button>
+        <button class="btn-guardar" onclick="confirmarDevolucionMaquina()"><i
+            class="fa-solid fa-check me-1"></i>Confirmar devolución</button>
       </div>
     </div>
   </div>
-<!-- MODAL SALIDA DE MAQUINARIA A OBRA PROPIA (sin cliente, sin albarán) -->
+  <!-- MODAL SALIDA DE MAQUINARIA A OBRA PROPIA (sin cliente, sin albarán) -->
   <div class="modal-overlay" id="modalSalidaMaquina">
     <div class="modal-box-sm">
       <h3><i class="fa-solid fa-user-hard-hat" style="color:#b53987"></i>Salida de maquinaria a obra propia</h3>
       <p style="font-size:.78rem;color:#888;margin-top:-8px;margin-bottom:12px">
-        <i class="fa-solid fa-info-circle me-1"></i>Para cuando un empleado se lleva maquinaria a una obra nuestra — no genera albarán ni factura.
+        <i class="fa-solid fa-info-circle me-1"></i>Para cuando un empleado se lleva maquinaria a una obra nuestra — no
+        genera albarán ni factura.
       </p>
       <div class="form-group">
         <label>Obra *</label>
@@ -2441,7 +2443,8 @@
       </button>
       <div class="modal-btns">
         <button class="btn-cancelar" onclick="cerrarModal('modalSalidaMaquina')">Cancelar</button>
-        <button class="btn-guardar" onclick="guardarSalidaInterna()"><i class="fa-solid fa-floppy-disk me-1"></i>Guardar</button>
+        <button class="btn-guardar" onclick="guardarSalidaInterna()"><i
+            class="fa-solid fa-floppy-disk me-1"></i>Guardar</button>
       </div>
     </div>
   </div>
@@ -4379,13 +4382,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           `<i class="fa-solid fa-clock-rotate-left" style="color:#b53987"></i>Historial — ${nombre}`;
         document.getElementById('modalDetalleContenido').innerHTML = !hist.length
           ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin alquileres registrados todavía</p>`
-          : `<table class="mini-table"><thead><tr><th>Cliente</th><th>Obra</th><th>Salida</th><th>Devolución</th><th>Devuelto por</th><th>Registrado por</th></tr></thead><tbody>
+          : `<table class="mini-table"><thead><tr><th>Se la llevó</th><th>Obra de salida</th><th>Salida</th><th>La devolvió</th><th>Obra de devolución</th><th>Devolución</th><th>Registrado por</th></tr></thead><tbody>
       ${hist.map(h => `<tr>
         <td>${h.tipo_salida === 'obra_propia' ? '<i class="fa-solid fa-user-hard-hat" style="color:#b53987" title="Uso interno"></i> ' + (h.empleado || '—') : (h.cliente_nombre || '—')}</td>
-        <td>${h.obra_devolucion || h.obra || '—'}</td>
+        <td>${h.obra || '—'}</td>
         <td>${fmtF(h.fecha_salida)}</td>
+        <td>${h.devuelto_por || (h.fecha_devolucion ? '—' : '<span style="color:#ccc">—</span>')}</td>
+        <td>${h.fecha_devolucion ? (h.obra_devolucion || '—') : '<span style="color:#ccc">—</span>'}</td>
         <td>${h.fecha_devolucion ? fmtF(h.fecha_devolucion) : '<span style="color:#c47a00;font-weight:600">Sin devolver</span>'}</td>
-        <td>${h.devuelto_por || '—'}</td>
         <td>${NOMBRES_PERSONAS[h.registrado_por] || h.registrado_por || '—'}</td>
       </tr>`).join('')}
     </tbody></table>`;
@@ -4535,11 +4539,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           `<i class="fa-solid fa-truck-monster" style="color:#b53987"></i>Maquinaria — ${nombreObra}`;
         document.getElementById('modalDetalleContenido').innerHTML = !hist.length
           ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin maquinaria registrada en esta obra</p>`
-          : `<table class="mini-table"><thead><tr><th>Máquina</th><th>Cliente/Empleado</th><th>Salida</th><th>Devolución</th><th>Registrado por</th></tr></thead><tbody>
+          : `<table class="mini-table"><thead><tr><th>Máquina</th><th>Se la llevó</th><th>Salida</th><th>La devolvió</th><th>Obra de devolución</th><th>Devolución</th><th>Registrado por</th></tr></thead><tbody>
         ${hist.map(h => `<tr>
           <td>${h.nombre || '—'}</td>
           <td>${h.tipo_salida === 'obra_propia' ? '<i class="fa-solid fa-user-hard-hat" style="color:#b53987" title="Uso interno"></i> ' + (h.empleado || '—') : (h.cliente_nombre || '—')}</td>
           <td>${fmtF(h.fecha_salida)}</td>
+          <td>${h.devuelto_por || (h.fecha_devolucion ? '—' : '<span style="color:#ccc">—</span>')}</td>
+          <td>${h.fecha_devolucion ? (h.obra_devolucion || '—') : '<span style="color:#ccc">—</span>'}</td>
           <td>${h.fecha_devolucion ? fmtF(h.fecha_devolucion) : '<span style="color:#c47a00;font-weight:600">Sin devolver</span>'}</td>
           <td>${NOMBRES_PERSONAS[h.registrado_por] || h.registrado_por || '—'}</td>
         </tr>`).join('')}
@@ -9048,16 +9054,16 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 
     let lineasBajaCount = 0;
-let clienteBajaSelId = null;
+    let clienteBajaSelId = null;
 
-function addLineaBaja() {
-  lineasBajaCount++;
-  const idx = lineasBajaCount;
-  const div = document.createElement('div');
-  div.id = `ba_linea_${idx}`;
-  div.className = 'linea-prod';
-  div.style.gridTemplateColumns = '110px 1fr 90px 100px 70px auto';
-  div.innerHTML = `
+    function addLineaBaja() {
+      lineasBajaCount++;
+      const idx = lineasBajaCount;
+      const div = document.createElement('div');
+      div.id = `ba_linea_${idx}`;
+      div.className = 'linea-prod';
+      div.style.gridTemplateColumns = '110px 1fr 90px 100px 70px auto';
+      div.innerHTML = `
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Código</label>
       <input type="text" id="bal_cod_${idx}" list="dl_maquinaria" placeholder="MAQ008" oninput="autocompletarMaquinaLineaBaja(${idx})">
@@ -9082,211 +9088,211 @@ function addLineaBaja() {
       style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
       <i class="fa-solid fa-xmark"></i>
     </button>`;
-  document.getElementById('lineasBaja').appendChild(div);
-}
+      document.getElementById('lineasBaja').appendChild(div);
+    }
 
-function autocompletarMaquinaLineaBaja(idx) {
-  const inpCod = document.getElementById(`bal_cod_${idx}`);
-  const inpDesc = document.getElementById(`bal_desc_${idx}`);
-  const inpPrecio = document.getElementById(`bal_precio_${idx}`);
-  if (!inpCod) return;
-  const maquina = buscarMaquinaPorCodigo(inpCod.value);
-  if (maquina) {
-    if (inpDesc) inpDesc.value = maquina.nombre || '';
-    if (inpPrecio && maquina.precio_dia != null) inpPrecio.value = maquina.precio_dia;
-    recalcTotalBaja();
-  }
-}
-
-function _leerLineasBaja() {
-  const lineas = [];
-  document.querySelectorAll('[id^="bal_desc_"]').forEach(inp => {
-    const desc = inp.value.trim();
-    if (!desc) return;
-    const idx = inp.id.split('_')[2];
-    const cod = document.getElementById(`bal_cod_${idx}`)?.value.trim() || '';
-    const cant = parseFloat(document.getElementById(`bal_cant_${idx}`)?.value || 0);
-    const precio = parseFloat(document.getElementById(`bal_precio_${idx}`)?.value || 0);
-    const dto = parseFloat(document.getElementById(`bal_dto_${idx}`)?.value || 0);
-    const subtotal = cant * precio;
-    const totalLinea = subtotal - (subtotal * dto / 100);
-    lineas.push({ articulo_codigo: cod || null, descripcion: desc, cantidad: cant, precio_unitario: precio, dto_pct: dto, total_linea: +totalLinea.toFixed(2) });
-  });
-  return lineas;
-}
-
-function recalcTotalBaja() {
-  const lineas = _leerLineasBaja();
-  const base = lineas.reduce((s, l) => s + l.total_linea, 0);
-  const pctIva = parseFloat(document.getElementById('ba_pct_iva')?.value || 0);
-  const iva = base * pctIva / 100;
-  document.getElementById('ba_base').value = base.toFixed(2);
-  document.getElementById('ba_total').value = (base + iva).toFixed(2);
-}
-
-function setupClienteBajaAC(inputNombreId, inputNifId, inputIdId) {
-  const inpN = document.getElementById(inputNombreId);
-  const inpF = document.getElementById(inputNifId);
-  const inpId = document.getElementById(inputIdId);
-  if (!inpN || !inpF || !inpId) return;
-
-  inpN.parentElement.style.position = 'relative';
-  const lista = _crearLista('ac_baja_' + inputNombreId, inpN.parentElement);
-
-  function filtrar(q) {
-    return clientesDB.filter(c =>
-      (c.nombre || '').toLowerCase().includes(q) ||
-      (c.nif || '').toLowerCase().includes(q)
-    ).slice(0, 10);
-  }
-  function seleccionar(c) {
-    inpN.value = c.nombre || '';
-    inpF.value = c.nif || '';
-    inpId.value = c.id;
-    clienteBajaSelId = c.id;
-    document.getElementById('ba_direccion').value = c.domicilio || '';
-    document.getElementById('ba_poblacion').value = c.poblacion || '';
-    document.getElementById('ba_cp').value = c.codigo_postal || '';
-    document.getElementById('ba_provincia').value = c.provincia || '';
-    lista.style.display = 'none';
-  }
-  function render(items) {
-    if (!items.length) { lista.style.display = 'none'; return; }
-    lista.innerHTML = items.map(c =>
-      `<div class="ac-item" data-id="${c.id}">
-        <span class="ac-nombre">${c.nombre || '—'}</span>
-        <span class="ac-nif">${c.nif || 'Sin NIF'}</span>
-      </div>`).join('');
-    lista.style.display = 'block';
-    lista.querySelectorAll('.ac-item').forEach(el => {
-      el.addEventListener('mousedown', e => {
-        e.preventDefault();
-        const c = clientesDB.find(x => x.id == el.dataset.id);
-        if (c) seleccionar(c);
-      });
-    });
-  }
-  inpN.addEventListener('input', () => {
-    inpId.value = ''; clienteBajaSelId = null;
-    render(filtrar(inpN.value.toLowerCase().trim()));
-  });
-  inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim())); });
-  inpN.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
-}
-
-async function abrirModalBaja() {
-  clienteBajaSelId = null;
-  document.getElementById('bajaAlquilerTitulo').textContent = 'Nueva Baja de Alquiler';
-  document.getElementById('ba_fecha').value = hoy();
-  document.getElementById('ba_hora').value = '';
-  document.getElementById('ba_cliente').value = '';
-  document.getElementById('ba_cliente_id').value = '';
-  document.getElementById('ba_nif').value = '';
-  document.getElementById('ba_direccion').value = '';
-  document.getElementById('ba_poblacion').value = '';
-  document.getElementById('ba_cp').value = '';
-  document.getElementById('ba_provincia').value = '';
-  document.getElementById('ba_obra').value = '';
-  document.getElementById('ba_operario').value = '';
-  document.getElementById('ba_dni_operario').value = '';
-  document.getElementById('ba_pct_iva').value = 21;
-  document.getElementById('lineasBaja').innerHTML = '';
-  lineasBajaCount = 0;
-  addLineaBaja();
-  recalcTotalBaja();
-  document.getElementById('ba_num').value = '';
-
-  document.getElementById('modalBajaAlquiler').classList.add('visible');
-  setTimeout(() => setupClienteBajaAC('ba_cliente', 'ba_nif', 'ba_cliente_id'), 50);
-}
-
-async function guardarBajaAlquiler() {
-  const fecha = document.getElementById('ba_fecha').value;
-  const cliente_nombre = document.getElementById('ba_cliente').value.trim();
-  if (!fecha || !cliente_nombre) { toast('Fecha y cliente son obligatorios', 'err'); return; }
-  if (!clienteBajaSelId) { toast('Selecciona un cliente de la lista (créalo primero en Clientes si es nuevo)', 'err'); return; }
-
-  const lineas = _leerLineasBaja();
-  if (!lineas.length) { toast('Añade al menos un artículo', 'err'); return; }
-
-  const base = parseFloat(document.getElementById('ba_base').value || 0);
-  const pctIva = parseFloat(document.getElementById('ba_pct_iva').value || 0);
-  const total = parseFloat(document.getElementById('ba_total').value || 0);
-  const obra = document.getElementById('ba_obra').value.trim() || null;
-
-  const payload = {
-    tipo: 'baja',
-    cliente_id: clienteBajaSelId || null,
-    fecha,
-    hora_retirada: document.getElementById('ba_hora').value || null,
-    cliente_nombre,
-    nif: document.getElementById('ba_nif').value.trim() || null,
-    direccion: document.getElementById('ba_direccion').value.trim() || null,
-    poblacion: document.getElementById('ba_poblacion').value.trim() || null,
-    codigo_postal: document.getElementById('ba_cp').value.trim() || null,
-    provincia: document.getElementById('ba_provincia').value.trim() || null,
-    obra,
-    nombre_operario: document.getElementById('ba_operario').value.trim() || null,
-    dni_operario: document.getElementById('ba_dni_operario').value.trim() || null,
-    base_imponible: base,
-    pct_iva: pctIva,
-    importe_iva: +(total - base).toFixed(2),
-    total,
-    creado_por: currentPersona
-  };
-
-  try {
-    const [header] = await apiPost('alquileres', payload);
-    const headerId = header.id;
-    const numeroAsignado = header.numero_albaran;
-    document.getElementById('ba_num').value = numeroAsignado || '';
-
-    await apiPost('alquileres_items', lineas.map(l => ({ ...l, alquiler_id: headerId })));
-
-    // Marca como devueltas (disponibles) las máquinas del catálogo que coincidan por código
-    for (const l of lineas) {
-      if (!l.articulo_codigo) continue;
-      const maquina = buscarMaquinaPorCodigo(l.articulo_codigo);
-      if (!maquina) continue;
-      try {
-        await apiPatch('maquinaria', maquina.id, {
-          estado: 'disponible',
-          cliente_actual_nombre: null,
-          obra_actual: null,
-          fecha_alquiler_actual: null,
-          alquiler_actual_id: null
-        });
-        const abiertos = await apiGetAll('historial_maquinaria', `maquinaria_id=eq.${maquina.id}&fecha_devolucion=is.null&order=fecha_salida.desc`);
-        if (abiertos.length) {
-          await apiPatch('historial_maquinaria', abiertos[0].id, { fecha_devolucion: fecha });
-        }
-        maquina.estado = 'disponible';
-        maquina.cliente_actual_nombre = null;
-        maquina.obra_actual = null;
-      } catch (e) {
-        console.error('No se pudo actualizar el estado de la máquina', maquina.codigo, e);
+    function autocompletarMaquinaLineaBaja(idx) {
+      const inpCod = document.getElementById(`bal_cod_${idx}`);
+      const inpDesc = document.getElementById(`bal_desc_${idx}`);
+      const inpPrecio = document.getElementById(`bal_precio_${idx}`);
+      if (!inpCod) return;
+      const maquina = buscarMaquinaPorCodigo(inpCod.value);
+      if (maquina) {
+        if (inpDesc) inpDesc.value = maquina.nombre || '';
+        if (inpPrecio && maquina.precio_dia != null) inpPrecio.value = maquina.precio_dia;
+        recalcTotalBaja();
       }
     }
 
-    toast(`Baja de alquiler guardada — Nº ${numeroAsignado || ''}`);
-    cerrarModal('modalBajaAlquiler');
-    cargarDatos();
-  } catch (e) {
-    toast('Error al guardar: ' + e.message, 'err');
-  }
-}
+    function _leerLineasBaja() {
+      const lineas = [];
+      document.querySelectorAll('[id^="bal_desc_"]').forEach(inp => {
+        const desc = inp.value.trim();
+        if (!desc) return;
+        const idx = inp.id.split('_')[2];
+        const cod = document.getElementById(`bal_cod_${idx}`)?.value.trim() || '';
+        const cant = parseFloat(document.getElementById(`bal_cant_${idx}`)?.value || 0);
+        const precio = parseFloat(document.getElementById(`bal_precio_${idx}`)?.value || 0);
+        const dto = parseFloat(document.getElementById(`bal_dto_${idx}`)?.value || 0);
+        const subtotal = cant * precio;
+        const totalLinea = subtotal - (subtotal * dto / 100);
+        lineas.push({ articulo_codigo: cod || null, descripcion: desc, cantidad: cant, precio_unitario: precio, dto_pct: dto, total_linea: +totalLinea.toFixed(2) });
+      });
+      return lineas;
+    }
 
-// IMPRIMIR / DESCARGAR PDF DE LA BAJA (idéntico al de Alta, cambiando etiquetas)
-async function imprimirBajaAlquiler(id) {
-  let f;
-  try {
-    const [reg] = await apiGet('alquileres', `id=eq.${id}`);
-    if (!reg) { toast('No se ha encontrado la baja', 'err'); return; }
-    f = reg;
-    f._items = await apiGet('alquileres_items', `alquiler_id=eq.${id}`);
-  } catch (e) { toast('Error al cargar: ' + e.message, 'err'); return; }
+    function recalcTotalBaja() {
+      const lineas = _leerLineasBaja();
+      const base = lineas.reduce((s, l) => s + l.total_linea, 0);
+      const pctIva = parseFloat(document.getElementById('ba_pct_iva')?.value || 0);
+      const iva = base * pctIva / 100;
+      document.getElementById('ba_base').value = base.toFixed(2);
+      document.getElementById('ba_total').value = (base + iva).toFixed(2);
+    }
 
-  const filas = (f._items || []).map(i => `
+    function setupClienteBajaAC(inputNombreId, inputNifId, inputIdId) {
+      const inpN = document.getElementById(inputNombreId);
+      const inpF = document.getElementById(inputNifId);
+      const inpId = document.getElementById(inputIdId);
+      if (!inpN || !inpF || !inpId) return;
+
+      inpN.parentElement.style.position = 'relative';
+      const lista = _crearLista('ac_baja_' + inputNombreId, inpN.parentElement);
+
+      function filtrar(q) {
+        return clientesDB.filter(c =>
+          (c.nombre || '').toLowerCase().includes(q) ||
+          (c.nif || '').toLowerCase().includes(q)
+        ).slice(0, 10);
+      }
+      function seleccionar(c) {
+        inpN.value = c.nombre || '';
+        inpF.value = c.nif || '';
+        inpId.value = c.id;
+        clienteBajaSelId = c.id;
+        document.getElementById('ba_direccion').value = c.domicilio || '';
+        document.getElementById('ba_poblacion').value = c.poblacion || '';
+        document.getElementById('ba_cp').value = c.codigo_postal || '';
+        document.getElementById('ba_provincia').value = c.provincia || '';
+        lista.style.display = 'none';
+      }
+      function render(items) {
+        if (!items.length) { lista.style.display = 'none'; return; }
+        lista.innerHTML = items.map(c =>
+          `<div class="ac-item" data-id="${c.id}">
+        <span class="ac-nombre">${c.nombre || '—'}</span>
+        <span class="ac-nif">${c.nif || 'Sin NIF'}</span>
+      </div>`).join('');
+        lista.style.display = 'block';
+        lista.querySelectorAll('.ac-item').forEach(el => {
+          el.addEventListener('mousedown', e => {
+            e.preventDefault();
+            const c = clientesDB.find(x => x.id == el.dataset.id);
+            if (c) seleccionar(c);
+          });
+        });
+      }
+      inpN.addEventListener('input', () => {
+        inpId.value = ''; clienteBajaSelId = null;
+        render(filtrar(inpN.value.toLowerCase().trim()));
+      });
+      inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim())); });
+      inpN.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
+    }
+
+    async function abrirModalBaja() {
+      clienteBajaSelId = null;
+      document.getElementById('bajaAlquilerTitulo').textContent = 'Nueva Baja de Alquiler';
+      document.getElementById('ba_fecha').value = hoy();
+      document.getElementById('ba_hora').value = '';
+      document.getElementById('ba_cliente').value = '';
+      document.getElementById('ba_cliente_id').value = '';
+      document.getElementById('ba_nif').value = '';
+      document.getElementById('ba_direccion').value = '';
+      document.getElementById('ba_poblacion').value = '';
+      document.getElementById('ba_cp').value = '';
+      document.getElementById('ba_provincia').value = '';
+      document.getElementById('ba_obra').value = '';
+      document.getElementById('ba_operario').value = '';
+      document.getElementById('ba_dni_operario').value = '';
+      document.getElementById('ba_pct_iva').value = 21;
+      document.getElementById('lineasBaja').innerHTML = '';
+      lineasBajaCount = 0;
+      addLineaBaja();
+      recalcTotalBaja();
+      document.getElementById('ba_num').value = '';
+
+      document.getElementById('modalBajaAlquiler').classList.add('visible');
+      setTimeout(() => setupClienteBajaAC('ba_cliente', 'ba_nif', 'ba_cliente_id'), 50);
+    }
+
+    async function guardarBajaAlquiler() {
+      const fecha = document.getElementById('ba_fecha').value;
+      const cliente_nombre = document.getElementById('ba_cliente').value.trim();
+      if (!fecha || !cliente_nombre) { toast('Fecha y cliente son obligatorios', 'err'); return; }
+      if (!clienteBajaSelId) { toast('Selecciona un cliente de la lista (créalo primero en Clientes si es nuevo)', 'err'); return; }
+
+      const lineas = _leerLineasBaja();
+      if (!lineas.length) { toast('Añade al menos un artículo', 'err'); return; }
+
+      const base = parseFloat(document.getElementById('ba_base').value || 0);
+      const pctIva = parseFloat(document.getElementById('ba_pct_iva').value || 0);
+      const total = parseFloat(document.getElementById('ba_total').value || 0);
+      const obra = document.getElementById('ba_obra').value.trim() || null;
+
+      const payload = {
+        tipo: 'baja',
+        cliente_id: clienteBajaSelId || null,
+        fecha,
+        hora_retirada: document.getElementById('ba_hora').value || null,
+        cliente_nombre,
+        nif: document.getElementById('ba_nif').value.trim() || null,
+        direccion: document.getElementById('ba_direccion').value.trim() || null,
+        poblacion: document.getElementById('ba_poblacion').value.trim() || null,
+        codigo_postal: document.getElementById('ba_cp').value.trim() || null,
+        provincia: document.getElementById('ba_provincia').value.trim() || null,
+        obra,
+        nombre_operario: document.getElementById('ba_operario').value.trim() || null,
+        dni_operario: document.getElementById('ba_dni_operario').value.trim() || null,
+        base_imponible: base,
+        pct_iva: pctIva,
+        importe_iva: +(total - base).toFixed(2),
+        total,
+        creado_por: currentPersona
+      };
+
+      try {
+        const [header] = await apiPost('alquileres', payload);
+        const headerId = header.id;
+        const numeroAsignado = header.numero_albaran;
+        document.getElementById('ba_num').value = numeroAsignado || '';
+
+        await apiPost('alquileres_items', lineas.map(l => ({ ...l, alquiler_id: headerId })));
+
+        // Marca como devueltas (disponibles) las máquinas del catálogo que coincidan por código
+        for (const l of lineas) {
+          if (!l.articulo_codigo) continue;
+          const maquina = buscarMaquinaPorCodigo(l.articulo_codigo);
+          if (!maquina) continue;
+          try {
+            await apiPatch('maquinaria', maquina.id, {
+              estado: 'disponible',
+              cliente_actual_nombre: null,
+              obra_actual: null,
+              fecha_alquiler_actual: null,
+              alquiler_actual_id: null
+            });
+            const abiertos = await apiGetAll('historial_maquinaria', `maquinaria_id=eq.${maquina.id}&fecha_devolucion=is.null&order=fecha_salida.desc`);
+            if (abiertos.length) {
+              await apiPatch('historial_maquinaria', abiertos[0].id, { fecha_devolucion: fecha });
+            }
+            maquina.estado = 'disponible';
+            maquina.cliente_actual_nombre = null;
+            maquina.obra_actual = null;
+          } catch (e) {
+            console.error('No se pudo actualizar el estado de la máquina', maquina.codigo, e);
+          }
+        }
+
+        toast(`Baja de alquiler guardada — Nº ${numeroAsignado || ''}`);
+        cerrarModal('modalBajaAlquiler');
+        cargarDatos();
+      } catch (e) {
+        toast('Error al guardar: ' + e.message, 'err');
+      }
+    }
+
+    // IMPRIMIR / DESCARGAR PDF DE LA BAJA (idéntico al de Alta, cambiando etiquetas)
+    async function imprimirBajaAlquiler(id) {
+      let f;
+      try {
+        const [reg] = await apiGet('alquileres', `id=eq.${id}`);
+        if (!reg) { toast('No se ha encontrado la baja', 'err'); return; }
+        f = reg;
+        f._items = await apiGet('alquileres_items', `alquiler_id=eq.${id}`);
+      } catch (e) { toast('Error al cargar: ' + e.message, 'err'); return; }
+
+      const filas = (f._items || []).map(i => `
     <tr>
       <td>${i.articulo_codigo || ''}</td>
       <td>${i.descripcion || ''}</td>
@@ -9297,7 +9303,7 @@ async function imprimirBajaAlquiler(id) {
       <td style="text-align:right">${fmtN(i.total_linea)}</td>
     </tr>`).join('');
 
-  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Albarán de baja de alquiler ${f.numero_albaran || ''}</title>
+      const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Albarán de baja de alquiler ${f.numero_albaran || ''}</title>
   <style>
     body{font-family:Arial,sans-serif;color:#222;padding:36px;font-size:.72rem}
     .cabecera{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
@@ -9378,10 +9384,10 @@ async function imprimirBajaAlquiler(id) {
   </div>
   <button class="btn-imprimir" onclick="window.print()" style="padding:10px 20px;background:#c0392b;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
   </body></html>`;
-  const w = window.open('', '_blank');
-  w.document.write(html);
-  w.document.close();
-}
+      const w = window.open('', '_blank');
+      w.document.write(html);
+      w.document.close();
+    }
 
 
 

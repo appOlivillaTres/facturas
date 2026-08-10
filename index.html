@@ -3583,7 +3583,8 @@
       } else if (sec === 'maquinaria') {
         sel.innerHTML = `<option value="">Todos los estados</option>
 <option value="disponible">Disponible</option>
-<option value="alquilada">Alquilada</option>`;
+<option value="alquilada">Alquilada</option>
+<option value="averiada">Averiada</option>`;
         sp.placeholder = 'Buscar por código o nombre...';
       } else {
         sel.innerHTML = `<option value="">Todos</option>`;
@@ -4401,6 +4402,32 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     let maquinaDevolverActualId = null;
 
+    async function marcarMaquinaAveriada(id) {
+      const m = registros.find(r => r.id === id) || maquinariaDB.find(r => r.id === id);
+      if (!m) return;
+      if (m.estado === 'alquilada') { toast('Esta máquina está alquilada — márcala como devuelta antes de reportar la avería', 'err'); return; }
+      const motivo = prompt('Describe brevemente la avería (opcional):') || null;
+      try {
+        await apiPatch('maquinaria', id, { estado: 'averiada', motivo_averia: motivo });
+        const mCache = maquinariaDB.find(x => x.id === id);
+        if (mCache) { mCache.estado = 'averiada'; mCache.motivo_averia = motivo; }
+        toast(`Máquina "${m.nombre}" marcada como averiada`, 'err');
+        cargarDatos();
+      } catch (e) { toast('Error: ' + e.message, 'err'); }
+    }
+
+    async function marcarMaquinaReparada(id) {
+      const m = registros.find(r => r.id === id) || maquinariaDB.find(r => r.id === id);
+      if (!m) return;
+      try {
+        await apiPatch('maquinaria', id, { estado: 'disponible', motivo_averia: null });
+        const mCache = maquinariaDB.find(x => x.id === id);
+        if (mCache) { mCache.estado = 'disponible'; mCache.motivo_averia = null; }
+        toast(`Máquina "${m.nombre}" marcada como reparada y disponible`);
+        cargarDatos();
+      } catch (e) { toast('Error: ' + e.message, 'err'); }
+    }
+
     function marcarMaquinaDevuelta(id) {
       const m = registros.find(r => r.id === id) || maquinariaDB.find(r => r.id === id);
       if (!m) return;
@@ -4485,6 +4512,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       inpNombre.value = maquina ? maquina.nombre : '';
       if (maquina && maquina.estado === 'alquilada') {
         toast(`Aviso: "${maquina.nombre}" ya figura como alquilada/en uso`, 'err');
+      }
+      if (maquina && maquina.estado === 'averiada') {
+        toast(`Aviso: "${maquina.nombre}" está marcada como AVERIADA`, 'err');
       }
     }
 
@@ -5968,24 +5998,31 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         if (!lista.length) { bdy.innerHTML = emptyRow(10, 'No hay máquinas en el catálogo'); return; }
         bdy.innerHTML = lista.map(m => {
           const alquilada = m.estado === 'alquilada';
+          const averiada = m.estado === 'averiada';
+          const claseBadge = alquilada ? 'badge-vencido' : averiada ? 'badge-pendiente' : 'badge-pagado';
+          const textoBadge = alquilada ? 'ALQUILADA' : averiada ? 'AVERIADA' : 'DISPONIBLE';
           return `<tr data-id="${m.id}">
-      <td>${celdaCheck(m.id)}</td>
-      <td><strong>${m.codigo || '—'}</strong></td>
-      <td class="td-nombre">${m.nombre || '—'}</td>
-      <td class="num-cell">${m.precio_dia != null ? fmt(m.precio_dia) : '—'}</td>
-      <td><span class="badge-estado ${alquilada ? 'badge-vencido' : 'badge-pagado'}">${alquilada ? 'ALQUILADA' : 'DISPONIBLE'}</span></td>
-      <td class="td-nombre">${m.tipo_salida === 'obra_propia' ? `<i class="fa-solid fa-user-hard-hat" style="color:#b53987" title="Uso interno"></i> ${m.empleado_actual || '—'}` : (m.cliente_actual_nombre || '—')}</td>
-      <td>${m.obra_actual || '—'}</td>
-      <td>${fmtF(m.fecha_alquiler_actual)}</td>
-      <td><span class="link-badge" onclick="verHistorialMaquina(${m.id},'${(m.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-clock-rotate-left"></i>Ver</span></td>
-      <td>${alquilada
+    <td>${celdaCheck(m.id)}</td>
+    <td><strong>${m.codigo || '—'}</strong></td>
+    <td class="td-nombre">${m.nombre || '—'}</td>
+    <td class="num-cell">${m.precio_dia != null ? fmt(m.precio_dia) : '—'}</td>
+    <td><span class="badge-estado ${claseBadge}" ${averiada && m.motivo_averia ? `title="${m.motivo_averia.replace(/"/g, '&quot;')}"` : ''}>${textoBadge}</span></td>
+    <td class="td-nombre">${m.tipo_salida === 'obra_propia' ? `<i class="fa-solid fa-user-hard-hat" style="color:#b53987" title="Uso interno"></i> ${m.empleado_actual || '—'}` : (m.cliente_actual_nombre || '—')}</td>
+    <td>${m.obra_actual || '—'}</td>
+    <td>${fmtF(m.fecha_alquiler_actual)}</td>
+    <td><span class="link-badge" onclick="verHistorialMaquina(${m.id},'${(m.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-clock-rotate-left"></i>Ver</span></td>
+    <td>
+      ${alquilada
               ? `<button class="btn-toggle-pago pagado" onclick="marcarMaquinaDevuelta(${m.id})"><i class="fa-solid fa-rotate-left me-1"></i>Devolver</button>`
-              : `<span style="color:#ccc;font-size:.78rem">—</span>`}</td>
-      <td>
-        <button class="btn-toggle-pago pendiente" onclick="abrirModalEditar(${m.id},'maquinaria')"><i class="fa-solid fa-pen"></i></button>
-        <button class="btn-eliminar" onclick="eliminar(${m.id})"><i class="fa-solid fa-trash"></i></button>
-      </td>
-    </tr>`;
+              : averiada
+                ? `<button class="btn-toggle-pago pagado" onclick="marcarMaquinaReparada(${m.id})"><i class="fa-solid fa-wrench me-1"></i>Reparada</button>`
+                : `<button class="btn-toggle-pago vencido" onclick="marcarMaquinaAveriada(${m.id})"><i class="fa-solid fa-triangle-exclamation me-1"></i>Avería</button>`}
+    </td>
+    <td>
+      <button class="btn-toggle-pago pendiente" onclick="abrirModalEditar(${m.id},'maquinaria')"><i class="fa-solid fa-pen"></i></button>
+      <button class="btn-eliminar" onclick="eliminar(${m.id})"><i class="fa-solid fa-trash"></i></button>
+    </td>
+  </tr>`;
         }).join('');
       }
       actualizarBarraSeleccion();
@@ -9152,6 +9189,12 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         if (inpDesc) inpDesc.value = maquina.nombre || '';
         if (inpPrecio && maquina.precio_dia != null) inpPrecio.value = maquina.precio_dia;
         recalcTotalBaja();
+      }
+      if (maquina.estado === 'alquilada') {
+        toast(`Aviso: "${maquina.nombre}" ya figura como alquilada/en uso`, 'err');
+      }
+      if (maquina.estado === 'averiada') {
+        toast(`Aviso: "${maquina.nombre}" está marcada como AVERIADA`, 'err');
       }
     }
 

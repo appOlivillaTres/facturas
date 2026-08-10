@@ -958,6 +958,16 @@
       color: #2d7a4f;
     }
 
+    .badge-efectivo {
+      background: #e8f5e9;
+      color: #2d7a4f;
+    }
+
+    .badge-facturar {
+      background: #fff3e0;
+      color: #c47a00;
+    }
+
 
 
     .badge-vencido {
@@ -3568,10 +3578,8 @@
         sp.placeholder = 'Buscar por obra o empleado...';
       } else if (sec === 'albaranes_venta') {
         sel.innerHTML = `<option value="">Todos</option>
-<option value="facturar">Para facturar</option>
-<option value="no_facturar">No para facturar</option>
-<option value="pagado">Pagado en efectivo</option>
-<option value="sin_pagar">Sin pagar en efectivo</option>`;
+<option value="facturar">A facturar</option>
+<option value="efectivo">Efectivo</option>`;
         sp.placeholder = 'Buscar por nº albarán o cliente...';
       }
       else if (sec === 'presupuestos') {
@@ -5907,31 +5915,29 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       </tr>`;
         }).join('');
       } else if (tablaActual === 'albaranes_venta') {
-        hdr.innerHTML = `<tr><th>Nº Albarán</th><th>Fecha</th><th>Cliente</th><th>NIF</th><th class="num-cell">Total</th><th>Puntos</th><th>Creado por</th><th>Facturar</th><th>Pagado efectivo</th><th>Documento</th><th></th></tr>`;
+        hdr.innerHTML = `<tr><th>Nº Albarán</th><th>Fecha</th><th>Cliente</th><th>NIF</th><th class="num-cell">Total</th><th>Puntos</th><th>Cobro</th><th>Documento</th><th></th></tr>`;
         const lista = registros.filter(f => {
           const mQ = [f.numero_albaran, f.cliente_nombre].some(v => (v || '').toLowerCase().includes(q));
-          const mE = !fEst
-            || (fEst === 'facturar' && f.para_facturar)
-            || (fEst === 'no_facturar' && !f.para_facturar)
-            || (fEst === 'pagado' && f.pagado_efectivo)
-            || (fEst === 'sin_pagar' && !f.pagado_efectivo);
+          const forma = f.forma_cobro || 'facturar';
+          const mE = !fEst || fEst === forma;
           return mQ && mE;
         });
         if (!lista.length) { bdy.innerHTML = emptyRow(9, 'No hay albaranes de venta registrados'); return; }
-        bdy.innerHTML = lista.map(f => `<tr data-id="${f.id}">
+        bdy.innerHTML = lista.map(f => {
+          const forma = f.forma_cobro || 'facturar';
+          return `<tr data-id="${f.id}">
         <td><strong>${f.numero_albaran || '—'}</strong></td>
         <td>${fmtF(f.fecha)}</td>
         <td class="td-nombre">${f.cliente_nombre || '—'}</td>
         <td style="font-size:.8rem;color:#888">${f.nif || '—'}</td>
         <td class="td-total">${fmt(f.total)}</td>
         <td><span class="badge-puntos"><i class="fa-solid fa-star" style="color:#c47a00;margin-right:3px"></i>${f.puntos_generados || 0} pts</span></td>
-        <td style="font-size:.82rem">${NOMBRES_PERSONAS[f.creado_por] || f.creado_por || '—'}</td>
-        <td><button class="btn-toggle-facturado ${f.para_facturar ? 'si' : 'no'}" onclick="toggleAlbaranVentaFacturar(${f.id},${!!f.para_facturar})">
-  ${f.para_facturar ? '<i class="fa-solid fa-check me-1"></i>Sí' : '<i class="fa-solid fa-xmark me-1"></i>No'}
-</button></td>
-<td><button class="btn-toggle-pago ${f.pagado_efectivo ? 'pagado' : 'pendiente'}" onclick="toggleAlbaranVentaPagado(${f.id},${!!f.pagado_efectivo})">
-  ${f.pagado_efectivo ? '<i class="fa-solid fa-check me-1"></i>Pagado' : '<i class="fa-solid fa-coins me-1"></i>Marcar pagado'}
-</button></td>
+        <td>
+          <span class="badge-estado badge-${forma}">${forma === 'efectivo' ? 'EFECTIVO' : 'A FACTURAR'}</span><br>
+          <button class="btn-toggle-pago ${forma === 'efectivo' ? 'pagado' : 'pendiente'}" style="margin-top:4px" onclick="toggleFormaCobroAlbaranVenta(${f.id},'${forma}')">
+            <i class="fa-solid fa-rotate me-1"></i>Cambiar
+          </button>
+        </td>
         <td>
           <button class="btn-toggle-pago pendiente" onclick="imprimirAlbaranVenta(${f.id})" title="Imprimir / descargar PDF">
             <i class="fa-solid fa-print"></i>
@@ -5942,7 +5948,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             <i class="fa-solid fa-pen"></i>
           </button>
         </td>
-      </tr>`).join('');
+      </tr>`;
+        }).join('');
+
       } else if (tablaActual === 'ingresos') {
         hdr.innerHTML = `<tr>
           <th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th>
@@ -6488,23 +6496,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       } catch (e) { toast('Error: ' + e.message, 'err'); }
     }
 
-    async function toggleAlbaranVentaFacturar(id, actual) {
+    async function toggleFormaCobroAlbaranVenta(id, actual) {
+      const nueva = actual === 'efectivo' ? 'facturar' : 'efectivo';
       try {
-        await apiPatch('albaranes_venta', id, { para_facturar: !actual });
+        await apiPatch('albaranes_venta', id, { forma_cobro: nueva });
         const reg = registros.find(r => r.id === id);
-        if (reg) reg.para_facturar = !actual;
+        if (reg) reg.forma_cobro = nueva;
         renderTablaConScroll();
-        toast(`Albarán: <strong>${!actual ? 'PARA FACTURAR' : 'YA NO SE FACTURA'}</strong>`);
-      } catch (e) { toast('Error: ' + e.message, 'err'); }
-    }
-
-    async function toggleAlbaranVentaPagado(id, actual) {
-      try {
-        await apiPatch('albaranes_venta', id, { pagado_efectivo: !actual });
-        const reg = registros.find(r => r.id === id);
-        if (reg) reg.pagado_efectivo = !actual;
-        renderTablaConScroll();
-        toast(`Albarán: <strong>${!actual ? 'PAGADO EN EFECTIVO' : 'PAGO REVERTIDO'}</strong>`);
+        toast(`Albarán marcado como <strong>${nueva === 'efectivo' ? 'EFECTIVO' : 'A FACTURAR'}</strong>`);
       } catch (e) { toast('Error: ' + e.message, 'err'); }
     }
 

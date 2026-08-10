@@ -4364,12 +4364,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           `<i class="fa-solid fa-clock-rotate-left" style="color:#b53987"></i>Historial — ${nombre}`;
         document.getElementById('modalDetalleContenido').innerHTML = !hist.length
           ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin alquileres registrados todavía</p>`
-          : `<table class="mini-table"><thead><tr><th>Cliente</th><th>Obra</th><th>Salida</th><th>Devolución</th></tr></thead><tbody>
+          : `<table class="mini-table"><thead><tr><th>Cliente</th><th>Obra</th><th>Salida</th><th>Devolución</th><th>Registrado por</th></tr></thead><tbody>
       ${hist.map(h => `<tr>
-        <td>${h.cliente_nombre || '—'}</td>
+        <td>${h.tipo_salida === 'obra_propia' ? '<i class="fa-solid fa-user-hard-hat" style="color:#b53987" title="Uso interno"></i> ' + (h.empleado || '—') : (h.cliente_nombre || '—')}</td>
         <td>${h.obra || '—'}</td>
         <td>${fmtF(h.fecha_salida)}</td>
         <td>${h.fecha_devolucion ? fmtF(h.fecha_devolucion) : '<span style="color:#c47a00;font-weight:600">Sin devolver</span>'}</td>
+        <td>${NOMBRES_PERSONAS[h.registrado_por] || h.registrado_por || '—'}</td>
       </tr>`).join('')}
     </tbody></table>`;
         document.getElementById('modalDetalle').classList.add('visible');
@@ -4467,7 +4468,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             empleado_actual: empleado,
             dni_empleado_actual: dni,
             obra_actual: obra,
-            fecha_alquiler_actual: fecha
+            fecha_alquiler_actual: fecha,
+            registrado_por: currentPersona
           });
           await apiPost('historial_maquinaria', {
             maquinaria_id: maquina.id,
@@ -4478,7 +4480,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             dni_empleado: dni,
             obra,
             tipo_salida: 'obra_propia',
-            fecha_salida: fecha
+            fecha_salida: fecha,
+            registrado_por: currentPersona
           });
           Object.assign(maquina, { estado: 'alquilada', tipo_salida: 'obra_propia', empleado_actual: empleado, obra_actual: obra });
         } catch (e) {
@@ -4499,12 +4502,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           `<i class="fa-solid fa-truck-monster" style="color:#b53987"></i>Maquinaria — ${nombreObra}`;
         document.getElementById('modalDetalleContenido').innerHTML = !hist.length
           ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin maquinaria registrada en esta obra</p>`
-          : `<table class="mini-table"><thead><tr><th>Máquina</th><th>Cliente/Empleado</th><th>Salida</th><th>Devolución</th></tr></thead><tbody>
+          : `<table class="mini-table"><thead><tr><th>Máquina</th><th>Cliente/Empleado</th><th>Salida</th><th>Devolución</th><th>Registrado por</th></tr></thead><tbody>
         ${hist.map(h => `<tr>
           <td>${h.nombre || '—'}</td>
           <td>${h.tipo_salida === 'obra_propia' ? '<i class="fa-solid fa-user-hard-hat" style="color:#b53987" title="Uso interno"></i> ' + (h.empleado || '—') : (h.cliente_nombre || '—')}</td>
           <td>${fmtF(h.fecha_salida)}</td>
           <td>${h.fecha_devolucion ? fmtF(h.fecha_devolucion) : '<span style="color:#c47a00;font-weight:600">Sin devolver</span>'}</td>
+          <td>${NOMBRES_PERSONAS[h.registrado_por] || h.registrado_por || '—'}</td>
         </tr>`).join('')}
       </tbody></table>`;
         document.getElementById('modalDetalle').classList.add('visible');

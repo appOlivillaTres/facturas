@@ -4381,18 +4381,19 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         document.getElementById('modalDetalleTitulo').innerHTML =
           `<i class="fa-solid fa-clock-rotate-left" style="color:#b53987"></i>Historial — ${nombre}`;
         document.getElementById('modalDetalleContenido').innerHTML = !hist.length
-          ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin maquinaria registrada en esta obra</p>`
-          : `<div style="overflow-x:auto"><table class="mini-table"><thead><tr><th>Máquina</th><th>Se la llevó</th><th>Salida</th><th>La devolvió</th><th>Obra de devolución</th><th>Devolución</th><th>Registrado por</th></tr></thead><tbody>
-      ${hist.map(h => `<tr>
-        <td>${h.tipo_salida === 'obra_propia' ? '<i class="fa-solid fa-user-hard-hat" style="color:#b53987" title="Uso interno"></i> ' + (h.empleado || '—') : (h.cliente_nombre || '—')}</td>
-        <td>${h.obra || '—'}</td>
-        <td>${fmtF(h.fecha_salida)}</td>
-        <td>${h.devuelto_por || (h.fecha_devolucion ? '—' : '<span style="color:#ccc">—</span>')}</td>
-        <td>${h.fecha_devolucion ? (h.obra_devolucion || '—') : '<span style="color:#ccc">—</span>'}</td>
-        <td>${h.fecha_devolucion ? fmtF(h.fecha_devolucion) : '<span style="color:#c47a00;font-weight:600">Sin devolver</span>'}</td>
-        <td>${NOMBRES_PERSONAS[h.registrado_por] || h.registrado_por || '—'}</td>
-      </tr>`).join('')}
-    </tbody></table>`;
+          ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin alquileres registrados todavía</p>`
+          : `<div style="overflow-x:auto"><table class="mini-table"><thead><tr><th>Máquina</th><th>Se la llevó</th><th>Obra de salida</th><th>Salida</th><th>La devolvió</th><th>Obra de devolución</th><th>Devolución</th><th>Registrado por</th></tr></thead><tbody>
+        ${hist.map(h => `<tr>
+          <td>${h.nombre || '—'}</td>
+          <td>${h.tipo_salida === 'obra_propia' ? '<i class="fa-solid fa-user-hard-hat" style="color:#b53987" title="Uso interno"></i> ' + (h.empleado || '—') : (h.cliente_nombre || '—')}</td>
+          <td>${h.obra || '—'}</td>
+          <td>${fmtF(h.fecha_salida)}</td>
+          <td>${h.devuelto_por || (h.fecha_devolucion ? '—' : '<span style="color:#ccc">—</span>')}</td>
+          <td>${h.fecha_devolucion ? (h.obra_devolucion || '—') : '<span style="color:#ccc">—</span>'}</td>
+          <td>${h.fecha_devolucion ? fmtF(h.fecha_devolucion) : '<span style="color:#c47a00;font-weight:600">Sin devolver</span>'}</td>
+          <td>${NOMBRES_PERSONAS[h.registrado_por] || h.registrado_por || '—'}</td>
+        </tr>`).join('')}
+      </tbody></table></div>`;
         document.querySelector('#modalDetalle .modal-box').style.maxWidth = '780px';
         document.getElementById('modalDetalle').classList.add('visible');
       } catch (e) { toast('Error: ' + e.message, 'err'); }
@@ -4540,17 +4541,18 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           `<i class="fa-solid fa-truck-monster" style="color:#b53987"></i>Maquinaria — ${nombreObra}`;
         document.getElementById('modalDetalleContenido').innerHTML = !hist.length
           ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin alquileres registrados todavía</p>`
-          : `<div style="overflow-x:auto"><table class="mini-table"><thead><tr><th>Se la llevó</th><th>Obra de salida</th><th>Salida</th><th>La devolvió</th><th>Obra de devolución</th><th>Devolución</th><th>Registrado por</th></tr></thead><tbody>
+          : `<div style="overflow-x:auto"><table class="mini-table"><thead><tr><th>Máquina</th><th>Se la llevó</th><th>Obra de salida</th><th>Salida</th><th>La devolvió</th><th>Obra de devolución</th><th>Devolución</th><th>Registrado por</th></tr></thead><tbody>
         ${hist.map(h => `<tr>
           <td>${h.nombre || '—'}</td>
           <td>${h.tipo_salida === 'obra_propia' ? '<i class="fa-solid fa-user-hard-hat" style="color:#b53987" title="Uso interno"></i> ' + (h.empleado || '—') : (h.cliente_nombre || '—')}</td>
+          <td>${h.obra || '—'}</td>
           <td>${fmtF(h.fecha_salida)}</td>
           <td>${h.devuelto_por || (h.fecha_devolucion ? '—' : '<span style="color:#ccc">—</span>')}</td>
           <td>${h.fecha_devolucion ? (h.obra_devolucion || '—') : '<span style="color:#ccc">—</span>'}</td>
           <td>${h.fecha_devolucion ? fmtF(h.fecha_devolucion) : '<span style="color:#c47a00;font-weight:600">Sin devolver</span>'}</td>
           <td>${NOMBRES_PERSONAS[h.registrado_por] || h.registrado_por || '—'}</td>
         </tr>`).join('')}
-      </tbody></table>`;
+      </tbody></table></div>`;
         document.querySelector('#modalDetalle .modal-box').style.maxWidth = '780px';
         document.getElementById('modalDetalle').classList.add('visible');
       } catch (e) { toast('Error: ' + e.message, 'err'); }

@@ -6772,21 +6772,20 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           } else {
             await apiPost('maquinaria', payload);
           }
-
-
-
-          toast('Guardado correctamente');
-          cerrarModal('modalNueva');
-          lineasFacturaCount = 0;
-          modalDestinoTabla = null;
-          cargarDatos();
-        } catch (e) {
-          toast('Error al guardar: ' + e.message, 'err');
-        } finally {
-          btn.disabled = false;
-          btn.innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i>Guardar';
         }
+
+        toast('Guardado correctamente');
+        cerrarModal('modalNueva');
+        lineasFacturaCount = 0;
+        modalDestinoTabla = null;
+        cargarDatos();
+      } catch (e) {
+        toast('Error al guardar: ' + e.message, 'err');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i>Guardar';
       }
+    }
 
     async function eliminar(id) {
         if (!confirm('¿Seguro que deseas eliminar este registro?')) return;

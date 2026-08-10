@@ -2413,6 +2413,10 @@
         <input type="text" id="si_empleado" placeholder="Nombre y apellidos">
       </div>
       <div class="form-group">
+        <label>DNI / NIE *</label>
+        <input type="text" id="si_dni" placeholder="53.045.572-F">
+      </div>
+      <div class="form-group">
         <label>Fecha *</label>
         <input type="date" id="si_fecha">
       </div>
@@ -3494,7 +3498,10 @@
       document.getElementById('btnDuplicados').style.display = (esFacturas || sec === 'albaranes') ? 'flex' : 'none';
       // Solo se ve si la persona conectada tiene una casilla de revisión en esta sección
       filtroPorRevisar = false;
-      const campoRevisionMio = (CAMPOS_REVISION[sec] || []).find(c => c.campo.replace('revisado_', '') === currentPersona);
+      const SECCIONES_CON_REVISION = ['facturas_almacen', 'facturas_obra', 'facturas_csg', 'ingresos'];
+      const campoRevisionMio = SECCIONES_CON_REVISION.includes(sec)
+        ? (CAMPOS_REVISION[sec] || []).find(c => c.campo.replace('revisado_', '') === currentPersona)
+        : null;
       const btnRev = document.getElementById('btnPorRevisar');
       if (btnRev) {
         btnRev.style.display = campoRevisionMio ? 'flex' : 'none';
@@ -4396,6 +4403,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     function abrirModalSalidaInterna() {
       document.getElementById('si_obra').value = '';
       document.getElementById('si_empleado').value = '';
+      document.getElementById('si_dni').value = '';
       document.getElementById('si_fecha').value = hoy();
       document.getElementById('lineasSalidaMaquina').innerHTML = '';
       lineasSalidaMaquinaCount = 0;
@@ -4440,8 +4448,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     async function guardarSalidaInterna() {
       const obra = document.getElementById('si_obra').value.trim();
       const empleado = document.getElementById('si_empleado').value.trim();
+      const dni = document.getElementById('si_dni').value.trim();
       const fecha = document.getElementById('si_fecha').value;
-      if (!obra || !empleado || !fecha) { toast('Obra, empleado y fecha son obligatorios', 'err'); return; }
+      if (!obra || !empleado || !dni || !fecha) { toast('Obra, empleado, DNI y fecha son obligatorios', 'err'); return; }
 
       const codigos = [...document.querySelectorAll('[id^="sim_cod_"]')].map(i => i.value.trim()).filter(Boolean);
       if (!codigos.length) { toast('Añade al menos una máquina', 'err'); return; }
@@ -4456,6 +4465,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             tipo_salida: 'obra_propia',
             cliente_actual_nombre: null,
             empleado_actual: empleado,
+            dni_empleado_actual: dni,
             obra_actual: obra,
             fecha_alquiler_actual: fecha
           });
@@ -4465,6 +4475,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             nombre: maquina.nombre,
             cliente_nombre: null,
             empleado,
+            dni_empleado: dni,
             obra,
             tipo_salida: 'obra_propia',
             fecha_salida: fecha

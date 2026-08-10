@@ -8198,6 +8198,53 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     // AUTOCOMPLETADO DE CLIENTES (para albaranes de venta)
     let clienteAltaSelId = null;
 
+    // AUTOCOMPLETADO DE CLIENTES para Albaranes de Venta
+    function setupClienteVentaAC(inputNombreId, inputNifId, inputIdId) {
+      const inpN = document.getElementById(inputNombreId);
+      const inpF = document.getElementById(inputNifId);
+      const inpId = document.getElementById(inputIdId);
+      if (!inpN || !inpF || !inpId) return;
+
+      inpN.parentElement.style.position = 'relative';
+      const lista = _crearLista('ac_venta_' + inputNombreId, inpN.parentElement);
+
+      function filtrar(q) {
+        return clientesDB.filter(c =>
+          (c.nombre || '').toLowerCase().includes(q) ||
+          (c.nif || '').toLowerCase().includes(q)
+        ).slice(0, 10);
+      }
+      function seleccionar(c) {
+        inpN.value = c.nombre || '';
+        inpF.value = c.nif || '';
+        inpId.value = c.id;
+        clienteVentaSelId = c.id;
+        lista.style.display = 'none';
+      }
+      function render(items) {
+        if (!items.length) { lista.style.display = 'none'; return; }
+        lista.innerHTML = items.map(c =>
+          `<div class="ac-item" data-id="${c.id}">
+        <span class="ac-nombre">${c.nombre || '—'}</span>
+        <span class="ac-nif">${c.nif || 'Sin NIF'}</span>
+      </div>`).join('');
+        lista.style.display = 'block';
+        lista.querySelectorAll('.ac-item').forEach(el => {
+          el.addEventListener('mousedown', e => {
+            e.preventDefault();
+            const c = clientesDB.find(x => x.id == el.dataset.id);
+            if (c) seleccionar(c);
+          });
+        });
+      }
+      inpN.addEventListener('input', () => {
+        inpId.value = ''; clienteVentaSelId = null;
+        render(filtrar(inpN.value.toLowerCase().trim()));
+      });
+      inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim())); });
+      inpN.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
+    }
+
     function setupClienteAltaAC(inputNombreId, inputNifId, inputIdId) {
       const inpN = document.getElementById(inputNombreId);
       const inpF = document.getElementById(inputNifId);

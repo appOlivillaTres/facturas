@@ -2427,7 +2427,7 @@
       </div>
     </div>
   </div>
-  
+
   <!-- MODAL DEVOLVER MAQUINARIA -->
   <div class="modal-overlay" id="modalDevolverMaquina">
     <div class="modal-box-sm">
@@ -5895,12 +5895,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       Registrar compra
   </button>
 
-  ${f.nif ? `
-  <span class="link-badge"
-        onclick="verAlbaranesNif('${f.nif}','${(f.nombre || '').replace(/'/g, "\\'")}')">
-      <i class="fa-solid fa-file-signature"></i>
-      Albaranes
-  </span>` : ''}
+  <span class="link-badge factura"
+      onclick="verVentasYConsumosCliente(${f.id},'${(f.nombre || '').replace(/'/g, "\\'")}')">
+    <i class="fa-solid fa-file-invoice"></i>
+    Albaranes
+</span>
 
 </div>
 </td>
@@ -8892,8 +8891,12 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     // IMPRIMIR / DESCARGAR PDF DEL ALBARÁN
-    function imprimirAlbaranVenta(id) {
-      const f = registros.find(r => r.id === id);
+    async function imprimirAlbaranVenta(id) {
+      let f = registros.find(r => r.id === id);
+      if (!f) {
+        const items = await apiGet('albaranes_venta', `id=eq.${id}&select=*,albaranes_venta_items(*)`);
+        f = items && items[0];
+      }
       if (!f) { toast('No se ha encontrado el albarán', 'err'); return; }
       const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
       const items = f.albaranes_venta_items || [];
@@ -10858,18 +10861,23 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     function imprimirConsumoInterno(id) {
-  const f = registros.find(r => r.id === id);
-  if (!f) { toast('No se ha encontrado el registro', 'err'); return; }
-  const items = f.consumo_interno_items || [];
+      async function imprimirConsumoInterno(id) {
+        let f = registros.find(r => r.id === id);
+        if (!f) {
+          const items = await apiGet('consumo_interno', `id=eq.${id}&select=*,consumo_interno_items(*)`);
+          f = items && items[0];
+        }
+        if (!f) { toast('No se ha encontrado el registro', 'err'); return; }
+        const items = f.consumo_interno_items || [];
 
-  const filas = items.map(i => `
+        const filas = items.map(i => `
     <tr>
       <td>${i.producto_nombre || ''}</td>
       <td style="text-align:center">${fmtStock(i.cantidad)}</td>
       <td style="text-align:right">${fmt(i.importe_total)}</td>
     </tr>`).join('');
 
-  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+        const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
   <style>
     body{font-family:'Courier New',monospace;color:#111;padding:16px;max-width:320px;margin:0 auto;font-size:.85rem}
     h2{text-align:center;font-size:1rem;margin:0 0 4px}
@@ -10892,10 +10900,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   <div class="total">TOTAL: ${fmt(f.total)}</div>
   <button class="btn-imprimir" onclick="window.print()">Imprimir</button>
   </body></html>`;
-  const w = window.open('', '_blank');
-  w.document.write(html);
-  w.document.close();
-}
+        const w = window.open('', '_blank');
+        w.document.write(html);
+        w.document.close();
+      }
 
 
 
@@ -10916,29 +10924,29 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 
 
-    let lineasConsumoInternoCount = 0;
+      let lineasConsumoInternoCount = 0;
 
-    function abrirModalConsumoInterno() {
-      document.getElementById('ci_empleado').value = '';
-      document.getElementById('ci_cliente_id').value = '';
-      clienteConsumoSelId = null;
-      document.getElementById('ci_fecha').value = hoy();
-      document.getElementById('ci_total').value = '';
-      document.getElementById('lineasConsumoInterno').innerHTML = '';
-      lineasConsumoInternoCount = 0;
-      addLineaConsumoInterno();
-      document.getElementById('modalConsumoInterno').classList.add('visible');
-      setTimeout(() => setupClienteConsumoAC('ci_empleado', 'ci_cliente_id'), 50);
-    }
+      function abrirModalConsumoInterno() {
+        document.getElementById('ci_empleado').value = '';
+        document.getElementById('ci_cliente_id').value = '';
+        clienteConsumoSelId = null;
+        document.getElementById('ci_fecha').value = hoy();
+        document.getElementById('ci_total').value = '';
+        document.getElementById('lineasConsumoInterno').innerHTML = '';
+        lineasConsumoInternoCount = 0;
+        addLineaConsumoInterno();
+        document.getElementById('modalConsumoInterno').classList.add('visible');
+        setTimeout(() => setupClienteConsumoAC('ci_empleado', 'ci_cliente_id'), 50);
+      }
 
-    function addLineaConsumoInterno() {
-      lineasConsumoInternoCount++;
-      const idx = lineasConsumoInternoCount;
-      const div = document.createElement('div');
-      div.id = `ci_${idx}`;
-      div.className = 'linea-prod';
-      div.style.gridTemplateColumns = '1fr 100px 100px auto';
-      div.innerHTML = `
+      function addLineaConsumoInterno() {
+        lineasConsumoInternoCount++;
+        const idx = lineasConsumoInternoCount;
+        const div = document.createElement('div');
+        div.id = `ci_${idx}`;
+        div.className = 'linea-prod';
+        div.style.gridTemplateColumns = '1fr 100px 100px auto';
+        div.innerHTML = `
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Producto</label>
       <input type="text" id="ci_prod_${idx}" list="dl_productos" placeholder="Escribe para buscar..." oninput="autocompletarPrecioLineaCI(${idx})">
@@ -10955,129 +10963,181 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
       <i class="fa-solid fa-xmark"></i>
     </button>`;
-      document.getElementById('lineasConsumoInterno').appendChild(div);
-    }
-
-    function autocompletarPrecioLineaCI(idx) {
-      const inpNombre = document.getElementById(`ci_prod_${idx}`);
-      const inpPrecio = document.getElementById(`ci_precio_${idx}`);
-      const prod = buscarProductoPorNombre(inpNombre.value);
-      if (prod && prod.precio != null) inpPrecio.value = prod.precio;
-      recalcTotalCI();
-    }
-
-    function recalcTotalCI() {
-      let total = 0;
-      document.querySelectorAll('[id^="ci_prod_"]').forEach(inp => {
-        const idx = inp.id.split('_')[2];
-        const cant = parseFloat(document.getElementById(`ci_cant_${idx}`)?.value || 0);
-        const precio = parseFloat(document.getElementById(`ci_precio_${idx}`)?.value || 0);
-        total += cant * precio;
-      });
-      document.getElementById('ci_total').value = total.toFixed(2);
-    }
-
-    async function guardarConsumoInterno() {
-      const empleado = document.getElementById('ci_empleado').value.trim();
-      const fecha = document.getElementById('ci_fecha').value;
-      if (!empleado || !fecha) { toast('Indica quién se lo lleva y la fecha', 'err'); return; }
-
-      const lineas = [];
-      let ok = true;
-      document.querySelectorAll('[id^="ci_prod_"]').forEach(inp => {
-        const nombre = inp.value.trim();
-        if (!nombre) return;
-        const idx = inp.id.split('_')[2];
-        const cant = parseFloat(document.getElementById(`ci_cant_${idx}`)?.value || 0);
-        const precio = parseFloat(document.getElementById(`ci_precio_${idx}`)?.value || 0);
-        if (cant <= 0) { toast(`Cantidad inválida en "${nombre}"`, 'err'); ok = false; return; }
-        const prod = buscarProductoPorNombre(nombre);
-        if (!prod) { toast(`"${nombre}" no existe en el inventario`, 'err'); ok = false; return; }
-        const stock = parseFloat(prod.stock || 0);
-        if (cant > stock) { toast(`Stock insuficiente para "${nombre}": hay ${fmtStock(stock)}`, 'err'); ok = false; return; }
-        lineas.push({ producto_id: prod.id, producto_nombre: nombre, cantidad: cant, precio_unitario: precio, importe_total: +(cant * precio).toFixed(2), stock });
-      });
-      if (!ok) return;
-      if (!lineas.length) { toast('Añade al menos un producto', 'err'); return; }
-
-      const total = parseFloat(document.getElementById('ci_total').value || 0);
-
-      try {
-        const [header] = await apiPost('consumo_interno', {
-          empleado, fecha, total,
-          cliente_id: clienteConsumoSelId || null,
-          creado_por: currentPersona
-        });
-        await apiPost('consumo_interno_items', lineas.map(l => ({
-          consumo_interno_id: header.id,
-          producto_id: l.producto_id, producto_nombre: l.producto_nombre,
-          cantidad: l.cantidad, precio_unitario: l.precio_unitario, importe_total: l.importe_total
-        })));
-        for (const l of lineas) {
-          await apiPatch('inventario', l.producto_id, { stock: l.stock - l.cantidad });
-        }
-        toast('Consumo interno registrado y stock descontado');
-        cerrarModal('modalConsumoInterno');
-        cargarDatos();
-      } catch (e) {
-        toast('Error al guardar: ' + e.message, 'err');
+        document.getElementById('lineasConsumoInterno').appendChild(div);
       }
-    }
-    function verDetalleConsumoInterno(id) {
-      const reg = registros.find(r => r.id === id);
-      if (!reg) return;
-      const items = reg.consumo_interno_items || [];
-      document.getElementById('modalDetalleTitulo').innerHTML =
-        `<i class="fa-solid fa-user-check" style="color:#b53987"></i>Consumo — ${reg.empleado || '—'}`;
-      document.getElementById('modalDetalleContenido').innerHTML = !items.length
-        ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin productos registrados</p>`
-        : `<table class="mini-table"><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Total</th></tr></thead><tbody>
+
+      function autocompletarPrecioLineaCI(idx) {
+        const inpNombre = document.getElementById(`ci_prod_${idx}`);
+        const inpPrecio = document.getElementById(`ci_precio_${idx}`);
+        const prod = buscarProductoPorNombre(inpNombre.value);
+        if (prod && prod.precio != null) inpPrecio.value = prod.precio;
+        recalcTotalCI();
+      }
+
+      function recalcTotalCI() {
+        let total = 0;
+        document.querySelectorAll('[id^="ci_prod_"]').forEach(inp => {
+          const idx = inp.id.split('_')[2];
+          const cant = parseFloat(document.getElementById(`ci_cant_${idx}`)?.value || 0);
+          const precio = parseFloat(document.getElementById(`ci_precio_${idx}`)?.value || 0);
+          total += cant * precio;
+        });
+        document.getElementById('ci_total').value = total.toFixed(2);
+      }
+
+      async function guardarConsumoInterno() {
+        const empleado = document.getElementById('ci_empleado').value.trim();
+        const fecha = document.getElementById('ci_fecha').value;
+        if (!empleado || !fecha) { toast('Indica quién se lo lleva y la fecha', 'err'); return; }
+
+        const lineas = [];
+        let ok = true;
+        document.querySelectorAll('[id^="ci_prod_"]').forEach(inp => {
+          const nombre = inp.value.trim();
+          if (!nombre) return;
+          const idx = inp.id.split('_')[2];
+          const cant = parseFloat(document.getElementById(`ci_cant_${idx}`)?.value || 0);
+          const precio = parseFloat(document.getElementById(`ci_precio_${idx}`)?.value || 0);
+          if (cant <= 0) { toast(`Cantidad inválida en "${nombre}"`, 'err'); ok = false; return; }
+          const prod = buscarProductoPorNombre(nombre);
+          if (!prod) { toast(`"${nombre}" no existe en el inventario`, 'err'); ok = false; return; }
+          const stock = parseFloat(prod.stock || 0);
+          if (cant > stock) { toast(`Stock insuficiente para "${nombre}": hay ${fmtStock(stock)}`, 'err'); ok = false; return; }
+          lineas.push({ producto_id: prod.id, producto_nombre: nombre, cantidad: cant, precio_unitario: precio, importe_total: +(cant * precio).toFixed(2), stock });
+        });
+        if (!ok) return;
+        if (!lineas.length) { toast('Añade al menos un producto', 'err'); return; }
+
+        const total = parseFloat(document.getElementById('ci_total').value || 0);
+
+        try {
+          const [header] = await apiPost('consumo_interno', {
+            empleado, fecha, total,
+            cliente_id: clienteConsumoSelId || null,
+            creado_por: currentPersona
+          });
+          await apiPost('consumo_interno_items', lineas.map(l => ({
+            consumo_interno_id: header.id,
+            producto_id: l.producto_id, producto_nombre: l.producto_nombre,
+            cantidad: l.cantidad, precio_unitario: l.precio_unitario, importe_total: l.importe_total
+          })));
+          for (const l of lineas) {
+            await apiPatch('inventario', l.producto_id, { stock: l.stock - l.cantidad });
+          }
+          toast('Consumo interno registrado y stock descontado');
+          cerrarModal('modalConsumoInterno');
+          cargarDatos();
+        } catch (e) {
+          toast('Error al guardar: ' + e.message, 'err');
+        }
+      }
+      function verDetalleConsumoInterno(id) {
+        const reg = registros.find(r => r.id === id);
+        if (!reg) return;
+        const items = reg.consumo_interno_items || [];
+        document.getElementById('modalDetalleTitulo').innerHTML =
+          `<i class="fa-solid fa-user-check" style="color:#b53987"></i>Consumo — ${reg.empleado || '—'}`;
+        document.getElementById('modalDetalleContenido').innerHTML = !items.length
+          ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin productos registrados</p>`
+          : `<table class="mini-table"><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Total</th></tr></thead><tbody>
       ${items.map(i => `<tr><td>${i.producto_nombre || '—'}</td><td>${i.cantidad}</td><td>${fmt(i.precio_unitario)}</td><td><strong>${fmt(i.importe_total)}</strong></td></tr>`).join('')}
     </tbody></table>`;
-      document.getElementById('modalDetalle').classList.add('visible');
-    }
-    let clienteConsumoSelId = null;
-
-    function setupClienteConsumoAC(inputNombreId, inputIdId) {
-      const inpN = document.getElementById(inputNombreId);
-      const inpId = document.getElementById(inputIdId);
-      if (!inpN || !inpId) return;
-
-      inpN.parentElement.style.position = 'relative';
-      const lista = _crearLista('ac_consumo_' + inputNombreId, inpN.parentElement);
-
-      function filtrar(q) {
-        return clientesDB.filter(c => (c.nombre || '').toLowerCase().includes(q)).slice(0, 10);
+        document.getElementById('modalDetalle').classList.add('visible');
       }
-      function seleccionar(c) {
-        inpN.value = c.nombre || '';
-        inpId.value = c.id;
-        clienteConsumoSelId = c.id;
-        lista.style.display = 'none';
-      }
-      function render(items) {
-        if (!items.length) { lista.style.display = 'none'; return; }
-        lista.innerHTML = items.map(c =>
-          `<div class="ac-item" data-id="${c.id}">
+      let clienteConsumoSelId = null;
+
+      function setupClienteConsumoAC(inputNombreId, inputIdId) {
+        const inpN = document.getElementById(inputNombreId);
+        const inpId = document.getElementById(inputIdId);
+        if (!inpN || !inpId) return;
+
+        inpN.parentElement.style.position = 'relative';
+        const lista = _crearLista('ac_consumo_' + inputNombreId, inpN.parentElement);
+
+        function filtrar(q) {
+          return clientesDB.filter(c => (c.nombre || '').toLowerCase().includes(q)).slice(0, 10);
+        }
+        function seleccionar(c) {
+          inpN.value = c.nombre || '';
+          inpId.value = c.id;
+          clienteConsumoSelId = c.id;
+          lista.style.display = 'none';
+        }
+        function render(items) {
+          if (!items.length) { lista.style.display = 'none'; return; }
+          lista.innerHTML = items.map(c =>
+            `<div class="ac-item" data-id="${c.id}">
         <span class="ac-nombre">${c.nombre || '—'}</span>
         <span class="ac-nif">${c.nif || 'Sin NIF'}</span>
       </div>`).join('');
-        lista.style.display = 'block';
-        lista.querySelectorAll('.ac-item').forEach(el => {
-          el.addEventListener('mousedown', e => {
-            e.preventDefault();
-            const c = clientesDB.find(x => x.id == el.dataset.id);
-            if (c) seleccionar(c);
+          lista.style.display = 'block';
+          lista.querySelectorAll('.ac-item').forEach(el => {
+            el.addEventListener('mousedown', e => {
+              e.preventDefault();
+              const c = clientesDB.find(x => x.id == el.dataset.id);
+              if (c) seleccionar(c);
+            });
           });
+        }
+        inpN.addEventListener('input', () => {
+          inpId.value = ''; clienteConsumoSelId = null;
+          render(filtrar(inpN.value.toLowerCase().trim()));
         });
+        inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim())); });
+        inpN.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
       }
-      inpN.addEventListener('input', () => {
-        inpId.value = ''; clienteConsumoSelId = null;
-        render(filtrar(inpN.value.toLowerCase().trim()));
-      });
-      inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim())); });
-      inpN.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
-    }
+
+      async function verVentasYConsumosCliente(clienteId, nombre) {
+        try {
+          const [ventas, consumos] = await Promise.all([
+            apiGetAll('albaranes_venta', `cliente_id=eq.${clienteId}&order=fecha.desc`),
+            apiGetAll('consumo_interno', `cliente_id=eq.${clienteId}&order=fecha.desc`)
+          ]);
+
+          document.getElementById('modalDetalleTitulo').innerHTML =
+            `<i class="fa-solid fa-file-invoice" style="color:#b53987"></i>Albaranes de ${nombre}`;
+
+          const tablaVentas = !ventas.length
+            ? `<p style="text-align:center;color:#aaa;padding:1.5rem">Sin albaranes de venta</p>`
+            : `<table class="mini-table"><thead><tr><th>Nº Albarán</th><th>Fecha</th><th>Total</th><th>Cobro</th><th></th></tr></thead><tbody>
+        ${ventas.map(a => `<tr>
+          <td><strong>${a.numero_albaran || '—'}</strong></td>
+          <td>${fmtF(a.fecha)}</td>
+          <td><strong>${fmt(a.total)}</strong></td>
+          <td><span class="badge-estado badge-${a.forma_cobro === 'efectivo' ? 'efectivo' : 'facturar'}">${a.forma_cobro === 'efectivo' ? 'EFECTIVO' : 'A FACTURAR'}</span></td>
+          <td><button class="btn-toggle-pago pendiente" onclick="imprimirAlbaranVenta(${a.id})" title="Imprimir"><i class="fa-solid fa-print"></i></button></td>
+        </tr>`).join('')}
+      </tbody></table>`;
+
+          const tablaConsumos = !consumos.length
+            ? `<p style="text-align:center;color:#aaa;padding:1.5rem">Sin consumos internos</p>`
+            : `<table class="mini-table"><thead><tr><th>Fecha</th><th>Total</th><th>Registrado por</th><th></th></tr></thead><tbody>
+        ${consumos.map(c => `<tr>
+          <td>${fmtF(c.fecha)}</td>
+          <td><strong>${fmt(c.total)}</strong></td>
+          <td>${NOMBRES_PERSONAS[c.creado_por] || c.creado_por || '—'}</td>
+          <td><button class="btn-toggle-pago pendiente" onclick="imprimirConsumoInterno(${c.id})" title="Imprimir"><i class="fa-solid fa-print"></i></button></td>
+        </tr>`).join('')}
+      </tbody></table>`;
+
+          document.getElementById('modalDetalleContenido').innerHTML = `
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="modal-pdf-tab active" id="tabVentasCliente" onclick="cambiarTabVentasCliente('ventas')">Albaranes de Venta (${ventas.length})</button>
+        <button class="modal-pdf-tab" id="tabConsumosCliente" onclick="cambiarTabVentasCliente('consumos')">Consumo Interno (${consumos.length})</button>
+      </div>
+      <div id="panelVentasCliente">${tablaVentas}</div>
+      <div id="panelConsumosCliente" style="display:none">${tablaConsumos}</div>
+    `;
+          document.getElementById('modalDetalle').classList.add('visible');
+        } catch (e) { toast('Error: ' + e.message, 'err'); }
+      }
+
+      function cambiarTabVentasCliente(tab) {
+        document.getElementById('panelVentasCliente').style.display = tab === 'ventas' ? 'block' : 'none';
+        document.getElementById('panelConsumosCliente').style.display = tab === 'consumos' ? 'block' : 'none';
+        document.getElementById('tabVentasCliente').classList.toggle('active', tab === 'ventas');
+        document.getElementById('tabConsumosCliente').classList.toggle('active', tab === 'consumos');
+      }
 
 
 
@@ -11109,14 +11169,12 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 
 
-
-
-    // EXCEL
+      // EXCEL
 
 
 
-    function htmlCamposExcel() {
-      return `
+      function htmlCamposExcel() {
+        return `
     <div class="form-seccion">Pago</div>
     <div class="form-grid">
       <div class="form-group">
@@ -11166,468 +11224,417 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <div class="form-group"><label>% Retención</label><input type="number" id="f_pct_ret" step="0.01" ></div>
       <div class="form-group"><label>Total Retención</label><input type="number" id="f_total_ret" step="0.01"></div>
     </div>`;
-    }
-
-    function recogerCamposExcel() {
-      const n = id => { const v = document.getElementById(id)?.value; return (v === '' || v === null || v === undefined) ? null : parseFloat(v); };
-      return {
-        metodo_pago: document.getElementById('f_metodo_pago')?.value || null,
-        iban: document.getElementById('f_iban')?.value.trim() || null,
-        base1: n('f_base1'), pct_iva1: n('f_pct_iva1'), total_iva1: n('f_total_iva1'),
-        pct_re1: n('f_pct_re1'), total_re1: n('f_total_re1'), tasas: n('f_tasas'),
-        base2: n('f_base2'), pct_iva2: n('f_pct_iva2'), total_iva2: n('f_total_iva2'),
-        base3: n('f_base3'), pct_iva3: n('f_pct_iva3'), total_iva3: n('f_total_iva3'),
-        exento: n('f_exento'), descuento: n('f_descuento'),
-        base_retencion: n('f_base_ret'), pct_retencion: n('f_pct_ret'), total_retencion: n('f_total_ret'),
-      };
-    }
-
-
-    function abrirModalExportar() {
-      if (tablaActual === 'materiales_obra') {
-        abrirModalExportarMateriales();
-        return;
-      }
-      if (tablaActual !== 'facturas_almacen' && tablaActual !== 'facturas_obra' && tablaActual !== 'facturas_csg' && tablaActual !== 'revisadas_facturadas' && tablaActual !== 'ingresos' && tablaActual !== 'albaranes_venta') {
-        toast('La exportación solo está disponible en Facturas Almacén, Facturas Obra, Facturas CSG, Revisadas y Facturadas, Ingresos y Material de Obra', 'err');
-        return;
-      }
-      const sel = document.getElementById('exportYear');
-      sel.innerHTML = '';
-      const currentYear = new Date().getFullYear();
-      for (let y = currentYear; y >= currentYear - 5; y--) {
-        const opt = document.createElement('option');
-        opt.value = y;
-        opt.textContent = y;
-        sel.appendChild(opt);
-      }
-      sel.value = currentYear;
-
-      const obraWrap = document.getElementById('exportObraWrap');
-      if (tablaActual === 'ingresos') {
-        const obras = [...new Set(registros.map(r => r.nombre_obra).filter(Boolean))].sort();
-        document.getElementById('exportObraFiltro').innerHTML =
-          `<option value="">Todas las obras</option>` + obras.map(o => `<option value="${o}">${o}</option>`).join('');
-        obraWrap.style.display = 'block';
-      } else {
-        obraWrap.style.display = 'none';
       }
 
-      document.getElementById('modalExportar').classList.add('visible');
-    }
-
-    async function exportarExcel() {
-      if (tablaActual !== 'facturas_almacen' && tablaActual !== 'facturas_obra' && tablaActual !== 'facturas_csg' && tablaActual !== 'revisadas_facturadas' && tablaActual !== 'ingresos' && tablaActual !== 'albaranes_venta') {
-        toast('La exportación solo está disponible en Facturas Almacén, Facturas Obra, Facturas CSG, Revisadas y Facturadas e Ingresos', 'err');
-        return;
+      function recogerCamposExcel() {
+        const n = id => { const v = document.getElementById(id)?.value; return (v === '' || v === null || v === undefined) ? null : parseFloat(v); };
+        return {
+          metodo_pago: document.getElementById('f_metodo_pago')?.value || null,
+          iban: document.getElementById('f_iban')?.value.trim() || null,
+          base1: n('f_base1'), pct_iva1: n('f_pct_iva1'), total_iva1: n('f_total_iva1'),
+          pct_re1: n('f_pct_re1'), total_re1: n('f_total_re1'), tasas: n('f_tasas'),
+          base2: n('f_base2'), pct_iva2: n('f_pct_iva2'), total_iva2: n('f_total_iva2'),
+          base3: n('f_base3'), pct_iva3: n('f_pct_iva3'), total_iva3: n('f_total_iva3'),
+          exento: n('f_exento'), descuento: n('f_descuento'),
+          base_retencion: n('f_base_ret'), pct_retencion: n('f_pct_ret'), total_retencion: n('f_total_ret'),
+        };
       }
-      if (tablaActual === 'albaranes_venta') {
+
+
+      function abrirModalExportar() {
+        if (tablaActual === 'materiales_obra') {
+          abrirModalExportarMateriales();
+          return;
+        }
+        if (tablaActual !== 'facturas_almacen' && tablaActual !== 'facturas_obra' && tablaActual !== 'facturas_csg' && tablaActual !== 'revisadas_facturadas' && tablaActual !== 'ingresos' && tablaActual !== 'albaranes_venta') {
+          toast('La exportación solo está disponible en Facturas Almacén, Facturas Obra, Facturas CSG, Revisadas y Facturadas, Ingresos y Material de Obra', 'err');
+          return;
+        }
+        const sel = document.getElementById('exportYear');
+        sel.innerHTML = '';
+        const currentYear = new Date().getFullYear();
+        for (let y = currentYear; y >= currentYear - 5; y--) {
+          const opt = document.createElement('option');
+          opt.value = y;
+          opt.textContent = y;
+          sel.appendChild(opt);
+        }
+        sel.value = currentYear;
+
+        const obraWrap = document.getElementById('exportObraWrap');
+        if (tablaActual === 'ingresos') {
+          const obras = [...new Set(registros.map(r => r.nombre_obra).filter(Boolean))].sort();
+          document.getElementById('exportObraFiltro').innerHTML =
+            `<option value="">Todas las obras</option>` + obras.map(o => `<option value="${o}">${o}</option>`).join('');
+          obraWrap.style.display = 'block';
+        } else {
+          obraWrap.style.display = 'none';
+        }
+
+        document.getElementById('modalExportar').classList.add('visible');
+      }
+
+      async function exportarExcel() {
+        if (tablaActual !== 'facturas_almacen' && tablaActual !== 'facturas_obra' && tablaActual !== 'facturas_csg' && tablaActual !== 'revisadas_facturadas' && tablaActual !== 'ingresos' && tablaActual !== 'albaranes_venta') {
+          toast('La exportación solo está disponible en Facturas Almacén, Facturas Obra, Facturas CSG, Revisadas y Facturadas e Ingresos', 'err');
+          return;
+        }
+        if (tablaActual === 'albaranes_venta') {
+          const year = parseInt(document.getElementById('exportYear').value);
+          const meses = Array.from(document.querySelectorAll('#exportMeses input:checked')).map(i => parseInt(i.value));
+          const filtrados = registros.filter(f => {
+            const fechaRef = f.fecha_recibido || f.fecha;
+            if (!fechaRef) return false;
+            const [y, m] = fechaRef.split('-').map(Number);
+            if (y !== year) return false;
+            if (meses.length && !meses.includes(m)) return false;
+            return true;
+          }).sort((a, b) => {
+            const fa = a.fecha_recibido || a.fecha || '';
+            const fb = b.fecha_recibido || b.fecha || '';
+            const cmp = fa.localeCompare(fb);
+            if (cmp !== 0) return cmp;
+            return (a.id || 0) - (b.id || 0); // desempate fijo: mismo orden siempre
+          });
+          if (!filtrados.length) { toast('No hay albaranes para ese filtro', 'err'); return; }
+          exportarAlbaranesVentaExcel(filtrados);
+          cerrarModal('modalExportar');
+          return;
+        }
+        if (!registros.length) { toast('No hay datos para exportar', 'err'); return; }
+
         const year = parseInt(document.getElementById('exportYear').value);
         const meses = Array.from(document.querySelectorAll('#exportMeses input:checked')).map(i => parseInt(i.value));
-        const filtrados = registros.filter(f => {
+        const obraFiltro = tablaActual === 'ingresos' ? document.getElementById('exportObraFiltro').value : '';
+
+        const filtrados = _ordenarParaExportacion(registros.filter(f => {
+          const fechaRef = f.fecha_recibido || f.fecha;
+          if (!fechaRef) return false;
+          const [y, m] = fechaRef.split('-').map(Number);
+          if (y !== year) return false;
+          if (meses.length && !meses.includes(m)) return false;
+          if (obraFiltro && f.nombre_obra !== obraFiltro) return false;
+          return true;
+        }));
+
+        if (!filtrados.length) { toast('No hay datos para ese filtro', 'err'); return; }
+
+        // ── INGRESOS: rama independiente ──
+        if (tablaActual === 'ingresos') {
+          const cabeceras = [
+            'Nº Interno', 'Fecha', 'NIF', 'Cliente', 'Obra', 'Nº Factura', 'Concepto',
+            'Base', '%IVA', 'Total IVA', 'Total',
+            'Cobrado', 'Pendiente', 'Detalle cobros',
+            'Descuento', 'Pago permisos', '%IVA permisos', 'Total IVA permisos', 'Total con permisos'
+          ];
+          const filas = filtrados.map(f => {
+            const cobros = (f.cobros_parciales || []).slice().sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
+            const cobrado = cobros.reduce((s, c) => s + (parseFloat(c.cantidad) || 0), 0);
+            const detalle = cobros.map(c => `${c.fecha.split('-').reverse().join('/')}: ${parseFloat(c.cantidad).toFixed(2)}€`).join(' | ');
+            return {
+              'Nº Interno': f.numero_interno || '',
+              'Fecha': f.fecha ? f.fecha.split('-').reverse().join('/') : '',
+              'NIF': f.nif || '',
+              'Cliente': f.cliente || '',
+              'Obra': f.nombre_obra || '',
+              'Nº Factura': f.numero_ingreso || '',
+              'Concepto': f.concepto || '',
+              'Base': f.base1 != null ? parseFloat(f.base1) : 0,
+              '%IVA': f.pct_iva1 != null ? parseFloat(f.pct_iva1) : 0,
+              'Total IVA': f.total_iva1 != null ? parseFloat(f.total_iva1) : 0,
+              'Total': f.total != null ? parseFloat(f.total) : 0,
+              'Cobrado': cobrado,
+              'Pendiente': (parseFloat(f.total || 0) - cobrado),
+              'Detalle cobros': detalle,
+              'Descuento': f.descuento != null ? parseFloat(f.descuento) : 0,
+              'Pago permisos': f.pago_permisos != null ? parseFloat(f.pago_permisos) : 0,
+              '%IVA permisos': f.pct_iva_permisos != null ? parseFloat(f.pct_iva_permisos) : 0,
+              'Total IVA permisos': f.total_iva_permisos != null ? parseFloat(f.total_iva_permisos) : 0,
+              'Total con permisos': f.total_con_permisos != null ? parseFloat(f.total_con_permisos) : 0
+            };
+          });
+
+          const wb = XLSX.utils.book_new();
+          const ws = XLSX.utils.json_to_sheet(filas, { header: cabeceras });
+          ws['!cols'] = [14, 12, 22, 22, 14, 26, 30, 10, 7, 10, 10, 10, 10, 40, 12, 12, 12, 12, 12].map(w => ({ wch: w }));
+          XLSX.utils.book_append_sheet(wb, ws, 'Ingresos');
+          const fecha = new Date().toISOString().split('T')[0];
+          const nombre = `ingresos_${obraFiltro || 'todas'}_${fecha}.xlsx`;
+          XLSX.writeFile(wb, nombre);
+          toast(`<i class="fa-solid fa-file-excel me-1"></i>Excel descargado: <strong>${nombre}</strong>`, 'ok');
+          return;
+        }
+
+        // ── (a partir de aquí sigue tal cual tu código actual para
+        //     facturas_almacen / facturas_obra / facturas_csg / revisadas_facturadas) ──
+        const esObra = tablaActual === 'facturas_obra';
+        const esCsg = tablaActual === 'facturas_csg';
+        const esRevisadas = tablaActual === 'revisadas_facturadas';
+
+        const origenLabel = { facturas_almacen: 'Almacén', facturas_obra: 'Obra', facturas_csg: 'CSG' };
+        const cabeceras = [
+          'Nº ORDEN',
+          ...(esRevisadas ? ['ORIGEN'] : []),
+          'NUMERACION INTERNA EMP', 'Fecha', 'NIF', 'NOMBRE', 'FACTURA', 'CONCEPTO',
+          'Base 1', '%IVA1', 'Total IVA1', '%RE1', 'Total RE1', 'TASAS',
+          'Base 2', '%IVA2', 'Total IVA2', 'Base3', '%IVA3', 'Total IVA3',
+          'Base4', '%IVA4', 'Total IVA4', 'Base5', '%IVA5', 'Total IVA5',
+          'Exento', 'DESCUENTO', 'Base Retención', '% Retención', 'Total Retención', 'Total'
+        ];
+        const filas = filtrados.map((f, i) => ({
+          'Nº ORDEN': String(i + 1).padStart(4, '0'),
+          ...(esRevisadas ? { 'ORIGEN': origenLabel[f.origen] || f.origen } : {}),
+          'NUMERACION INTERNA EMP': f.numero_interno || '',
+          'Fecha': f.fecha ? f.fecha.split('-').reverse().join('/') : '',
+          'NIF': f.nif || '',
+          'NOMBRE': f.proveedor || '',
+          'FACTURA': f.numero_factura || '',
+          'CONCEPTO': f.concepto || '',
+          'Base 1': f.base1 != null ? parseFloat(f.base1) : 0,
+          '%IVA1': f.pct_iva1 != null ? parseFloat(f.pct_iva1) : 0,
+          'Total IVA1': f.total_iva1 != null ? parseFloat(f.total_iva1) : 0,
+          '%RE1': f.pct_re1 != null ? parseFloat(f.pct_re1) : 0,
+          'Total RE1': f.total_re1 != null ? parseFloat(f.total_re1) : 0,
+          'TASAS': f.tasas != null ? parseFloat(f.tasas) : 0,
+          'Base 2': f.base2 != null ? parseFloat(f.base2) : 0,
+          '%IVA2': f.pct_iva2 != null ? parseFloat(f.pct_iva2) : 0,
+          'Total IVA2': f.total_iva2 != null ? parseFloat(f.total_iva2) : 0,
+          'Base3': f.base3 != null ? parseFloat(f.base3) : 0,
+          '%IVA3': f.pct_iva3 != null ? parseFloat(f.pct_iva3) : 0,
+          'Total IVA3': f.total_iva3 != null ? parseFloat(f.total_iva3) : 0,
+          'Base4': 0,
+          '%IVA4': 0,
+          'Total IVA4': 0,
+          'Base5': 0,
+          '%IVA5': 0,
+          'Total IVA5': 0,
+          'Exento': f.exento != null ? parseFloat(f.exento) : 0,
+          'DESCUENTO': f.descuento != null ? parseFloat(f.descuento) : 0,
+          'Base Retención': f.base_retencion != null ? parseFloat(f.base_retencion) : 0,
+          '% Retención': f.pct_retencion != null ? parseFloat(f.pct_retencion) : 0,
+          'Total Retención': f.total_retencion != null ? parseFloat(f.total_retencion) : 0,
+          'Total': f.total != null ? parseFloat(f.total) : 0
+        }));
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(filas, { header: cabeceras });
+        const anchos = [8, ...(esRevisadas ? [12] : []), 18, 12, 14, 28, 18, 30, 10, 7, 10, 7, 10, 10, 10, 7, 10, 10, 7, 10, 10, 7, 10, 10, 7, 10, 10, 14, 12, 10, 14, 12];
+        ws['!cols'] = anchos.map(w => ({ wch: w }));
+        XLSX.utils.book_append_sheet(wb, ws, esRevisadas ? 'Revisadas y Facturadas' : esObra ? 'Facturas Obra' : esCsg ? 'Facturas CSG' : 'Facturas Almacén');
+        const fecha = new Date().toISOString().split('T')[0];
+        const nombre = `${tablaActual}_${fecha}.xlsx`;
+        XLSX.writeFile(wb, nombre);
+        // Marcar como exportadas a Excel
+        if (esObra || esCsg || esRevisadas || tablaActual === 'facturas_almacen') {
+          const idsPorTabla = {};
+          filtrados.forEach(f => {
+            const tablaDest = esRevisadas ? f.origen : tablaActual;
+            (idsPorTabla[tablaDest] = idsPorTabla[tablaDest] || []).push(f.id);
+          });
+          for (const [tabla, ids] of Object.entries(idsPorTabla)) {
+            try { await marcarExportadosExcel(tabla, ids); }
+            catch (e) { console.error('No se pudo marcar como exportado:', tabla, e); }
+          }
+          cargarDatos();
+        }
+        toast(`<i class="fa-solid fa-file-excel me-1"></i>Excel descargado: <strong>${nombre}</strong>`, 'ok');
+      }
+
+      // descargar todos los archivos
+      //DESCARGA DE ARCHIVOS ADJUNTOS POR FECHA (ZIP) 
+      const SECCIONES_CON_ARCHIVOS = ['facturas_almacen', 'facturas_obra', 'facturas_csg', 'revisadas_facturadas', 'ingresos', 'albaranes'];
+
+      function _archivosDeRegistro(f) {
+        if (f.archivos_urls && f.archivos_urls.length) return f.archivos_urls;
+        if (f.archivo_url) return [f.archivo_url];
+        return [];
+      }
+
+      function _extensionDeUrl(url) {
+        const m = (url || '').split('?')[0].split('#')[0].match(/\.([a-zA-Z0-9]+)$/);
+        return m ? m[1] : 'pdf';
+      }
+
+      function abrirModalExportarArchivos() {
+        if (!SECCIONES_CON_ARCHIVOS.includes(tablaActual)) {
+          toast('La descarga de archivos solo está disponible en Facturas, Revisadas y Facturadas, Ingresos y Albaranes', 'err');
+          return;
+        }
+        const sel = document.getElementById('exportArchivosYear');
+        sel.innerHTML = '';
+        const currentYear = new Date().getFullYear();
+        for (let y = currentYear; y >= currentYear - 5; y--) {
+          const opt = document.createElement('option');
+          opt.value = y; opt.textContent = y;
+          sel.appendChild(opt);
+        }
+        sel.value = currentYear;
+        document.querySelectorAll('#exportArchivosMeses input').forEach(c => c.checked = false);
+        document.getElementById('infoArchivosZip').textContent = '';
+        document.getElementById('modalExportarArchivos').classList.add('visible');
+      }
+
+      async function descargarArchivosPorFecha() {
+        const year = parseInt(document.getElementById('exportArchivosYear').value);
+        const meses = Array.from(document.querySelectorAll('#exportArchivosMeses input:checked')).map(i => parseInt(i.value));
+
+        const filtrados = _ordenarParaExportacion(registros.filter(f => {
           const fechaRef = f.fecha_recibido || f.fecha;
           if (!fechaRef) return false;
           const [y, m] = fechaRef.split('-').map(Number);
           if (y !== year) return false;
           if (meses.length && !meses.includes(m)) return false;
           return true;
-        }).sort((a, b) => {
-          const fa = a.fecha_recibido || a.fecha || '';
-          const fb = b.fecha_recibido || b.fecha || '';
-          const cmp = fa.localeCompare(fb);
-          if (cmp !== 0) return cmp;
-          return (a.id || 0) - (b.id || 0); // desempate fijo: mismo orden siempre
-        });
-        if (!filtrados.length) { toast('No hay albaranes para ese filtro', 'err'); return; }
-        exportarAlbaranesVentaExcel(filtrados);
-        cerrarModal('modalExportar');
-        return;
-      }
-      if (!registros.length) { toast('No hay datos para exportar', 'err'); return; }
+        }));
 
-      const year = parseInt(document.getElementById('exportYear').value);
-      const meses = Array.from(document.querySelectorAll('#exportMeses input:checked')).map(i => parseInt(i.value));
-      const obraFiltro = tablaActual === 'ingresos' ? document.getElementById('exportObraFiltro').value : '';
+        const tareas = [];
+        const contadorNombres = {};
+        filtrados.forEach((f, indexOrden) => {
+          const archivosDelRegistro = _archivosDeRegistro(f);
+          archivosDelRegistro.forEach((url, i) => {
+            const base = (f.proveedor || f.empresa || f.cliente || 'archivo')
+              .toString().replace(/[^a-zA-Z0-9_\-]+/g, '_');
+            const numDoc = (f.numero_factura || f.numero_albaran || f.numero_ingreso || '')
+              .toString().replace(/[^a-zA-Z0-9_\-]+/g, '_');
+            const fechaOriginal = (f.fecha_recibido || f.fecha) || '';
+            const fechaTxt = fechaOriginal.includes('-')
+              ? fechaOriginal.split('-').reverse().join('')  // YYYY-MM-DD → DDMMYYYY
+              : fechaOriginal;
+            const orden = String(indexOrden + 1).padStart(4, '0');
+            const sufijoArchivo = archivosDelRegistro.length > 1 ? `_${i + 1}` : '';
 
-      const filtrados = _ordenarParaExportacion(registros.filter(f => {
-        const fechaRef = f.fecha_recibido || f.fecha;
-        if (!fechaRef) return false;
-        const [y, m] = fechaRef.split('-').map(Number);
-        if (y !== year) return false;
-        if (meses.length && !meses.includes(m)) return false;
-        if (obraFiltro && f.nombre_obra !== obraFiltro) return false;
-        return true;
-      }));
+            const nombreBase = `${orden}_${fechaTxt}_${base}${numDoc ? '_' + numDoc : ''}${sufijoArchivo}`;
+            const ext = _extensionDeUrl(url);
 
-      if (!filtrados.length) { toast('No hay datos para ese filtro', 'err'); return; }
-
-      // ── INGRESOS: rama independiente ──
-      if (tablaActual === 'ingresos') {
-        const cabeceras = [
-          'Nº Interno', 'Fecha', 'NIF', 'Cliente', 'Obra', 'Nº Factura', 'Concepto',
-          'Base', '%IVA', 'Total IVA', 'Total',
-          'Cobrado', 'Pendiente', 'Detalle cobros',
-          'Descuento', 'Pago permisos', '%IVA permisos', 'Total IVA permisos', 'Total con permisos'
-        ];
-        const filas = filtrados.map(f => {
-          const cobros = (f.cobros_parciales || []).slice().sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
-          const cobrado = cobros.reduce((s, c) => s + (parseFloat(c.cantidad) || 0), 0);
-          const detalle = cobros.map(c => `${c.fecha.split('-').reverse().join('/')}: ${parseFloat(c.cantidad).toFixed(2)}€`).join(' | ');
-          return {
-            'Nº Interno': f.numero_interno || '',
-            'Fecha': f.fecha ? f.fecha.split('-').reverse().join('/') : '',
-            'NIF': f.nif || '',
-            'Cliente': f.cliente || '',
-            'Obra': f.nombre_obra || '',
-            'Nº Factura': f.numero_ingreso || '',
-            'Concepto': f.concepto || '',
-            'Base': f.base1 != null ? parseFloat(f.base1) : 0,
-            '%IVA': f.pct_iva1 != null ? parseFloat(f.pct_iva1) : 0,
-            'Total IVA': f.total_iva1 != null ? parseFloat(f.total_iva1) : 0,
-            'Total': f.total != null ? parseFloat(f.total) : 0,
-            'Cobrado': cobrado,
-            'Pendiente': (parseFloat(f.total || 0) - cobrado),
-            'Detalle cobros': detalle,
-            'Descuento': f.descuento != null ? parseFloat(f.descuento) : 0,
-            'Pago permisos': f.pago_permisos != null ? parseFloat(f.pago_permisos) : 0,
-            '%IVA permisos': f.pct_iva_permisos != null ? parseFloat(f.pct_iva_permisos) : 0,
-            'Total IVA permisos': f.total_iva_permisos != null ? parseFloat(f.total_iva_permisos) : 0,
-            'Total con permisos': f.total_con_permisos != null ? parseFloat(f.total_con_permisos) : 0
-          };
-        });
-
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.json_to_sheet(filas, { header: cabeceras });
-        ws['!cols'] = [14, 12, 22, 22, 14, 26, 30, 10, 7, 10, 10, 10, 10, 40, 12, 12, 12, 12, 12].map(w => ({ wch: w }));
-        XLSX.utils.book_append_sheet(wb, ws, 'Ingresos');
-        const fecha = new Date().toISOString().split('T')[0];
-        const nombre = `ingresos_${obraFiltro || 'todas'}_${fecha}.xlsx`;
-        XLSX.writeFile(wb, nombre);
-        toast(`<i class="fa-solid fa-file-excel me-1"></i>Excel descargado: <strong>${nombre}</strong>`, 'ok');
-        return;
-      }
-
-      // ── (a partir de aquí sigue tal cual tu código actual para
-      //     facturas_almacen / facturas_obra / facturas_csg / revisadas_facturadas) ──
-      const esObra = tablaActual === 'facturas_obra';
-      const esCsg = tablaActual === 'facturas_csg';
-      const esRevisadas = tablaActual === 'revisadas_facturadas';
-
-      const origenLabel = { facturas_almacen: 'Almacén', facturas_obra: 'Obra', facturas_csg: 'CSG' };
-      const cabeceras = [
-        'Nº ORDEN',
-        ...(esRevisadas ? ['ORIGEN'] : []),
-        'NUMERACION INTERNA EMP', 'Fecha', 'NIF', 'NOMBRE', 'FACTURA', 'CONCEPTO',
-        'Base 1', '%IVA1', 'Total IVA1', '%RE1', 'Total RE1', 'TASAS',
-        'Base 2', '%IVA2', 'Total IVA2', 'Base3', '%IVA3', 'Total IVA3',
-        'Base4', '%IVA4', 'Total IVA4', 'Base5', '%IVA5', 'Total IVA5',
-        'Exento', 'DESCUENTO', 'Base Retención', '% Retención', 'Total Retención', 'Total'
-      ];
-      const filas = filtrados.map((f, i) => ({
-        'Nº ORDEN': String(i + 1).padStart(4, '0'),
-        ...(esRevisadas ? { 'ORIGEN': origenLabel[f.origen] || f.origen } : {}),
-        'NUMERACION INTERNA EMP': f.numero_interno || '',
-        'Fecha': f.fecha ? f.fecha.split('-').reverse().join('/') : '',
-        'NIF': f.nif || '',
-        'NOMBRE': f.proveedor || '',
-        'FACTURA': f.numero_factura || '',
-        'CONCEPTO': f.concepto || '',
-        'Base 1': f.base1 != null ? parseFloat(f.base1) : 0,
-        '%IVA1': f.pct_iva1 != null ? parseFloat(f.pct_iva1) : 0,
-        'Total IVA1': f.total_iva1 != null ? parseFloat(f.total_iva1) : 0,
-        '%RE1': f.pct_re1 != null ? parseFloat(f.pct_re1) : 0,
-        'Total RE1': f.total_re1 != null ? parseFloat(f.total_re1) : 0,
-        'TASAS': f.tasas != null ? parseFloat(f.tasas) : 0,
-        'Base 2': f.base2 != null ? parseFloat(f.base2) : 0,
-        '%IVA2': f.pct_iva2 != null ? parseFloat(f.pct_iva2) : 0,
-        'Total IVA2': f.total_iva2 != null ? parseFloat(f.total_iva2) : 0,
-        'Base3': f.base3 != null ? parseFloat(f.base3) : 0,
-        '%IVA3': f.pct_iva3 != null ? parseFloat(f.pct_iva3) : 0,
-        'Total IVA3': f.total_iva3 != null ? parseFloat(f.total_iva3) : 0,
-        'Base4': 0,
-        '%IVA4': 0,
-        'Total IVA4': 0,
-        'Base5': 0,
-        '%IVA5': 0,
-        'Total IVA5': 0,
-        'Exento': f.exento != null ? parseFloat(f.exento) : 0,
-        'DESCUENTO': f.descuento != null ? parseFloat(f.descuento) : 0,
-        'Base Retención': f.base_retencion != null ? parseFloat(f.base_retencion) : 0,
-        '% Retención': f.pct_retencion != null ? parseFloat(f.pct_retencion) : 0,
-        'Total Retención': f.total_retencion != null ? parseFloat(f.total_retencion) : 0,
-        'Total': f.total != null ? parseFloat(f.total) : 0
-      }));
-
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(filas, { header: cabeceras });
-      const anchos = [8, ...(esRevisadas ? [12] : []), 18, 12, 14, 28, 18, 30, 10, 7, 10, 7, 10, 10, 10, 7, 10, 10, 7, 10, 10, 7, 10, 10, 7, 10, 10, 14, 12, 10, 14, 12];
-      ws['!cols'] = anchos.map(w => ({ wch: w }));
-      XLSX.utils.book_append_sheet(wb, ws, esRevisadas ? 'Revisadas y Facturadas' : esObra ? 'Facturas Obra' : esCsg ? 'Facturas CSG' : 'Facturas Almacén');
-      const fecha = new Date().toISOString().split('T')[0];
-      const nombre = `${tablaActual}_${fecha}.xlsx`;
-      XLSX.writeFile(wb, nombre);
-      // Marcar como exportadas a Excel
-      if (esObra || esCsg || esRevisadas || tablaActual === 'facturas_almacen') {
-        const idsPorTabla = {};
-        filtrados.forEach(f => {
-          const tablaDest = esRevisadas ? f.origen : tablaActual;
-          (idsPorTabla[tablaDest] = idsPorTabla[tablaDest] || []).push(f.id);
-        });
-        for (const [tabla, ids] of Object.entries(idsPorTabla)) {
-          try { await marcarExportadosExcel(tabla, ids); }
-          catch (e) { console.error('No se pudo marcar como exportado:', tabla, e); }
-        }
-        cargarDatos();
-      }
-      toast(`<i class="fa-solid fa-file-excel me-1"></i>Excel descargado: <strong>${nombre}</strong>`, 'ok');
-    }
-
-    // descargar todos los archivos
-    //DESCARGA DE ARCHIVOS ADJUNTOS POR FECHA (ZIP) 
-    const SECCIONES_CON_ARCHIVOS = ['facturas_almacen', 'facturas_obra', 'facturas_csg', 'revisadas_facturadas', 'ingresos', 'albaranes'];
-
-    function _archivosDeRegistro(f) {
-      if (f.archivos_urls && f.archivos_urls.length) return f.archivos_urls;
-      if (f.archivo_url) return [f.archivo_url];
-      return [];
-    }
-
-    function _extensionDeUrl(url) {
-      const m = (url || '').split('?')[0].split('#')[0].match(/\.([a-zA-Z0-9]+)$/);
-      return m ? m[1] : 'pdf';
-    }
-
-    function abrirModalExportarArchivos() {
-      if (!SECCIONES_CON_ARCHIVOS.includes(tablaActual)) {
-        toast('La descarga de archivos solo está disponible en Facturas, Revisadas y Facturadas, Ingresos y Albaranes', 'err');
-        return;
-      }
-      const sel = document.getElementById('exportArchivosYear');
-      sel.innerHTML = '';
-      const currentYear = new Date().getFullYear();
-      for (let y = currentYear; y >= currentYear - 5; y--) {
-        const opt = document.createElement('option');
-        opt.value = y; opt.textContent = y;
-        sel.appendChild(opt);
-      }
-      sel.value = currentYear;
-      document.querySelectorAll('#exportArchivosMeses input').forEach(c => c.checked = false);
-      document.getElementById('infoArchivosZip').textContent = '';
-      document.getElementById('modalExportarArchivos').classList.add('visible');
-    }
-
-    async function descargarArchivosPorFecha() {
-      const year = parseInt(document.getElementById('exportArchivosYear').value);
-      const meses = Array.from(document.querySelectorAll('#exportArchivosMeses input:checked')).map(i => parseInt(i.value));
-
-      const filtrados = _ordenarParaExportacion(registros.filter(f => {
-        const fechaRef = f.fecha_recibido || f.fecha;
-        if (!fechaRef) return false;
-        const [y, m] = fechaRef.split('-').map(Number);
-        if (y !== year) return false;
-        if (meses.length && !meses.includes(m)) return false;
-        return true;
-      }));
-
-      const tareas = [];
-      const contadorNombres = {};
-      filtrados.forEach((f, indexOrden) => {
-        const archivosDelRegistro = _archivosDeRegistro(f);
-        archivosDelRegistro.forEach((url, i) => {
-          const base = (f.proveedor || f.empresa || f.cliente || 'archivo')
-            .toString().replace(/[^a-zA-Z0-9_\-]+/g, '_');
-          const numDoc = (f.numero_factura || f.numero_albaran || f.numero_ingreso || '')
-            .toString().replace(/[^a-zA-Z0-9_\-]+/g, '_');
-          const fechaOriginal = (f.fecha_recibido || f.fecha) || '';
-          const fechaTxt = fechaOriginal.includes('-')
-            ? fechaOriginal.split('-').reverse().join('')  // YYYY-MM-DD → DDMMYYYY
-            : fechaOriginal;
-          const orden = String(indexOrden + 1).padStart(4, '0');
-          const sufijoArchivo = archivosDelRegistro.length > 1 ? `_${i + 1}` : '';
-
-          const nombreBase = `${orden}_${fechaTxt}_${base}${numDoc ? '_' + numDoc : ''}${sufijoArchivo}`;
-          const ext = _extensionDeUrl(url);
-
-          let nombreFinal;
-          if (!contadorNombres[nombreBase]) {
-            contadorNombres[nombreBase] = 1;
-            nombreFinal = `${nombreBase}.${ext}`;
-          } else {
-            contadorNombres[nombreBase]++;
-            nombreFinal = `${nombreBase}_${contadorNombres[nombreBase]}.${ext}`;
-          }
-
-          tareas.push({ url, nombre: nombreFinal, id: f.id });
-        });
-      });
-
-      if (!tareas.length) { toast('No hay archivos para ese filtro', 'err'); return; }
-
-      const btn = document.getElementById('btnDescargarArchivosZip');
-      const textoOriginal = btn.innerHTML;
-      btn.disabled = true;
-
-      try {
-        const zip = new JSZip();
-        let ok = 0, fallidos = 0;
-        const fallidosNombres = [];
-        for (let idx = 0; idx < tareas.length; idx++) {
-          const t = tareas[idx];
-          btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-1"></i>Descargando ${idx + 1}/${tareas.length}...`;
-          try {
-            const r = await fetch(t.url);
-            if (!r.ok) throw new Error('HTTP ' + r.status);
-            let blob = await r.blob();
-            let nombreFinal = t.nombre;
-            if (esImagen(t.url)) {
-              blob = await comprimirImagenBlob(blob, 1600, 0.72);
-              nombreFinal = nombreFinal.replace(/\.[a-zA-Z0-9]+$/, '.jpg');
+            let nombreFinal;
+            if (!contadorNombres[nombreBase]) {
+              contadorNombres[nombreBase] = 1;
+              nombreFinal = `${nombreBase}.${ext}`;
+            } else {
+              contadorNombres[nombreBase]++;
+              nombreFinal = `${nombreBase}_${contadorNombres[nombreBase]}.${ext}`;
             }
-            zip.file(nombreFinal, blob);
-            ok++;
-          } catch (e) {
-            console.error('No se pudo descargar', t.url, e);
-            fallidos++;
-            fallidosNombres.push(t.nombre);
+
+            tareas.push({ url, nombre: nombreFinal, id: f.id });
+          });
+        });
+
+        if (!tareas.length) { toast('No hay archivos para ese filtro', 'err'); return; }
+
+        const btn = document.getElementById('btnDescargarArchivosZip');
+        const textoOriginal = btn.innerHTML;
+        btn.disabled = true;
+
+        try {
+          const zip = new JSZip();
+          let ok = 0, fallidos = 0;
+          const fallidosNombres = [];
+          for (let idx = 0; idx < tareas.length; idx++) {
+            const t = tareas[idx];
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-1"></i>Descargando ${idx + 1}/${tareas.length}...`;
+            try {
+              const r = await fetch(t.url);
+              if (!r.ok) throw new Error('HTTP ' + r.status);
+              let blob = await r.blob();
+              let nombreFinal = t.nombre;
+              if (esImagen(t.url)) {
+                blob = await comprimirImagenBlob(blob, 1600, 0.72);
+                nombreFinal = nombreFinal.replace(/\.[a-zA-Z0-9]+$/, '.jpg');
+              }
+              zip.file(nombreFinal, blob);
+              ok++;
+            } catch (e) {
+              console.error('No se pudo descargar', t.url, e);
+              fallidos++;
+              fallidosNombres.push(t.nombre);
+            }
           }
-        }
 
-        if (!ok) { toast('No se ha podido descargar ningún archivo (revisa la consola)', 'err'); return; }
+          if (!ok) { toast('No se ha podido descargar ningún archivo (revisa la consola)', 'err'); return; }
 
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Generando ZIP...';
-        const contenido = await zip.generateAsync({ type: 'blob' });
-        const nombreZip = `archivos_${tablaActual}_${year}${meses.length ? '_' + meses.join('-') : ''}.zip`;
-        const pesoMB = (contenido.size / (1024 * 1024)).toFixed(1);
+          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Generando ZIP...';
+          const contenido = await zip.generateAsync({ type: 'blob' });
+          const nombreZip = `archivos_${tablaActual}_${year}${meses.length ? '_' + meses.join('-') : ''}.zip`;
+          const pesoMB = (contenido.size / (1024 * 1024)).toFixed(1);
 
-        // Si pesa poco, descarga normal
-        if (contenido.size < 20 * 1024 * 1024) {
-          const a = document.createElement('a');
-          a.href = URL.createObjectURL(contenido);
-          a.download = nombreZip;
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          toast(`<i class="fa-solid fa-file-zipper me-1"></i>ZIP descargado (${pesoMB} MB) con ${ok} archivo(s)`, 'ok');
-        } else {
-          // Si pesa mucho, lo subimos y damos un enlace para compartir
-          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Subiendo ZIP (' + pesoMB + ' MB)...';
-          const url = await subirZipStorage(contenido, nombreZip);
-          await navigator.clipboard.writeText(url).catch(() => { });
-          document.getElementById('modalDetalleTitulo').innerHTML =
-            `<i class="fa-solid fa-link" style="color:#b53987"></i>Enlace del ZIP (${pesoMB} MB)`;
-          document.getElementById('modalDetalleContenido').innerHTML = `
+          // Si pesa poco, descarga normal
+          if (contenido.size < 20 * 1024 * 1024) {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(contenido);
+            a.download = nombreZip;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            toast(`<i class="fa-solid fa-file-zipper me-1"></i>ZIP descargado (${pesoMB} MB) con ${ok} archivo(s)`, 'ok');
+          } else {
+            // Si pesa mucho, lo subimos y damos un enlace para compartir
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Subiendo ZIP (' + pesoMB + ' MB)...';
+            const url = await subirZipStorage(contenido, nombreZip);
+            await navigator.clipboard.writeText(url).catch(() => { });
+            document.getElementById('modalDetalleTitulo').innerHTML =
+              `<i class="fa-solid fa-link" style="color:#b53987"></i>Enlace del ZIP (${pesoMB} MB)`;
+            document.getElementById('modalDetalleContenido').innerHTML = `
             <p style="font-size:.85rem;color:#666;margin-bottom:10px">El archivo es demasiado grande para adjuntarlo por email — copia este enlace y mándalo en su lugar (ya está copiado al portapapeles):</p>
             <input type="text" readonly value="${url}" style="width:100%;padding:8px;border:1.5px solid #ddd;border-radius:8px;font-size:.82rem" onclick="this.select()">
           `;
-          document.getElementById('modalDetalle').classList.add('visible');
-          toast(`<i class="fa-solid fa-link me-1"></i>Enlace generado y copiado — pégalo en el correo`, 'ok');
-        }
-        cerrarModal('modalExportarArchivos');
-      } catch (e) {
-        toast('Error al generar el ZIP: ' + e.message, 'err');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = textoOriginal;
-      }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    //REVISIONES Y AVISOS DE FACTURAS VENCIDAS
-
-
-    // Debe coincidir con REVISORES en supabase_service.py (FacturaSync)
-    const REVISORES = {
-      facturas_obra: [
-        { nombre: 'Angel', email: 'angelperez@olivillatres.com', campo: 'revisado_angel' },
-        { nombre: 'Emilio', email: 'efernandez@olivillatres.com', campo: 'revisado_emilio' },
-        { nombre: 'Cynthia', email: 'cynthiagomez@olivillatres.com', campo: 'revisado_cynthia' }
-      ],
-      facturas_almacen: [
-        { nombre: 'Cynthia', email: 'cynthiagomez@olivillatres.com', campo: 'revisado_cynthia' },
-        { nombre: 'Emilio', email: 'efernandez@olivillatres.com', campo: 'revisado_emilio' }
-      ],
-      facturas_csg: [
-        { nombre: 'Angel', email: 'angelperez@olivillatres.com', campo: 'revisado_angel' },
-        { nombre: 'Emilio', email: 'efernandez@olivillatres.com', campo: 'revisado_emilio' },
-        { nombre: 'Cynthia', email: 'cynthiagomez@olivillatres.com', campo: 'revisado_cynthia' }
-      ],
-      ingresos: [
-        { nombre: 'Angel', email: 'angelperez@olivillatres.com', campo: 'revisado_angel' },
-        { nombre: 'Emilio', email: 'efernandez@olivillatres.com', campo: 'revisado_emilio' }
-      ]
-    };
-
-    async function notificarRevisoresFactura(tabla, factura) {
-      const revisores = REVISORES[tabla] || [];
-      if (!revisores.length) return;
-      const tipo = tabla === 'facturas_obra' ? 'revision_obra' : tabla === 'facturas_csg' ? 'revision_csg' : 'revision_almacen';
-
-      for (const rev of revisores) {
-        try {
-          await fetch(
-            'https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker',
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
-              body: JSON.stringify({
-                tipo,
-                email: rev.email,
-                nombre: rev.nombre,
-                factura: {
-                  proveedor: factura.proveedor,
-                  numero_factura: factura.numero_factura,
-                  fecha: factura.fecha,
-                  total: factura.total,
-                  nombre_obra: factura.nombre_obra || null
-                }
-              })
-            }
-          );
+            document.getElementById('modalDetalle').classList.add('visible');
+            toast(`<i class="fa-solid fa-link me-1"></i>Enlace generado y copiado — pégalo en el correo`, 'ok');
+          }
+          cerrarModal('modalExportarArchivos');
         } catch (e) {
-          console.error('Error notificando a', rev.nombre, e);
+          toast('Error al generar el ZIP: ' + e.message, 'err');
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = textoOriginal;
         }
       }
-    }
 
 
-    async function comprobarFacturasVencidasSinRevisar() {
-      if (tablaActual !== 'facturas_almacen' && tablaActual !== 'facturas_obra' && tablaActual !== 'facturas_csg' && tablaActual !== 'ingresos') return;
-      const hoyD = new Date(); hoyD.setHours(0, 0, 0, 0);
-      const revisores = REVISORES[tablaActual] || [];
-      if (!revisores.length) return;
 
-      for (const f of registros) {
-        if (!f.fecha_vencimiento) continue;
-        if (f.aviso_vencimiento_enviado) continue;
 
-        const diasRestantes = Math.ceil((new Date(f.fecha_vencimiento) - hoyD) / 86400000);
 
-        // Avisar cuando falten 3 días o menos (incluye si ya está vencida)
-        if (diasRestantes > 3) continue;
 
-        const pendientes = revisores.filter(r => !f[r.campo]);
-        if (!pendientes.length) continue;
 
-        const tipo = tablaActual === 'facturas_obra' ? 'aviso_vencimiento_obra'
-          : tablaActual === 'facturas_csg' ? 'aviso_vencimiento_csg'
-            : tablaActual === 'ingresos' ? 'aviso_vencimiento_ingresos'
-              : 'aviso_vencimiento_almacen';
 
-        for (const rev of pendientes) {
+
+
+
+
+
+
+
+
+      //REVISIONES Y AVISOS DE FACTURAS VENCIDAS
+
+
+      // Debe coincidir con REVISORES en supabase_service.py (FacturaSync)
+      const REVISORES = {
+        facturas_obra: [
+          { nombre: 'Angel', email: 'angelperez@olivillatres.com', campo: 'revisado_angel' },
+          { nombre: 'Emilio', email: 'efernandez@olivillatres.com', campo: 'revisado_emilio' },
+          { nombre: 'Cynthia', email: 'cynthiagomez@olivillatres.com', campo: 'revisado_cynthia' }
+        ],
+        facturas_almacen: [
+          { nombre: 'Cynthia', email: 'cynthiagomez@olivillatres.com', campo: 'revisado_cynthia' },
+          { nombre: 'Emilio', email: 'efernandez@olivillatres.com', campo: 'revisado_emilio' }
+        ],
+        facturas_csg: [
+          { nombre: 'Angel', email: 'angelperez@olivillatres.com', campo: 'revisado_angel' },
+          { nombre: 'Emilio', email: 'efernandez@olivillatres.com', campo: 'revisado_emilio' },
+          { nombre: 'Cynthia', email: 'cynthiagomez@olivillatres.com', campo: 'revisado_cynthia' }
+        ],
+        ingresos: [
+          { nombre: 'Angel', email: 'angelperez@olivillatres.com', campo: 'revisado_angel' },
+          { nombre: 'Emilio', email: 'efernandez@olivillatres.com', campo: 'revisado_emilio' }
+        ]
+      };
+
+      async function notificarRevisoresFactura(tabla, factura) {
+        const revisores = REVISORES[tabla] || [];
+        if (!revisores.length) return;
+        const tipo = tabla === 'facturas_obra' ? 'revision_obra' : tabla === 'facturas_csg' ? 'revision_csg' : 'revision_almacen';
+
+        for (const rev of revisores) {
           try {
             await fetch(
               'https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker',
@@ -11639,92 +11646,143 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
                   email: rev.email,
                   nombre: rev.nombre,
                   factura: {
-                    proveedor: f.proveedor,
-                    numero_factura: f.numero_factura,
-                    fecha: f.fecha,
-                    fecha_vencimiento: f.fecha_vencimiento,
-                    dias_restantes: diasRestantes,
-                    total: f.total,
-                    nombre_obra: f.nombre_obra || null
+                    proveedor: factura.proveedor,
+                    numero_factura: factura.numero_factura,
+                    fecha: factura.fecha,
+                    total: factura.total,
+                    nombre_obra: factura.nombre_obra || null
                   }
                 })
               }
             );
           } catch (e) {
-            console.error('Error avisando vencimiento a', rev.nombre, e);
+            console.error('Error notificando a', rev.nombre, e);
           }
         }
-
-        try {
-          await apiPatch(tablaActual, f.id, { aviso_vencimiento_enviado: true });
-          f.aviso_vencimiento_enviado = true;
-        } catch (e) {
-          console.error('No se pudo marcar aviso_vencimiento_enviado:', e);
-        }
       }
-    }
 
 
+      async function comprobarFacturasVencidasSinRevisar() {
+        if (tablaActual !== 'facturas_almacen' && tablaActual !== 'facturas_obra' && tablaActual !== 'facturas_csg' && tablaActual !== 'ingresos') return;
+        const hoyD = new Date(); hoyD.setHours(0, 0, 0, 0);
+        const revisores = REVISORES[tablaActual] || [];
+        if (!revisores.length) return;
 
+        for (const f of registros) {
+          if (!f.fecha_vencimiento) continue;
+          if (f.aviso_vencimiento_enviado) continue;
 
+          const diasRestantes = Math.ceil((new Date(f.fecha_vencimiento) - hoyD) / 86400000);
 
+          // Avisar cuando falten 3 días o menos (incluye si ya está vencida)
+          if (diasRestantes > 3) continue;
 
-    //EMAIL PUNTOS Y CADUCIDAD DE PUNTOS
+          const pendientes = revisores.filter(r => !f[r.campo]);
+          if (!pendientes.length) continue;
 
-    async function enviarEmailPuntos(email, nombre, puntos, tipo) {
-      if (!email) return;
-      try {
-        const res = await fetch(
-          'https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
-            body: JSON.stringify({ email, nombre, puntos, tipo })
+          const tipo = tablaActual === 'facturas_obra' ? 'aviso_vencimiento_obra'
+            : tablaActual === 'facturas_csg' ? 'aviso_vencimiento_csg'
+              : tablaActual === 'ingresos' ? 'aviso_vencimiento_ingresos'
+                : 'aviso_vencimiento_almacen';
+
+          for (const rev of pendientes) {
+            try {
+              await fetch(
+                'https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker',
+                {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+                  body: JSON.stringify({
+                    tipo,
+                    email: rev.email,
+                    nombre: rev.nombre,
+                    factura: {
+                      proveedor: f.proveedor,
+                      numero_factura: f.numero_factura,
+                      fecha: f.fecha,
+                      fecha_vencimiento: f.fecha_vencimiento,
+                      dias_restantes: diasRestantes,
+                      total: f.total,
+                      nombre_obra: f.nombre_obra || null
+                    }
+                  })
+                }
+              );
+            } catch (e) {
+              console.error('Error avisando vencimiento a', rev.nombre, e);
+            }
           }
-        );
-        console.log('Status:', res.status);
-        const text = await res.text();
-        console.log('Respuesta:', text);
-      } catch (e) {
-        console.error('Error:', e);
-      }
-    }
 
-
-    async function comprobarCaducidadPuntos() {
-      const ahora = new Date();
-      for (const cliente of clientesDB) {
-        if (!cliente.puntos_desde || !cliente.puntos || cliente.puntos <= 0) continue;
-        const desde = new Date(cliente.puntos_desde);
-        const mesesTranscurridos = (ahora.getFullYear() - desde.getFullYear()) * 12
-          + (ahora.getMonth() - desde.getMonth());
-
-        if (mesesTranscurridos >= 6) {
-          const siguienteCiclo = new Date(desde);
-          siguienteCiclo.setMonth(siguienteCiclo.getMonth() + 6);
-          await apiPatch('clientes', cliente.id, {
-            puntos: 0,
-            puntos_desde: siguienteCiclo.toISOString(),
-            aviso_puntos_enviado: false
-          });
-          cliente.puntos = 0;
-          cliente.puntos_desde = siguienteCiclo.toISOString();
-          cliente.aviso_puntos_enviado = false;
-          toast(`Puntos de <strong>${cliente.nombre}</strong> reiniciados por caducidad`, 'info');
-
-        } else if (mesesTranscurridos === 5 && !cliente.aviso_puntos_enviado) {
-          if (cliente.email) {
-            await enviarEmailPuntos(cliente.email, cliente.nombre, cliente.puntos, 'aviso');
-          }
           try {
-            await apiPatch('clientes', cliente.id, { aviso_puntos_enviado: true });
-            cliente.aviso_puntos_enviado = true;
+            await apiPatch(tablaActual, f.id, { aviso_vencimiento_enviado: true });
+            f.aviso_vencimiento_enviado = true;
           } catch (e) {
-            console.error('No se pudo marcar aviso_puntos_enviado:', e);
+            console.error('No se pudo marcar aviso_vencimiento_enviado:', e);
           }
         }
       }
-    }
+
+
+
+
+
+
+      //EMAIL PUNTOS Y CADUCIDAD DE PUNTOS
+
+      async function enviarEmailPuntos(email, nombre, puntos, tipo) {
+        if (!email) return;
+        try {
+          const res = await fetch(
+            'https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+              body: JSON.stringify({ email, nombre, puntos, tipo })
+            }
+          );
+          console.log('Status:', res.status);
+          const text = await res.text();
+          console.log('Respuesta:', text);
+        } catch (e) {
+          console.error('Error:', e);
+        }
+      }
+
+
+      async function comprobarCaducidadPuntos() {
+        const ahora = new Date();
+        for (const cliente of clientesDB) {
+          if (!cliente.puntos_desde || !cliente.puntos || cliente.puntos <= 0) continue;
+          const desde = new Date(cliente.puntos_desde);
+          const mesesTranscurridos = (ahora.getFullYear() - desde.getFullYear()) * 12
+            + (ahora.getMonth() - desde.getMonth());
+
+          if (mesesTranscurridos >= 6) {
+            const siguienteCiclo = new Date(desde);
+            siguienteCiclo.setMonth(siguienteCiclo.getMonth() + 6);
+            await apiPatch('clientes', cliente.id, {
+              puntos: 0,
+              puntos_desde: siguienteCiclo.toISOString(),
+              aviso_puntos_enviado: false
+            });
+            cliente.puntos = 0;
+            cliente.puntos_desde = siguienteCiclo.toISOString();
+            cliente.aviso_puntos_enviado = false;
+            toast(`Puntos de <strong>${cliente.nombre}</strong> reiniciados por caducidad`, 'info');
+
+          } else if (mesesTranscurridos === 5 && !cliente.aviso_puntos_enviado) {
+            if (cliente.email) {
+              await enviarEmailPuntos(cliente.email, cliente.nombre, cliente.puntos, 'aviso');
+            }
+            try {
+              await apiPatch('clientes', cliente.id, { aviso_puntos_enviado: true });
+              cliente.aviso_puntos_enviado = true;
+            } catch (e) {
+              console.error('No se pudo marcar aviso_puntos_enviado:', e);
+            }
+          }
+        }
+      }
   </script>
 </body>
 

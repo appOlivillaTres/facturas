@@ -2427,34 +2427,7 @@
       </div>
     </div>
   </div>
-  <div class="modal-overlay" id="modalConsumoInterno">
-    <div class="modal-box-sm">
-      <h3><i class="fa-solid fa-user-check" style="color:#b53987"></i>Consumo Interno</h3>
-      <div class="form-group ac-wrap">
-        <label>¿Quién se lo lleva? *</label>
-        <input type="text" id="ci_empleado" placeholder="Escribe el nombre para buscar en Clientes...">
-        <input type="hidden" id="ci_cliente_id">
-      </div>
-      <div class="form-group">
-        <label>Fecha *</label>
-        <input type="date" id="ci_fecha">
-      </div>
-      <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">¿Qué se lleva?</div>
-      <div id="lineasConsumoInterno"></div>
-      <button type="button" class="btn-add-linea" onclick="addLineaConsumoInterno()">
-        <i class="fa-solid fa-plus me-1"></i>Añadir producto
-      </button>
-      <div class="form-group" style="margin-top:12px;padding-top:12px;border-top:1.5px solid #ede5f5">
-        <label style="font-weight:600">Total (€)</label>
-        <input type="number" id="ci_total" readonly style="background:#f7f0f5;font-weight:700;max-width:200px">
-      </div>
-      <div class="modal-btns">
-        <button class="btn-cancelar" onclick="cerrarModal('modalConsumoInterno')">Cancelar</button>
-        <button class="btn-guardar" onclick="guardarConsumoInterno()"><i
-            class="fa-solid fa-floppy-disk me-1"></i>Guardar</button>
-      </div>
-    </div>
-  </div>
+  
   <!-- MODAL DEVOLVER MAQUINARIA -->
   <div class="modal-overlay" id="modalDevolverMaquina">
     <div class="modal-box-sm">
@@ -2769,6 +2742,34 @@
       </div>
     </div>
   </div>
+  <div class="modal-overlay" id="modalConsumoInterno">
+    <div class="modal-box-sm">
+      <h3><i class="fa-solid fa-user-check" style="color:#b53987"></i>Consumo Interno</h3>
+      <div class="form-group ac-wrap">
+        <label>¿Quién se lo lleva? *</label>
+        <input type="text" id="ci_empleado" placeholder="Escribe el nombre para buscar en Clientes...">
+        <input type="hidden" id="ci_cliente_id">
+      </div>
+      <div class="form-group">
+        <label>Fecha *</label>
+        <input type="date" id="ci_fecha">
+      </div>
+      <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">¿Qué se lleva?</div>
+      <div id="lineasConsumoInterno"></div>
+      <button type="button" class="btn-add-linea" onclick="addLineaConsumoInterno()">
+        <i class="fa-solid fa-plus me-1"></i>Añadir producto
+      </button>
+      <div class="form-group" style="margin-top:12px;padding-top:12px;border-top:1.5px solid #ede5f5">
+        <label style="font-weight:600">Total (€)</label>
+        <input type="number" id="ci_total" readonly style="background:#f7f0f5;font-weight:700;max-width:200px">
+      </div>
+      <div class="modal-btns">
+        <button class="btn-cancelar" onclick="cerrarModal('modalConsumoInterno')">Cancelar</button>
+        <button class="btn-guardar" onclick="guardarConsumoInterno()"><i
+            class="fa-solid fa-floppy-disk me-1"></i>Guardar</button>
+      </div>
+    </div>
+  </div>
   <div class="toast-wrap" id="toastWrap"></div>
   <datalist id="dl_productos"></datalist>
   <datalist id="dl_materiales_exclusivos"></datalist>
@@ -3039,8 +3040,8 @@
     const TODAS_LAS_SECCIONES = [
       'clasificacion', 'facturas_almacen', 'facturas_obra', 'facturas_csg',
       'revisadas_facturadas', 'obras', 'calendario_pagos', 'presupuestos',
-      'albaranes', 'albaranes_venta', 'consumo_interno', 'clientes', 'inventario',
-      'materiales_obra', 'ingresos', 'varios', 'maquinaria'
+      'albaranes', 'albaranes_venta', 'clientes', 'inventario',
+      'materiales_obra', 'ingresos', 'varios', 'maquinaria', 'consumo_interno'
     ];
 
 
@@ -10868,7 +10869,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <td style="text-align:right">${fmt(i.importe_total)}</td>
     </tr>`).join('');
 
-  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Ticket consumo interno</title>
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
   <style>
     body{font-family:'Courier New',monospace;color:#111;padding:16px;max-width:320px;margin:0 auto;font-size:.85rem}
     h2{text-align:center;font-size:1rem;margin:0 0 4px}

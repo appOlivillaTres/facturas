@@ -2430,9 +2430,10 @@
   <div class="modal-overlay" id="modalConsumoInterno">
     <div class="modal-box-sm">
       <h3><i class="fa-solid fa-user-check" style="color:#b53987"></i>Consumo Interno</h3>
-      <div class="form-group">
+      <div class="form-group ac-wrap">
         <label>¿Quién se lo lleva? *</label>
-        <input type="text" id="ci_empleado" placeholder="Nombre y apellidos">
+        <input type="text" id="ci_empleado" placeholder="Escribe el nombre para buscar en Clientes...">
+        <input type="hidden" id="ci_cliente_id">
       </div>
       <div class="form-group">
         <label>Fecha *</label>
@@ -6149,7 +6150,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       } else if (tablaActual === 'consumo_interno') {
         hdr.innerHTML = `<tr><th>Empleado</th><th>Fecha</th><th>Productos</th><th class="num-cell">Total</th><th>Registrado por</th><th>Detalle</th><th></th></tr>`;
         const lista = registros.filter(f => (f.empleado || '').toLowerCase().includes(q));
-        if (!lista.length) { bdy.innerHTML = emptyRow(7, 'No hay consumos internos registrados'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(8, 'No hay consumos internos registrados'); return; }
         bdy.innerHTML = lista.map(f => {
           const items = f.consumo_interno_items || [];
           const resumen = items.length
@@ -6162,6 +6163,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <td class="td-total">${fmt(f.total)}</td>
       <td>${NOMBRES_PERSONAS[f.creado_por] || f.creado_por || '—'}</td>
       <td><span class="link-badge" onclick="verDetalleConsumoInterno(${f.id})"><i class="fa-solid fa-list"></i>Ver detalle</span></td>
+      <td><button class="btn-toggle-pago pendiente" onclick="imprimirConsumoInterno(${f.id})" title="Imprimir ticket"><i class="fa-solid fa-print"></i></button></td>
       <td><button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
     </tr>`;
         }).join('');
@@ -10854,6 +10856,47 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       }
     }
 
+    function imprimirConsumoInterno(id) {
+  const f = registros.find(r => r.id === id);
+  if (!f) { toast('No se ha encontrado el registro', 'err'); return; }
+  const items = f.consumo_interno_items || [];
+
+  const filas = items.map(i => `
+    <tr>
+      <td>${i.producto_nombre || ''}</td>
+      <td style="text-align:center">${fmtStock(i.cantidad)}</td>
+      <td style="text-align:right">${fmt(i.importe_total)}</td>
+    </tr>`).join('');
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Ticket consumo interno</title>
+  <style>
+    body{font-family:'Courier New',monospace;color:#111;padding:16px;max-width:320px;margin:0 auto;font-size:.85rem}
+    h2{text-align:center;font-size:1rem;margin:0 0 4px}
+    .linea{border-top:1px dashed #333;margin:10px 0}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th,td{padding:4px 2px;font-size:.8rem;text-align:left}
+    th{border-bottom:1px solid #333}
+    .total{font-weight:700;font-size:1rem;text-align:right;margin-top:10px;border-top:1px dashed #333;padding-top:8px}
+    .btn-imprimir{display:block;margin:16px auto 0;padding:8px 16px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer}
+    @media print{.btn-imprimir{display:none}}
+  </style></head><body>
+  <h2>Olivilla Tres</h2>
+  <p style="text-align:center;margin:0 0 8px">Consumo Interno</p>
+  <div class="linea"></div>
+  <p><b>Nombre:</b> ${f.empleado || '—'}</p>
+  <p><b>Fecha:</b> ${fmtF(f.fecha)}</p>
+  <div class="linea"></div>
+  <table>
+    <thead><tr><th>Producto</th><th style="text-align:center">Cant.</th><th style="text-align:right">Total</th></tr></thead>
+    <tbody>${filas || '<tr><td colspan="3">Sin productos</td></tr>'}</tbody>
+  </table>
+  <div class="total">TOTAL: ${fmt(f.total)}</div>
+  <button class="btn-imprimir" onclick="window.print()">Imprimir</button>
+  </body></html>`;
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+}
 
 
 
@@ -10878,12 +10921,15 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     function abrirModalConsumoInterno() {
       document.getElementById('ci_empleado').value = '';
+      document.getElementById('ci_cliente_id').value = '';
+      clienteConsumoSelId = null;
       document.getElementById('ci_fecha').value = hoy();
       document.getElementById('ci_total').value = '';
       document.getElementById('lineasConsumoInterno').innerHTML = '';
       lineasConsumoInternoCount = 0;
       addLineaConsumoInterno();
       document.getElementById('modalConsumoInterno').classList.add('visible');
+      setTimeout(() => setupClienteConsumoAC('ci_empleado', 'ci_cliente_id'), 50);
     }
 
     function addLineaConsumoInterno() {
@@ -10958,7 +11004,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const total = parseFloat(document.getElementById('ci_total').value || 0);
 
       try {
-        const [header] = await apiPost('consumo_interno', { empleado, fecha, total, creado_por: currentPersona });
+        const [header] = await apiPost('consumo_interno', {
+          empleado, fecha, total,
+          cliente_id: clienteConsumoSelId || null,
+          creado_por: currentPersona
+        });
         await apiPost('consumo_interno_items', lineas.map(l => ({
           consumo_interno_id: header.id,
           producto_id: l.producto_id, producto_nombre: l.producto_nombre,
@@ -10987,7 +11037,48 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     </tbody></table>`;
       document.getElementById('modalDetalle').classList.add('visible');
     }
+    let clienteConsumoSelId = null;
 
+    function setupClienteConsumoAC(inputNombreId, inputIdId) {
+      const inpN = document.getElementById(inputNombreId);
+      const inpId = document.getElementById(inputIdId);
+      if (!inpN || !inpId) return;
+
+      inpN.parentElement.style.position = 'relative';
+      const lista = _crearLista('ac_consumo_' + inputNombreId, inpN.parentElement);
+
+      function filtrar(q) {
+        return clientesDB.filter(c => (c.nombre || '').toLowerCase().includes(q)).slice(0, 10);
+      }
+      function seleccionar(c) {
+        inpN.value = c.nombre || '';
+        inpId.value = c.id;
+        clienteConsumoSelId = c.id;
+        lista.style.display = 'none';
+      }
+      function render(items) {
+        if (!items.length) { lista.style.display = 'none'; return; }
+        lista.innerHTML = items.map(c =>
+          `<div class="ac-item" data-id="${c.id}">
+        <span class="ac-nombre">${c.nombre || '—'}</span>
+        <span class="ac-nif">${c.nif || 'Sin NIF'}</span>
+      </div>`).join('');
+        lista.style.display = 'block';
+        lista.querySelectorAll('.ac-item').forEach(el => {
+          el.addEventListener('mousedown', e => {
+            e.preventDefault();
+            const c = clientesDB.find(x => x.id == el.dataset.id);
+            if (c) seleccionar(c);
+          });
+        });
+      }
+      inpN.addEventListener('input', () => {
+        inpId.value = ''; clienteConsumoSelId = null;
+        render(filtrar(inpN.value.toLowerCase().trim()));
+      });
+      inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim())); });
+      inpN.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
+    }
 
 
 

@@ -2119,6 +2119,8 @@
         <button class="btn-nav" onclick="cambiarSeccion('varios')"><i class="fa-solid fa-ellipsis"></i>Varios</button>
         <button class="btn-nav" onclick="cambiarSeccion('maquinaria')"><i
             class="fa-solid fa-truck-monster"></i>Maquinaria</button>
+        <button class="btn-nav" onclick="cambiarSeccion('consumo_interno')"><i
+            class="fa-solid fa-user-check"></i>Consumo Interno</button>
       </div>
       <span id="usuarioConectado" style="color:#fff;opacity:.85;font-size:.85rem;margin-right:10px"></span>
       <button class="btn-salir" onclick="volverAlPanel()" style="margin-right:8px"><i
@@ -2328,7 +2330,7 @@
       <p style="font-size:.85rem;color:#888;margin-bottom:14px">¿Qué tipo de albarán quieres crear?</p>
       <div style="display:flex;flex-direction:column;gap:10px">
         <button class="btn-nueva" style="justify-content:center"
-          onclick="cerrarModal('modalTipoAlbaranVenta'); abrirModalNuevo('albaranes_venta')">
+          onclick="cerrarModal('modalTipoAlbaranVenta'); document.getElementById('modalTipoVenta').classList.add('visible')">
           <i class="fa-solid fa-cart-shopping"></i> Venta
         </button>
         <button class="btn-nueva" style="justify-content:center;background:#2d7a4f"
@@ -2342,6 +2344,25 @@
       </div>
       <div class="modal-btns">
         <button class="btn-cancelar" onclick="cerrarModal('modalTipoAlbaranVenta')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="modalTipoVenta">
+    <div class="modal-box-sm">
+      <h3><i class="fa-solid fa-cart-shopping" style="color:#b53987"></i>Tipo de venta</h3>
+      <p style="font-size:.85rem;color:#888;margin-bottom:14px">¿Es una venta normal o consumo interno?</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn-nueva" style="justify-content:center"
+          onclick="cerrarModal('modalTipoVenta'); abrirModalNuevo('albaranes_venta')">
+          <i class="fa-solid fa-cart-shopping"></i> No consumo (venta normal)
+        </button>
+        <button class="btn-nueva" style="justify-content:center;background:#607d8b"
+          onclick="cerrarModal('modalTipoVenta'); abrirModalConsumoInterno()">
+          <i class="fa-solid fa-user-check"></i> Consumo interno
+        </button>
+      </div>
+      <div class="modal-btns">
+        <button class="btn-cancelar" onclick="cerrarModal('modalTipoVenta')">Cancelar</button>
       </div>
     </div>
   </div>
@@ -2402,6 +2423,33 @@
       <div class="modal-btns">
         <button class="btn-cancelar" onclick="cerrarModal('modalAltaAlquiler')">Cancelar</button>
         <button class="btn-guardar" onclick="guardarAltaAlquiler()"><i
+            class="fa-solid fa-floppy-disk me-1"></i>Guardar</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="modalConsumoInterno">
+    <div class="modal-box-sm">
+      <h3><i class="fa-solid fa-user-check" style="color:#b53987"></i>Consumo Interno</h3>
+      <div class="form-group">
+        <label>¿Quién se lo lleva? *</label>
+        <input type="text" id="ci_empleado" placeholder="Nombre y apellidos">
+      </div>
+      <div class="form-group">
+        <label>Fecha *</label>
+        <input type="date" id="ci_fecha">
+      </div>
+      <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">¿Qué se lleva?</div>
+      <div id="lineasConsumoInterno"></div>
+      <button type="button" class="btn-add-linea" onclick="addLineaConsumoInterno()">
+        <i class="fa-solid fa-plus me-1"></i>Añadir producto
+      </button>
+      <div class="form-group" style="margin-top:12px;padding-top:12px;border-top:1.5px solid #ede5f5">
+        <label style="font-weight:600">Total (€)</label>
+        <input type="number" id="ci_total" readonly style="background:#f7f0f5;font-weight:700;max-width:200px">
+      </div>
+      <div class="modal-btns">
+        <button class="btn-cancelar" onclick="cerrarModal('modalConsumoInterno')">Cancelar</button>
+        <button class="btn-guardar" onclick="guardarConsumoInterno()"><i
             class="fa-solid fa-floppy-disk me-1"></i>Guardar</button>
       </div>
     </div>
@@ -2608,8 +2656,8 @@
           <i class="fa-solid fa-plus me-1"></i>Añadir material exclusivo
         </button>
 
-        <div class="form-seccion">Maquinaria <span
-            style="font-weight:400;font-size:.75rem;color:#888">(máquinas de esta salida a obra propia)</span></div>
+        <div class="form-seccion">Maquinaria <span style="font-weight:400;font-size:.75rem;color:#888">(máquinas de esta
+            salida a obra propia)</span></div>
         <div id="lineasMaquinariaObra"></div>
         <button type="button" class="btn-add-linea" onclick="addLineaMaquinariaObra()">
           <i class="fa-solid fa-plus me-1"></i>Añadir máquina
@@ -2858,14 +2906,14 @@
     const TABLAS_REALTIME = [
       'facturas_pendientes', 'facturas_almacen', 'facturas_obra', 'facturas_csg',
       'albaranes', 'clientes', 'inventario', 'proveedores', 'materiales_obra', 'citas',
-      'ingresos', 'varios', 'albaranes_venta', 'maquinaria'
+      'ingresos', 'varios', 'albaranes_venta', 'maquinaria', 'consumo_interno'
     ];
 
     let _refrescoPendiente = null;  // Crea una variable vacia para guardar el temporizador de refresco, para que no se ejecute varias veces seguidas si llegan varios cambios en poco tiempo.
 
     // Primero mira si hay un modal abierto, y si lo hay, no hace nada (para no romper lo que se está editando en ese momento).
     function hayModalAbierto() {
-      return ['modalNueva', 'modalMaterialObra', 'modalDetalle', 'modalExportar', 'modalExportarMateriales', 'modalCita', 'modalPuntos', 'modalEvento', 'modalCobros', 'modalTipoAlbaranVenta']
+      return ['modalNueva', 'modalMaterialObra', 'modalDetalle', 'modalExportar', 'modalExportarMateriales', 'modalCita', 'modalPuntos', 'modalEvento', 'modalCobros', 'modalTipoAlbaranVenta', 'modalConsumoInterno', 'modalTipoVenta']
         .some(id => document.getElementById(id)?.classList.contains('visible'));
     }
 
@@ -2949,6 +2997,7 @@
       varios: ['cynthia', 'emilio'],
       albaranes_venta: ['cynthia', 'emilio', 'jose'],
       maquinaria: ['cynthia', 'emilio', 'jose'],
+      consumo_interno: ['cynthia', 'emilio', 'jose']
     };
 
     // Personas con acceso EXCLUSIVO a una lista concreta de secciones
@@ -2989,7 +3038,8 @@
     const TODAS_LAS_SECCIONES = [
       'clasificacion', 'facturas_almacen', 'facturas_obra', 'facturas_csg',
       'revisadas_facturadas', 'obras', 'calendario_pagos', 'presupuestos',
-      'albaranes', 'albaranes_venta', 'clientes', 'inventario', 'materiales_obra', 'ingresos', 'varios', 'maquinaria'
+      'albaranes', 'albaranes_venta', 'consumo_interno', 'clientes', 'inventario',
+      'materiales_obra', 'ingresos', 'varios', 'maquinaria'
     ];
 
 
@@ -3322,6 +3372,7 @@
       varios: ['Varios', 'fa-ellipsis', false],
       albaranes_venta: ['Albaranes de Venta', 'fa-file-invoice', false],
       maquinaria: ['Maquinaria', 'fa-truck-monster', false],
+      consumo_interno: ['Consumo Interno', 'fa-user-check', false],
     };
 
     function aplicarPermisosMenu() { // creo que no es necesaria
@@ -3548,7 +3599,12 @@
 
       const btnTxt = document.getElementById('btnNuevaTxt');
       // si estamos en clasificación,obras, presupuestos saldra el boton de añadir manualmente 
-      btnTxt.textContent = sec === 'clasificacion' ? 'Añadir manualmente' : sec === 'obras' ? 'Nueva obra' : sec === 'presupuestos' ? 'Nuevo presupuesto' : sec === 'albaranes_venta' ? 'Nuevo albarán' : 'Añadir Nuevo';
+      btnTxt.textContent = sec === 'clasificacion' ? 'Añadir manualmente'
+        : sec === 'obras' ? 'Nueva obra'
+          : sec === 'presupuestos' ? 'Nuevo presupuesto'
+            : sec === 'albaranes_venta' ? 'Nuevo albarán'
+              : sec === 'consumo_interno' ? 'Nuevo consumo'
+                : 'Añadir Nuevo';
 
       const sel = document.getElementById('filtroEstado');  // barra de busqueda
       const sp = document.getElementById('searchInput');
@@ -3605,6 +3661,10 @@
 <option value="alquilada">Alquilada</option>
 <option value="averiada">Averiada</option>`;
         sp.placeholder = 'Buscar por código o nombre...';
+      } else if (sec === 'consumo_interno') {
+        sel.innerHTML = `<option value="">Todos</option>`;
+        sp.placeholder = 'Buscar por empleado...';
+
       } else {
         sel.innerHTML = `<option value="">Todos</option>`;
         sp.placeholder = sec === 'clientes' ? 'Buscar nombre, NIF o email...' : 'Buscar producto...';
@@ -3965,6 +4025,10 @@
     function abrirNuevoRegistro() {
       if (tablaActual === 'albaranes_venta') {
         document.getElementById('modalTipoAlbaranVenta').classList.add('visible');
+        return;
+      }
+      if (tablaActual === 'consumo_interno') {
+        abrirModalConsumoInterno();
         return;
       }
       abrirModalNuevo();
@@ -4823,6 +4887,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           ingresos: 'order=fecha.desc',
           varios: 'order=fecha_recibido.desc',
           maquinaria: 'order=codigo',
+          consumo_interno: 'select=*,consumo_interno_items(*)&order=fecha.desc',
         };
         registros = await apiGetAll(tablaReal(tablaActual), orden[tablaActual] || '');
         inventarioDB = await apiGetAll('inventario', 'order=nombre');
@@ -6080,6 +6145,25 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <button class="btn-eliminar" onclick="eliminar(${m.id})"><i class="fa-solid fa-trash"></i></button>
     </td>
   </tr>`;
+        }).join('');
+      } else if (tablaActual === 'consumo_interno') {
+        hdr.innerHTML = `<tr><th>Empleado</th><th>Fecha</th><th>Productos</th><th class="num-cell">Total</th><th>Registrado por</th><th>Detalle</th><th></th></tr>`;
+        const lista = registros.filter(f => (f.empleado || '').toLowerCase().includes(q));
+        if (!lista.length) { bdy.innerHTML = emptyRow(7, 'No hay consumos internos registrados'); return; }
+        bdy.innerHTML = lista.map(f => {
+          const items = f.consumo_interno_items || [];
+          const resumen = items.length
+            ? items.slice(0, 2).map(i => `${i.producto_nombre} (${i.cantidad})`).join(', ') + (items.length > 2 ? ` +${items.length - 2} más` : '')
+            : 'Sin productos';
+          return `<tr data-id="${f.id}">
+      <td class="td-nombre"><strong>${f.empleado || '—'}</strong></td>
+      <td>${fmtF(f.fecha)}</td>
+      <td class="td-concepto" title="${resumen}">${resumen}</td>
+      <td class="td-total">${fmt(f.total)}</td>
+      <td>${NOMBRES_PERSONAS[f.creado_por] || f.creado_por || '—'}</td>
+      <td><span class="link-badge" onclick="verDetalleConsumoInterno(${f.id})"><i class="fa-solid fa-list"></i>Ver detalle</span></td>
+      <td><button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
+    </tr>`;
         }).join('');
       }
       actualizarBarraSeleccion();
@@ -10769,6 +10853,152 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         toast('No se pudo leer el archivo con IA: ' + e.message, 'err');
       }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    let lineasConsumoInternoCount = 0;
+
+    function abrirModalConsumoInterno() {
+      document.getElementById('ci_empleado').value = '';
+      document.getElementById('ci_fecha').value = hoy();
+      document.getElementById('ci_total').value = '';
+      document.getElementById('lineasConsumoInterno').innerHTML = '';
+      lineasConsumoInternoCount = 0;
+      addLineaConsumoInterno();
+      document.getElementById('modalConsumoInterno').classList.add('visible');
+    }
+
+    function addLineaConsumoInterno() {
+      lineasConsumoInternoCount++;
+      const idx = lineasConsumoInternoCount;
+      const div = document.createElement('div');
+      div.id = `ci_${idx}`;
+      div.className = 'linea-prod';
+      div.style.gridTemplateColumns = '1fr 100px 100px auto';
+      div.innerHTML = `
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Producto</label>
+      <input type="text" id="ci_prod_${idx}" list="dl_productos" placeholder="Escribe para buscar..." oninput="autocompletarPrecioLineaCI(${idx})">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Cantidad</label>
+      <input type="number" id="ci_cant_${idx}" value="1" min="0.01" step="0.01" oninput="recalcTotalCI()">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Precio Ud. (€)</label>
+      <input type="number" id="ci_precio_${idx}" step="0.01" min="0" value="0" oninput="recalcTotalCI()">
+    </div>
+    <button type="button" onclick="document.getElementById('ci_${idx}').remove(); recalcTotalCI();"
+      style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
+      <i class="fa-solid fa-xmark"></i>
+    </button>`;
+      document.getElementById('lineasConsumoInterno').appendChild(div);
+    }
+
+    function autocompletarPrecioLineaCI(idx) {
+      const inpNombre = document.getElementById(`ci_prod_${idx}`);
+      const inpPrecio = document.getElementById(`ci_precio_${idx}`);
+      const prod = buscarProductoPorNombre(inpNombre.value);
+      if (prod && prod.precio != null) inpPrecio.value = prod.precio;
+      recalcTotalCI();
+    }
+
+    function recalcTotalCI() {
+      let total = 0;
+      document.querySelectorAll('[id^="ci_prod_"]').forEach(inp => {
+        const idx = inp.id.split('_')[2];
+        const cant = parseFloat(document.getElementById(`ci_cant_${idx}`)?.value || 0);
+        const precio = parseFloat(document.getElementById(`ci_precio_${idx}`)?.value || 0);
+        total += cant * precio;
+      });
+      document.getElementById('ci_total').value = total.toFixed(2);
+    }
+
+    async function guardarConsumoInterno() {
+      const empleado = document.getElementById('ci_empleado').value.trim();
+      const fecha = document.getElementById('ci_fecha').value;
+      if (!empleado || !fecha) { toast('Indica quién se lo lleva y la fecha', 'err'); return; }
+
+      const lineas = [];
+      let ok = true;
+      document.querySelectorAll('[id^="ci_prod_"]').forEach(inp => {
+        const nombre = inp.value.trim();
+        if (!nombre) return;
+        const idx = inp.id.split('_')[2];
+        const cant = parseFloat(document.getElementById(`ci_cant_${idx}`)?.value || 0);
+        const precio = parseFloat(document.getElementById(`ci_precio_${idx}`)?.value || 0);
+        if (cant <= 0) { toast(`Cantidad inválida en "${nombre}"`, 'err'); ok = false; return; }
+        const prod = buscarProductoPorNombre(nombre);
+        if (!prod) { toast(`"${nombre}" no existe en el inventario`, 'err'); ok = false; return; }
+        const stock = parseFloat(prod.stock || 0);
+        if (cant > stock) { toast(`Stock insuficiente para "${nombre}": hay ${fmtStock(stock)}`, 'err'); ok = false; return; }
+        lineas.push({ producto_id: prod.id, producto_nombre: nombre, cantidad: cant, precio_unitario: precio, importe_total: +(cant * precio).toFixed(2), stock });
+      });
+      if (!ok) return;
+      if (!lineas.length) { toast('Añade al menos un producto', 'err'); return; }
+
+      const total = parseFloat(document.getElementById('ci_total').value || 0);
+
+      try {
+        const [header] = await apiPost('consumo_interno', { empleado, fecha, total, creado_por: currentPersona });
+        await apiPost('consumo_interno_items', lineas.map(l => ({
+          consumo_interno_id: header.id,
+          producto_id: l.producto_id, producto_nombre: l.producto_nombre,
+          cantidad: l.cantidad, precio_unitario: l.precio_unitario, importe_total: l.importe_total
+        })));
+        for (const l of lineas) {
+          await apiPatch('inventario', l.producto_id, { stock: l.stock - l.cantidad });
+        }
+        toast('Consumo interno registrado y stock descontado');
+        cerrarModal('modalConsumoInterno');
+        cargarDatos();
+      } catch (e) {
+        toast('Error al guardar: ' + e.message, 'err');
+      }
+    }
+    function verDetalleConsumoInterno(id) {
+      const reg = registros.find(r => r.id === id);
+      if (!reg) return;
+      const items = reg.consumo_interno_items || [];
+      document.getElementById('modalDetalleTitulo').innerHTML =
+        `<i class="fa-solid fa-user-check" style="color:#b53987"></i>Consumo — ${reg.empleado || '—'}`;
+      document.getElementById('modalDetalleContenido').innerHTML = !items.length
+        ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin productos registrados</p>`
+        : `<table class="mini-table"><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Total</th></tr></thead><tbody>
+      ${items.map(i => `<tr><td>${i.producto_nombre || '—'}</td><td>${i.cantidad}</td><td>${fmt(i.precio_unitario)}</td><td><strong>${fmt(i.importe_total)}</strong></td></tr>`).join('')}
+    </tbody></table>`;
+      document.getElementById('modalDetalle').classList.add('visible');
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

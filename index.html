@@ -9055,6 +9055,26 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         return fila;
       });
     }
+    // Fila legible para el tercer Excel (resumen sin formato FactuSol)
+    function _filaResumenVenta(f) {
+      const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
+      const domicilio = [
+        cliente.domicilio,
+        cliente.codigo_postal,
+        cliente.poblacion,
+        cliente.provincia
+      ].filter(Boolean).join(', ');
+
+      return {
+        'Cliente': f.cliente_nombre || cliente.nombre || '',
+        'NIF/DNI': f.nif || cliente.nif || '',
+        'Domicilio': domicilio,
+        'Base': f.base_imponible != null ? parseFloat(f.base_imponible) : 0,
+        'IVA': f.importe_iva != null ? parseFloat(f.importe_iva) : 0,
+        'Descuento': f.importe_descuento != null ? parseFloat(f.importe_descuento) : 0,
+        'Total': f.total != null ? parseFloat(f.total) : 0
+      };
+    }
 
     function exportarAlbaranesVentaExcel(filtrados) {
       const sinNumero = filtrados.filter(f => !f.numero_factusol);
@@ -9062,9 +9082,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         toast(`${sinNumero.length} albarán(es) sin número interno de FactuSol asignado — revísalos antes de exportar`, 'err');
       }
 
-      // Sin fila de cabecera: FactuSol identifica los campos por posición
-      // de columna (A, B, C...), no por nombre — incluir los títulos hacía
-      // que los leyera como si fueran datos de un albarán real.
       const filasALB = filtrados.map(_filaALB);
       const filasLAL = filtrados.flatMap(_filasLAL);
 
@@ -9076,7 +9093,17 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       XLSX.utils.book_append_sheet(wbLal, XLSX.utils.aoa_to_sheet(filasLAL), 'LAL');
       XLSX.writeFile(wbLal, 'LAL.xlsx');
 
-      toast('<i class="fa-solid fa-file-excel me-1"></i>Descargados <strong>ALB.xlsx</strong> y <strong>LAL.xlsx</strong> — cópialos juntos a la carpeta de importación de FactuSol', 'ok');
+      // Tercer Excel: resumen legible, sin formato FactuSol
+      const cabecerasResumen = ['Cliente', 'NIF/DNI', 'Domicilio', 'Base', 'IVA', 'Descuento', 'Total'];
+      const filasResumen = filtrados.map(_filaResumenVenta);
+      const wbResumen = XLSX.utils.book_new();
+      const wsResumen = XLSX.utils.json_to_sheet(filasResumen, { header: cabecerasResumen });
+      wsResumen['!cols'] = [22, 14, 42, 10, 10, 10, 10].map(w => ({ wch: w }));
+      XLSX.utils.book_append_sheet(wbResumen, wsResumen, 'Resumen');
+      const fechaHoy = new Date().toISOString().split('T')[0];
+      XLSX.writeFile(wbResumen, `resumen_albaranes_venta_${fechaHoy}.xlsx`);
+
+      toast('<i class="fa-solid fa-file-excel me-1"></i>Descargados <strong>ALB.xlsx</strong>, <strong>LAL.xlsx</strong> y el resumen — cópialos juntos a la carpeta de importación de FactuSol', 'ok');
     }
 
     function autocompletarPrecioLinea(idx) {
@@ -11068,7 +11095,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       function seleccionar(c) {
         inpN.value = c.nombre || '';
         inpId.value = c.id;
-        clienteConsumoSelId = c.id; 
+        clienteConsumoSelId = c.id;
         lista.style.display = 'none';
         if (c.aviso_albaran) {
           alert(c.aviso_albaran);

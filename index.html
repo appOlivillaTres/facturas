@@ -6149,7 +6149,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   </tr>`;
         }).join('');
       } else if (tablaActual === 'consumo_interno') {
-        hdr.innerHTML = `<tr><th>Empleado</th><th>Fecha</th><th>Productos</th><th class="num-cell">Total</th><th>Registrado por</th><th>Detalle</th><th></th></tr>`;
+        hdr.innerHTML = `<tr><th>Cliente</th><th>Fecha</th><th>Productos</th><th class="num-cell">Total</th><th>Registrado por</th><th>Detalle</th><th></th><th></th></tr>`;
         const lista = registros.filter(f => (f.empleado || '').toLowerCase().includes(q));
         if (!lista.length) { bdy.innerHTML = emptyRow(8, 'No hay consumos internos registrados'); return; }
         bdy.innerHTML = lista.map(f => {

@@ -2607,6 +2607,13 @@
         <button type="button" class="btn-add-linea" onclick="addLineaMaterialExclusivo()">
           <i class="fa-solid fa-plus me-1"></i>Añadir material exclusivo
         </button>
+
+        <div class="form-seccion">Maquinaria <span
+            style="font-weight:400;font-size:.75rem;color:#888">(máquinas de esta salida a obra propia)</span></div>
+        <div id="lineasMaquinariaObra"></div>
+        <button type="button" class="btn-add-linea" onclick="addLineaMaquinariaObra()">
+          <i class="fa-solid fa-plus me-1"></i>Añadir máquina
+        </button>
       </div>
       <div class="modal-btns">
         <button class="btn-cancelar" onclick="cerrarModal('modalMaterialObra')">Cancelar</button>
@@ -7344,6 +7351,58 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById('lineasMaterialExclusivo').appendChild(div);
     }
 
+    let lineasMaquinariaObraCount = 0;
+
+    function addLineaMaquinariaObra(item) {
+      lineasMaquinariaObraCount++;
+      const idx = lineasMaquinariaObraCount;
+      const div = document.createElement('div');
+      div.id = `lmq_${idx}`;
+      div.className = 'linea-prod';
+      div.style.gridTemplateColumns = '110px 1fr 120px 120px auto';
+      div.innerHTML = `
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Código</label>
+      <input type="text" id="lmq_cod_${idx}" list="dl_maquinaria" value="${(item?.maquina_codigo || '').replace(/"/g, '&quot;')}" placeholder="MAQ008" oninput="autocompletarMaquinariaObraLinea(${idx})">
+      <input type="hidden" id="lmq_maqid_${idx}" value="${item?.maquinaria_id || ''}">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Máquina</label>
+      <input type="text" id="lmq_nombre_${idx}" value="${(item?.maquina_nombre || '').replace(/"/g, '&quot;')}" readonly style="background:#f7f0f5">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Salida</label>
+      <input type="date" id="lmq_salida_${idx}" value="${item?.fecha_salida || ''}">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Devolución</label>
+      <input type="date" id="lmq_devol_${idx}" value="${item?.fecha_devolucion || ''}">
+    </div>
+    <button type="button" onclick="document.getElementById('lmq_${idx}').remove()"
+      style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <div class="form-group" style="grid-column:1/3;margin:4px 0 0">
+      <label style="font-size:.72rem">Devuelto por</label>
+      <input type="text" id="lmq_devpor_${idx}" value="${(item?.devuelto_por || '').replace(/"/g, '&quot;')}" placeholder="Nombre de quien la devolvió">
+    </div>
+    <div class="form-group" style="grid-column:3/5;margin:4px 0 0">
+      <label style="font-size:.72rem">Obra de devolución</label>
+      <input type="text" id="lmq_obradev_${idx}" list="dl_obras" value="${(item?.obra_devolucion || '').replace(/"/g, '&quot;')}" placeholder="Obra a la que se devolvió">
+    </div>`;
+      document.getElementById('lineasMaquinariaObra').appendChild(div);
+    }
+
+    function autocompletarMaquinariaObraLinea(idx) {
+      const inpCod = document.getElementById(`lmq_cod_${idx}`);
+      const inpNombre = document.getElementById(`lmq_nombre_${idx}`);
+      const inpId = document.getElementById(`lmq_maqid_${idx}`);
+      if (!inpCod) return;
+      const maquina = buscarMaquinaPorCodigo(inpCod.value);
+      inpNombre.value = maquina ? maquina.nombre : '';
+      inpId.value = maquina ? maquina.id : '';
+    }
+
 
 
 
@@ -7673,8 +7732,30 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         lineasExclusivas.push({ producto_nombre: nombre, cantidad: cant });
       }
 
+      const lineasMaquina = [];
+      for (const inp of document.querySelectorAll('[id^="lmq_cod_"]')) {
+        const cod = inp.value.trim();
+        if (!cod) continue;
+        const idx = inp.id.split('_')[2];
+        const maquina = buscarMaquinaPorCodigo(cod);
+        if (!maquina) { toast(`Código de máquina "${cod}" no encontrado en el catálogo`, 'err'); ok = false; continue; }
+        const salida = document.getElementById(`lmq_salida_${idx}`)?.value || fecha;
+        const devolucion = document.getElementById(`lmq_devol_${idx}`)?.value || null;
+        const devueltoPor = document.getElementById(`lmq_devpor_${idx}`)?.value.trim() || null;
+        const obraDevolucion = document.getElementById(`lmq_obradev_${idx}`)?.value.trim() || null;
+        lineasMaquina.push({
+          maquinaria_id: maquina.id,
+          maquina_codigo: maquina.codigo,
+          maquina_nombre: maquina.nombre,
+          fecha_salida: salida,
+          fecha_devolucion: devolucion,
+          devuelto_por: devueltoPor,
+          obra_devolucion: obraDevolucion
+        });
+      }
+
       if (!ok) return;
-      if (!lineas.length && !lineasExclusivas.length) { toast('Añade al menos un material', 'err'); return; }
+      if (!lineas.length && !lineasExclusivas.length && !lineasMaquina.length) { toast('Añade al menos un material o una máquina', 'err'); return; }
 
       try {
         let headerId;
@@ -7711,6 +7792,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
             await apiDelete('materiales_obra_items', a.id);
 
+          }
+
+          const antiguasMaquina = await apiGet(
+            'materiales_obra_maquinaria_items',
+            `materiales_obra_id=eq.${headerId}`
+          );
+          for (const am of antiguasMaquina) {
+            await apiDelete('materiales_obra_maquinaria_items', am.id);
           }
 
         } else {
@@ -7753,6 +7842,19 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             fecha
           })));
           cargarMaterialesExclusivosCache(); // refresca el autocompletar, no bloqueante
+        }
+        if (lineasMaquina.length) {
+          await apiPost('materiales_obra_maquinaria_items', lineasMaquina.map(l => ({
+            materiales_obra_id: headerId,
+            nombre_obra,
+            maquinaria_id: l.maquinaria_id,
+            maquina_codigo: l.maquina_codigo,
+            maquina_nombre: l.maquina_nombre,
+            fecha_salida: l.fecha_salida,
+            fecha_devolucion: l.fecha_devolucion,
+            devuelto_por: l.devuelto_por,
+            obra_devolucion: l.obra_devolucion
+          })));
         }
         toast(modalEditId
           ? 'Material de obra actualizado correctamente'
@@ -9758,6 +9860,12 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         } else {
           addLineaMaterialExclusivo();
         }
+
+        document.getElementById('lineasMaquinariaObra').innerHTML = '';
+        lineasMaquinariaObraCount = 0;
+        const itemsMaquinaEdit = f.materiales_obra_maquinaria_items || [];
+        itemsMaquinaEdit.forEach(item => addLineaMaquinariaObra(item));
+
         return;
       }
       if (tabla == "ingresos") {
@@ -9891,8 +9999,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         document.getElementById('mo_fecha').value = hoy();
         document.getElementById('lineasMaterial').innerHTML = '';
         document.getElementById('lineasMaterialExclusivo').innerHTML = '';
+        document.getElementById('lineasMaquinariaObra').innerHTML = '';
         lineasMaterialCount = 0;
         lineasMaterialExclusivoCount = 0;
+        lineasMaquinariaObraCount = 0;
         document.getElementById('modalMaterialObra').classList.add('visible');
         addLineaMaterial();
         addLineaMaterialExclusivo();

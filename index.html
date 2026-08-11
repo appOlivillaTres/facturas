@@ -4477,7 +4477,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
         const abiertosMO = await apiGetAll('materiales_obra_maquinaria_items', `maquinaria_id=eq.${id}&fecha_devolucion=is.null&order=fecha_salida.desc`);
         if (abiertosMO.length) {
-          await apiPatch('materiales_obra_maquinaria_items', abiertosMO[0].id, { fecha_devolucion: hoy() });
+          await apiPatch('materiales_obra_maquinaria_items', abiertosMO[0].id, {
+            fecha_devolucion: hoy(),
+            devuelto_por: persona,
+            obra_devolucion: obra
+          });
         }
         const mCache = maquinariaDB.find(x => x.id === id);
         if (mCache) { mCache.estado = 'disponible'; mCache.cliente_actual_nombre = null; mCache.empleado_actual = null; mCache.obra_actual = null; }
@@ -7597,12 +7601,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     </tbody></table>`;
       const tablaMaquinas = !itemsMaquina.length ? '' : `
     <div class="form-seccion">Maquinaria</div>
-    <table class="mini-table"><thead><tr><th>Código</th><th>Máquina</th><th>Salida</th><th>Devolución</th></tr></thead><tbody>
+    <table class="mini-table"><thead><tr><th>Código</th><th>Máquina</th><th>Salida</th><th>Devolución</th><th>Devuelta por</th><th>Obra devolución</th></tr></thead><tbody>
     ${itemsMaquina.map(i => `<tr>
       <td>${i.maquina_codigo || '—'}</td>
       <td>${i.maquina_nombre || '—'}</td>
       <td>${fmtF(i.fecha_salida)}</td>
       <td>${i.fecha_devolucion ? fmtF(i.fecha_devolucion) : '<span style="color:#c47a00;font-weight:600">Sin devolver</span>'}</td>
+      <td>${i.devuelto_por || '—'}</td>
+      <td>${i.obra_devolucion || '—'}</td>
     </tr>`).join('')}
     </tbody></table>`;
       document.getElementById('modalDetalleContenido').innerHTML = (!items.length && !itemsExcl.length && !itemsMaquina.length)
@@ -7856,12 +7862,15 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             });
           });
           itemsMaquina.forEach(i => {
+            const infoDevol = i.fecha_devolucion
+              ? ` — Devuelta ${i.fecha_devolucion.split('-').reverse().join('/')} por ${i.devuelto_por || '—'} a ${i.obra_devolucion || '—'}`
+              : ' — Sin devolver';
             filas.push({
               'OBRA': r.nombre_obra || '',
               'EMPLEADO': r.nombre_empleado || '',
               'FECHA': fecha,
               'TIPO': 'Maquinaria',
-              'PRODUCTO': `${i.maquina_nombre || ''} (${i.maquina_codigo || ''})${i.fecha_devolucion ? ' — Devuelta ' + i.fecha_devolucion.split('-').reverse().join('/') : ' — Sin devolver'}`,
+              'PRODUCTO': `${i.maquina_nombre || ''} (${i.maquina_codigo || ''})${infoDevol}`,
               'CANTIDAD': 1
             });
           });

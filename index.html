@@ -8535,6 +8535,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         inpId.value = c.id;
         clienteVentaSelId = c.id;
         lista.style.display = 'none';
+        if (c.aviso_albaran) {
+          alert(c.aviso_albaran);
+        }
       }
       function render(items) {
         if (!items.length) { lista.style.display = 'none'; return; }
@@ -11064,9 +11067,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       }
       function seleccionar(c) {
         inpN.value = c.nombre || '';
-        inpF.value = c.nif || '';
         inpId.value = c.id;
-        clienteVentaSelId = c.id;
+        clienteConsumoSelId = c.id; 
         lista.style.display = 'none';
         if (c.aviso_albaran) {
           alert(c.aviso_albaran);

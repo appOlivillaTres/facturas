@@ -9071,7 +9071,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         'Domicilio': domicilio,
         'Base': f.base_imponible != null ? parseFloat(f.base_imponible) : 0,
         'IVA': f.importe_iva != null ? parseFloat(f.importe_iva) : 0,
-        'Descuento': f.importe_descuento != null ? parseFloat(f.importe_descuento) : 0,
         'Total': f.total != null ? parseFloat(f.total) : 0
       };
     }
@@ -9094,11 +9093,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       XLSX.writeFile(wbLal, 'LAL.xlsx');
 
       // Tercer Excel: resumen legible, sin formato FactuSol
-      const cabecerasResumen = ['Cliente', 'NIF/DNI', 'Domicilio', 'Base', 'IVA', 'Descuento', 'Total'];
+      const cabecerasResumen = ['Cliente', 'NIF/DNI', 'Domicilio', 'Base', 'IVA', 'Total'];
       const filasResumen = filtrados.map(_filaResumenVenta);
       const wbResumen = XLSX.utils.book_new();
       const wsResumen = XLSX.utils.json_to_sheet(filasResumen, { header: cabecerasResumen });
-      wsResumen['!cols'] = [22, 14, 42, 10, 10, 10, 10].map(w => ({ wch: w }));
+      wsResumen['!cols'] = [22, 14, 42, 10, 10, 10].map(w => ({ wch: w }));
       XLSX.utils.book_append_sheet(wbResumen, wsResumen, 'Resumen');
       const fechaHoy = new Date().toISOString().split('T')[0];
       XLSX.writeFile(wbResumen, `resumen_albaranes_venta_${fechaHoy}.xlsx`);

@@ -2103,8 +2103,8 @@
             class="fa-solid fa-diagram-project"></i>Obras</button>
         <button class="btn-nav" onclick="cambiarSeccion('calendario_pagos')"><i
             class="fa-solid fa-calendar-days"></i>Calendario</button>
-        <button class="btn-nav" onclick="cambiarSeccion('presupuestos')"><i
-            class="fa-solid fa-file-invoice-dollar"></i>Presupuestos</button>
+        <button class="btn-nav" onclick="cambiarSeccion('notificaciones_presupuestos')"><i
+            class="fa-solid fa-file-invoice-dollar"></i>Notificaciones Presupuestos</button>
         <button class="btn-nav" onclick="cambiarSeccion('albaranes')"><i
             class="fa-solid fa-file-signature"></i>Albaranes</button>
         <button class="btn-nav" onclick="cambiarSeccion('albaranes_venta')"><i
@@ -3028,7 +3028,7 @@
     let tablaActual = 'clasificacion';
 
     // 'clasificacion' es la clave interna de la sección; la tabla real es 'facturas_pendientes'
-    function tablaReal(t) { return t === 'clasificacion' ? 'facturas_pendientes' : t === 'presupuestos' ? 'presupuestos_seguimiento' : t; }
+    function tablaReal(t) { return t === 'clasificacion' ? 'facturas_pendientes' : t === 'notificaciones_presupuestos' ? 'presupuestos_seguimiento' : t; }
     let modalDestinoTabla = null;   // tabla destino del modal "Nuevo registro" (puede diferir de tablaActual)
     let modalEditId = null;   // id del registro que se está editando (null = modo "nuevo")
     let archivosAlbaranSeleccionados = []; // [{url, nombre}] — archivos adjuntos al albarán en el modal actual
@@ -3039,7 +3039,7 @@
     // Todas las secciones que existen en el menú.
     const TODAS_LAS_SECCIONES = [
       'clasificacion', 'facturas_almacen', 'facturas_obra', 'facturas_csg',
-      'revisadas_facturadas', 'obras', 'calendario_pagos', 'presupuestos',
+      'revisadas_facturadas', 'obras', 'calendario_pagos', 'notificaciones_presupuestos',
       'albaranes', 'albaranes_venta', 'clientes', 'inventario',
       'materiales_obra', 'ingresos', 'varios', 'maquinaria', 'consumo_interno'
     ];
@@ -3108,7 +3108,7 @@
         sub: f => f.cliente || f.direccion || ''
       },
       {
-        tabla: 'presupuestos_seguimiento', seccion: 'presupuestos', label: 'Presupuestos', icon: 'fa-file-invoice-dollar',
+        tabla: 'presupuestos_seguimiento', seccion: 'notificaciones_presupuestos', label: 'Notificaciones Presupuestos', icon: 'fa-file-invoice-dollar',
         campos: ['cliente', 'email_cliente', 'asunto'], orden: 'fecha_recordatorio.desc',
         titulo: f => f.cliente || 'Presupuesto',
         sub: f => f.asunto || f.email_cliente || ''
@@ -3213,7 +3213,7 @@
       if (tabla === 'albaranes') {
         abrirModalEditarAlbaran(id);
       } else {
-        abrirModalEditar(id, tabla === 'presupuestos_seguimiento' ? 'presupuestos' : tabla);
+        abrirModalEditar(id, tabla === 'presupuestos_seguimiento' ? 'notificaciones_presupuestos' : tabla);
       }
     }
 
@@ -3365,7 +3365,7 @@
       revisadas_facturadas: ['Revisadas y Facturadas', 'fa-clipboard-check', false],
       obras: ['Obras', 'fa-diagram-project', false],
       calendario_pagos: ['Calendario de Pagos', 'fa-calendar-days', false],
-      presupuestos: ['Presupuestos Enviados', 'fa-file-invoice-dollar', false],
+      notificaciones_presupuestos: ['Presupuestos Enviados', 'fa-file-invoice-dollar', false],
       albaranes: ['Albaranes', 'fa-file-signature', false],
       clientes: ['Clientes', 'fa-users', false],
       inventario: ['Inventario', 'fa-boxes-stacked', false],
@@ -3603,7 +3603,7 @@
       // si estamos en clasificación,obras, presupuestos saldra el boton de añadir manualmente 
       btnTxt.textContent = sec === 'clasificacion' ? 'Añadir manualmente'
         : sec === 'obras' ? 'Nueva obra'
-          : sec === 'presupuestos' ? 'Nuevo presupuesto'
+          : sec === 'notificaciones_presupuestos' ? 'Nuevo presupuesto'
             : sec === 'albaranes_venta' ? 'Nuevo albarán'
               : sec === 'consumo_interno' ? 'Nuevo consumo'
                 : 'Añadir Nuevo';
@@ -3646,7 +3646,7 @@
 <option value="efectivo">Factura al momento</option>`;
         sp.placeholder = 'Buscar por nº albarán o cliente...';
       }
-      else if (sec === 'presupuestos') {
+      else if (sec === 'notificaciones_presupuestos') {
         sel.innerHTML = `<option value="">Todos los estados</option>
       <option value="pendiente">Pendiente de respuesta</option>
       <option value="respondido">Respondido</option>`;
@@ -4885,7 +4885,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           albaranes: 'order=fecha.desc', clientes: 'order=nombre', inventario: 'order=nombre',
           materiales_obra: 'select=*,materiales_obra_items(*),materiales_exclusivos_obra_items(*),materiales_obra_maquinaria_items(*)&order=fecha.desc',
           albaranes_venta: 'select=*,albaranes_venta_items(*)&order=fecha.desc',
-          obras: 'order=nombre', presupuestos: 'order=fecha_recordatorio.asc',
+          obras: 'order=nombre', notificaciones_presupuestos: 'order=fecha_recordatorio.asc',
           ingresos: 'order=fecha.desc',
           varios: 'order=fecha_recibido.desc',
           maquinaria: 'order=codigo',
@@ -5908,7 +5908,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         }).join('');
 
         // PRESUPUESTOS ENVIADOS
-      } else if (tablaActual === 'presupuestos') {
+      } else if (tablaActual === 'notificaciones_presupuestos') {
         hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Cliente</th><th>Email</th><th>Asunto</th><th>Fecha envío</th><th>Fecha recordatorio</th><th>Estado</th><th>Acciones</th><th></th></tr>`;
         const lista = registros
           .filter(f => [f.cliente, f.email_cliente, f.asunto].some(v => (v || '').toLowerCase().includes(q)))
@@ -5934,7 +5934,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         </button></td>
         <td>
           <div class="td-acciones">
-            <button class="btn-toggle-pago pendiente" onclick="abrirModalEditar(${f.id},'presupuestos')"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn-toggle-pago pendiente" onclick="abrirModalEditar(${f.id},'notificaciones_presupuestos')"><i class="fa-solid fa-pen"></i></button>
             <button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button>
           </div>
         </td>
@@ -7087,7 +7087,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             await apiPost('clientes', payload);
           }
 
-        } else if (tabla === 'presupuestos') {
+        } else if (tabla === 'notificaciones_presupuestos') {
           const cliente = document.getElementById('f_pr_cliente').value.trim();
           const email_cliente = document.getElementById('f_pr_email').value.trim();
           const fecha_envio = document.getElementById('f_pr_fecha_envio').value;
@@ -9891,8 +9891,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
          PRESUPUESTOS ENVIADOS
       =========================== */
 
-      if (tabla == "presupuestos") {
-        abrirModalNuevo("presupuestos");
+      if (tabla == "notificaciones_presupuestos") {
+        abrirModalNuevo("notificaciones_presupuestos");
         setTimeout(() => {
           document.getElementById("modalTitulo").textContent = "Editar presupuesto";
           document.getElementById("btnGuardar").innerHTML =
@@ -10521,7 +10521,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         document.getElementById('modalNueva').classList.add('visible');
 
         // ── PRESUPUESTOS ENVIADOS ──
-      } else if (tabla === 'presupuestos') {
+      } else if (tabla === 'notificaciones_presupuestos') {
         document.getElementById('modalTitulo').textContent = 'Nuevo presupuesto enviado';
         cont.innerHTML = `<div class="form-grid-2">
       <div class="form-group span2"><label>Cliente *</label><input type="text" id="f_pr_cliente" placeholder="Nombre del cliente"></div>

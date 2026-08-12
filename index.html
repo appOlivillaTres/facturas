@@ -6531,46 +6531,48 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     // ── TOGGLE ESTADO FACTURA ─────────────────────────────────
-    async function toggleEstado(id, estadoActual, tabla) {
-      const nuevo = estadoActual === 'pagado' ? 'pendiente' : 'pagado';
-      try {
-        await apiPatch(tabla, id, { estado: nuevo });
-        const reg = registros.find(r => r.id === id);
-        if (reg) reg.estado = nuevo;
-        actualizarStats(); renderAlertas(); renderTablaConScroll();
-        toast(`Factura marcada como <strong>${nuevo.toUpperCase()}</strong>`);
-      } catch (e) { toast('Error: ' + e.message, 'err'); }
-    }
+async function toggleEstado(id, estadoActual, tabla) {
+  const nuevo = estadoActual === 'pagado' ? 'pendiente' : 'pagado';
+  try {
+    await apiPatch(tabla, id, { estado: nuevo });
+    const reg = registros.find(r => r.id === id);
+    if (reg) reg.estado = nuevo;
+    actualizarStats(); renderAlertas(); renderTablaConScroll();
+    if (modalEditId === id) renderAccionesModal(tabla, reg); // 👈 añadir
+    toast(`Factura marcada como <strong>${nuevo.toUpperCase()}</strong>`);
+  } catch (e) { toast('Error: ' + e.message, 'err'); }
+}
 
-    async function toggleImputado(id, actual, tabla) {
-      if (!['angel', 'emilio'].includes(currentPersona)) {
-        alert("Solo Angel o Emilio pueden marcar o quitar una imputación.");
-        return;
-      }
+async function toggleImputado(id, actual, tabla) {
+  if (!['angel', 'emilio'].includes(currentPersona)) {
+    alert("Solo Angel o Emilio pueden marcar o quitar una imputación.");
+    return;
+  }
+  try {
+    await apiPatch(tabla, id, { imputado: !actual });
+    const reg = registros.find(r => r.id === id);
+    if (reg) reg.imputado = !actual;
+    actualizarStats(); renderAlertas(); renderTablaConScroll();
+    if (modalEditId === id) renderAccionesModal(tabla, reg); // 👈 añadir
+    toast(!actual ? 'Factura marcada como <strong>IMPUTADA</strong>' : 'Se ha quitado la imputación de la factura');
+  } catch (e) { toast('Error: ' + e.message, 'err'); }
+}
 
-      try {
-        await apiPatch(tabla, id, { imputado: !actual });
-        const reg = registros.find(r => r.id === id);
-        if (reg) reg.imputado = !actual;
-        actualizarStats(); renderAlertas(); renderTablaConScroll();
-        toast(!actual ? 'Factura marcada como <strong>IMPUTADA</strong>' : 'Se ha quitado la imputación de la factura');
-      } catch (e) { toast('Error: ' + e.message, 'err'); }
-    }
-
-    async function toggleImpreso(id, actual, tabla) {
-      if (currentPersona !== 'cynthia') {
-        alert("Solo Cynthia puede marcar esta casilla.");
-        return;
-      }
-      try {
-        await apiPatch(tabla, id, { impreso: !actual });
-        const reg = registros.find(r => r.id === id && (r.origen ? r.origen === tabla : true));
-        if (reg) reg.impreso = !actual;
-        renderTablaConScroll();
-      } catch (e) {
-        toast('Error: ' + e.message, 'err');
-      }
-    }
+async function toggleImpreso(id, actual, tabla) {
+  if (currentPersona !== 'cynthia') {
+    alert("Solo Cynthia puede marcar esta casilla.");
+    return;
+  }
+  try {
+    await apiPatch(tabla, id, { impreso: !actual });
+    const reg = registros.find(r => r.id === id && (r.origen ? r.origen === tabla : true));
+    if (reg) reg.impreso = !actual;
+    renderTablaConScroll();
+    if (modalEditId === id) renderAccionesModal(tabla, reg); // 👈 añadir
+  } catch (e) {
+    toast('Error: ' + e.message, 'err');
+  }
+}
 
     function celdaImpreso(f, tabla) {
       const activo = !!f.impreso;
@@ -10076,6 +10078,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
         renderChipsRevisionModal(tabla, f);
         renderHistorialEdicionesModal(f);
+        renderAccionesModal(tabla, f); 
         const avisoProd = document.getElementById('avisoProductosRegistrados');
         if (avisoProd) {
           const productos = f.productos_recibidos || [];
@@ -10117,6 +10120,38 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       if (event.target.closest('button, input, select, a, .archivo-chip, .link-badge')) return;
       abrirModalEditar(id, tabla);
     }
+
+
+
+    // Pinta (o repinta) el bloque de acciones rápidas dentro del modal de edición
+function renderAccionesModal(tabla, f) {
+  const cont = document.getElementById('accionesModalCont');
+  if (!cont || !f) return;
+  const est = f.estado || 'pendiente';
+  const hoyD = new Date(); hoyD.setHours(0, 0, 0, 0);
+  const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
+  const eR = f.imputado ? 'imputado' : (esVenc ? 'vencido' : est);
+
+  const otras = tabla === 'facturas_almacen' ? [['facturas_obra', 'Obra'], ['facturas_csg', 'CSG']]
+    : tabla === 'facturas_obra' ? [['facturas_almacen', 'Almacén'], ['facturas_csg', 'CSG']]
+      : [['facturas_almacen', 'Almacén'], ['facturas_obra', 'Obra']];
+
+  cont.innerHTML = `
+    <button class="btn-toggle-pago ${eR}" onclick="toggleEstado(${f.id},'${est}','${tabla}')">
+      ${est === 'pagado' ? '<i class="fa-solid fa-rotate-left me-1"></i>Marcar pendiente' : '<i class="fa-solid fa-check me-1"></i>Marcar pagada'}
+    </button>
+    <button class="btn-toggle-pago ${f.imputado ? 'imputado' : 'pendiente'}" onclick="toggleImputado(${f.id},${f.imputado},'${tabla}')">
+      ${f.imputado ? '<i class="fa-solid fa-rotate-left me-1"></i>Quitar imputación' : '<i class="fa-solid fa-ban me-1"></i>Imputar'}
+    </button>
+    ${celdaImpreso(f, tabla)}
+    <span class="badge-estado" style="${f.exportado_excel ? 'background:#e8f5e9;color:#2d7a4f' : 'background:#f0f0f0;color:#999'}">
+      <i class="fa-solid fa-file-excel"></i> ${f.exportado_excel ? 'Exportado a Excel' : 'No exportado'}
+    </span>
+    ${otras.map(([dest, label]) => `<button class="btn-toggle-pago pendiente" onclick="moverFactura(${f.id},'${tabla}','${dest}')">${label}</button>`).join('')}
+    <button class="btn-toggle-pago" style="background:#f3e5f5;color:#6a1b9a;border:1.5px solid #d9b8e8" onclick="moverFacturaAAlbaran(${f.id},'${tabla}')">
+      <i class="fa-solid fa-file-signature"></i> Albarán
+    </button>`;
+}
 
 
     // MODAL NUEVO REGISTRO
@@ -10254,6 +10289,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <div class="form-group"><label>Estado</label><select id="f_est"><option value="pendiente">Pendiente</option><option value="pagado">Pagada</option></select></div>
       <div class="form-seccion" id="revisionModalWrap" style="display:none">Revisión</div>
       <div class="td-acciones" id="revisionChipsCont" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px"></div>
+      <div class="form-seccion">Acciones</div>
+<div class="td-acciones" id="accionesModalCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
       </div>
       ${htmlCampoArchivo()}
       ${htmlCamposExcel()}
@@ -10323,6 +10360,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <div class="form-group"><label>Estado</label><select id="f_est"><option value="pendiente">Pendiente</option><option value="pagado">Pagada</option></select></div>
       <div class="form-seccion" id="revisionModalWrap" style="display:none">Revisión</div>
       <div class="td-acciones" id="revisionChipsCont" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px"></div>
+      <div class="form-seccion">Acciones</div>
+<div class="td-acciones" id="accionesModalCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
       </div>
       ${htmlCampoArchivo()}
       ${htmlCamposExcel()}
@@ -10392,6 +10431,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <div class="form-group"><label>Estado</label><select id="f_est"><option value="pendiente">Pendiente</option><option value="pagado">Pagada</option></select></div>
       <div class="form-seccion" id="revisionModalWrap" style="display:none">Revisión</div>
       <div class="td-acciones" id="revisionChipsCont" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px"></div>
+      <div class="form-seccion">Acciones</div>
+<div class="td-acciones" id="accionesModalCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
       </div>
       ${htmlCampoArchivo()}
       ${htmlCamposExcel()}

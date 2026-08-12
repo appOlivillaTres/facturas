@@ -2061,17 +2061,27 @@
       <p class="login-error" id="loginErr"><i class="fa-solid fa-circle-exclamation me-1"></i>Contraseña incorrecta</p>
     </div>
   </div>
-
-  <!-- SELECTOR DE PANEL (tras el login, antes de entrar a una sección) -->
-  <div class="selector-wrap" id="selectorView">
+  <!-- SELECTOR DE CATEGORÍA (Almacén / Obra) -->
+  <div class="selector-wrap" id="categoriaView">
     <div class="selector-card">
-      <h2>¿A dónde quieres ir?</h2>
-      <p>Elige el panel que quieres abrir</p>
-      <div class="selector-grid" id="selectorGrid"></div>
+      <h2>¿Dónde quieres entrar?</h2>
+      <p>Elige el área de trabajo</p>
+      <div class="selector-grid" id="categoriaGrid"></div>
       <button class="selector-salir" onclick="doLogout()"><i
           class="fa-solid fa-right-from-bracket me-1"></i>Salir</button>
     </div>
   </div>
+
+  <!-- SELECTOR DE PANEL (tras el login, antes de entrar a una sección) -->
+  <div class="selector-wrap" id="selectorView">
+  <div class="selector-card">
+    <h2>¿A dónde quieres ir?</h2>
+    <p>Elige el panel que quieres abrir</p>
+    <div class="selector-grid" id="selectorGrid"></div>
+    <button class="selector-salir" onclick="mostrarCategorias()"><i class="fa-solid fa-arrow-left me-1"></i>Cambiar de área</button>
+    <button class="selector-salir" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket me-1"></i>Salir</button>
+  </div>
+</div>
 
   <!-- APP -->
   <div id="appView" style="display:none;flex-direction:column;flex:1;">
@@ -3355,7 +3365,22 @@
 
 
 
+    const GRUPOS_SECCIONES = {
+      almacen: [
+        'clasificacion', 'facturas_almacen', 'revisadas_facturadas', 'calendario_pagos',
+        'notificaciones_presupuestos', 'albaranes', 'albaranes_venta', 'clientes',
+        'inventario', 'materiales_obra', 'varios', 'maquinaria', 'consumo_interno'
+      ],
+      obra: [
+        'clasificacion', 'facturas_obra', 'facturas_csg', 'revisadas_facturadas', 'obras',
+        'calendario_pagos', 'materiales_obra', 'varios', 'ingresos'
+      ]
+    };
 
+    const GRUPOS_INFO = {
+      almacen: ['Almacén', 'fa-warehouse'],
+      obra: ['Obra', 'fa-helmet-safety']
+    };
     // Nombre, icono y si muestra tarjetas de estadísticas, por sección.
     const SECCIONES_INFO = {
       clasificacion: ['Bandeja de Clasificación', 'fa-inbox', false],
@@ -3391,30 +3416,35 @@
     let realtimeIniciado = false;
 
     async function entrarEnApp() {
-      document.getElementById('loginView').style.display = 'none';  // oculta la pagina de logi
-      document.getElementById('appView').style.display = 'none';  // y el panel
-      if (!cachesIniciales) {
-        cachesIniciales = Promise.all([
-          cargarInventarioCache(), cargarClientesCache(), cargarProveedoresCache(),
-          cargarObrasCache(), cargarMaterialesExclusivosCache(),
-          cargarMaquinariaCache()   // ← nueva
-        ]);
-      }
-      await cachesIniciales;
-      mostrarSelectorPanel(); // muestra el panel
-    }
+  document.getElementById('loginView').style.display = 'none';
+  document.getElementById('appView').style.display = 'none';
+  if (!cachesIniciales) {
+    cachesIniciales = Promise.all([
+      cargarInventarioCache(), cargarClientesCache(), cargarProveedoresCache(),
+      cargarObrasCache(), cargarMaterialesExclusivosCache(),
+      cargarMaquinariaCache()
+    ]);
+  }
+  await cachesIniciales;
+  mostrarCategorias(); // 👈 antes era mostrarSelectorPanel()
+}
 
     // Pinta las tarjetas del panel según las secciones a las que tiene acceso currentPersona
-    function mostrarSelectorPanel() {
-      const grid = document.getElementById('selectorGrid'); // guarda en grid lo que se llame como selectorGrid
-      grid.innerHTML = TODAS_LAS_SECCIONES  // de todas las secciones hace un boton 
-        .filter(sec => tieneAccesoSeccion(currentPersona, sec)) //pasa el filtro de los que tienen acceso o no a la sección
-        .map(sec => {  // ve cada sección y lo convierte en boton
-          const [tit, ico] = SECCIONES_INFO[sec]; // coge el titulo y el icono de las secciones
+    let _grupoActual = null;
+
+    function mostrarSelectorPanel(grupo) {
+      if (grupo) _grupoActual = grupo;
+      const secciones = _grupoActual ? GRUPOS_SECCIONES[_grupoActual] : TODAS_LAS_SECCIONES;
+      const grid = document.getElementById('selectorGrid');
+      grid.innerHTML = secciones
+        .filter(sec => tieneAccesoSeccion(currentPersona, sec))
+        .map(sec => {
+          const [tit, ico] = SECCIONES_INFO[sec];
           return `<div class="selector-item" onclick="entrarSeccion('${sec}')"><i class="fa-solid ${ico}"></i><span>${tit}</span></div>`;
-        }).join('');  // crea el boton con ello
-      document.getElementById('appView').style.display = 'none'; // mantiene la pagina oculta de momento
-      document.getElementById('selectorView').style.display = 'flex'; // pone el panel visual
+        }).join('');
+      document.getElementById('categoriaView').style.display = 'none';
+      document.getElementById('appView').style.display = 'none';
+      document.getElementById('selectorView').style.display = 'flex';
     }
 
     // El usuario elige una sección desde el panel: entra en la app en esa sección
@@ -11821,6 +11851,31 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         }
       }
     }
+
+
+
+
+
+
+
+
+
+    function mostrarCategorias() {
+      const grid = document.getElementById('categoriaGrid');
+      grid.innerHTML = Object.keys(GRUPOS_SECCIONES)
+        .filter(grupo => GRUPOS_SECCIONES[grupo].some(sec => tieneAccesoSeccion(currentPersona, sec)))
+        .map(grupo => {
+          const [tit, ico] = GRUPOS_INFO[grupo];
+          return `<div class="selector-item" onclick="mostrarSelectorPanel('${grupo}')"><i class="fa-solid ${ico}"></i><span>${tit}</span></div>`;
+        }).join('');
+      document.getElementById('appView').style.display = 'none';
+      document.getElementById('selectorView').style.display = 'none';
+      document.getElementById('categoriaView').style.display = 'flex';
+    }
+
+
+
+
 
 
 

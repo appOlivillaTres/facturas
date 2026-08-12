@@ -5405,7 +5405,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <th>Nº Factura</th><th>Concepto</th>
 <th>Albaranes</th>
       <th class="num-cell">Base 1</th><th class="pct-cell">%IVA1</th><th class="num-cell">IVA1</th>
-      <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th>Editar</th><th>Acción</th><th>Imputar</th><th>Impreso</th><th>Excel</th><th></th><th></th>
+      <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th>Acción</th><th>Imputar</th><th>Impreso</th><th>Excel</th><th></th><th></th>
       
       <th class="pct-cell">%RE1</th><th class="num-cell">RE1</th>
       <th class="num-cell">Tasas</th>
@@ -5420,13 +5420,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const estReal = f.imputado ? 'imputado' : (esVenc ? 'vencido' : (f.estado || 'pendiente'));
           return mQ && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_almacen'));
         });
-        if (!lista.length) { bdy.innerHTML = emptyRow(36, 'No se encontraron facturas'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(35, 'No se encontraron facturas'); return; }
         bdy.innerHTML = lista.map(f => {
           const est = f.estado || 'pendiente';
           const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
           const eR = f.imputado ? 'imputado' : (esVenc ? 'vencido' : est);
           const claseFila = claseFilaVencimiento(f, est, esVenc, hoyD);
-          return `<tr data-id="${f.id}" class="${claseFila}">
+          return `<tr data-id="${f.id}" class="${claseFila}" style="cursor:pointer" onclick="filaClicEditar(event,${f.id},'facturas_almacen')">
             <td>${celdaCheck(f.id)}</td>
         <td style="font-size:.78rem;color:#888">${nvl(f.numero_interno)}</td>
         <td>${fmtF(f.fecha)}</td><td>${fmtF(f.fecha_recibido)}</td><td>${fmtF(f.fecha_vencimiento)}</td>
@@ -5448,11 +5448,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <td><span class="badge-estado badge-${eR}">${eR.toUpperCase()}</span></td>
         <td>${celdaArchivoFactura(f)}</td>
         <td class="td-acciones">${celdaRevision(f, 'revisado_cynthia', 'facturas_almacen', 'Cynthia')}${chipRevisado(f, 'revisado_emilio', 'facturas_almacen', 'Emilio')}</td>
-<td>
-  <button class="btn-toggle-pago pendiente" onclick="abrirModalEditar(${f.id},'facturas_almacen')" title="Editar factura">
-    <i class="fa-solid fa-pen"></i>
-  </button>
-</td>
 <td>
   <button class="btn-toggle-pago ${eR}" onclick="toggleEstado(${f.id},'${est}','facturas_almacen')">
     ${est === 'pagado'
@@ -5521,7 +5516,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <th>Nº Factura</th><th>Concepto</th>
 <th>Albaranes</th>
       <th class="num-cell">Base 1</th><th class="pct-cell">%IVA1</th><th class="num-cell">IVA1</th>
-      <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th></th><th>Editar</th><th>Acción</th><th>Imputar</th><th>Impreso</th><th>Excel</th><th></th><th></th>
+      <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th></th><th>Acción</th><th>Imputar</th><th>Impreso</th><th>Excel</th><th></th><th></th>
       <th class="pct-cell">%RE1</th><th class="num-cell">RE1</th>
       <th class="num-cell">Tasas</th>
       <th class="num-cell">Base 2</th><th class="pct-cell">%IVA2</th><th class="num-cell">IVA2</th>
@@ -5545,14 +5540,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         } else {
           resumenEl.style.display = 'none';
         }
-        if (!lista.length) { bdy.innerHTML = emptyRow(38, 'No se encontraron facturas'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(37, 'No se encontraron facturas'); return; }
         bdy.innerHTML = lista.map(f => {
           const est = f.estado || 'pendiente';
           const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
           const eR = f.imputado ? 'imputado' : (esVenc ? 'vencido' : est);
           const claseFila = claseFilaVencimiento(f, est, esVenc, hoyD);
-          return `<tr data-id="${f.id}" class="${claseFila}">
-            <td>${celdaCheck(f.id)}</td>
+          return `<tr data-id="${f.id}" class="${claseFila}" style="cursor:pointer" onclick="filaClicEditar(event,${f.id},'facturas_obra')">            <td>${celdaCheck(f.id)}</td>
         <td style="font-size:.78rem;color:#888">${nvl(f.numero_interno)}</td>
         <td>${fmtF(f.fecha)}</td><td>${fmtF(f.fecha_recibido)}</td><td>${fmtF(f.fecha_vencimiento)}</td>
         <td style="font-size:.78rem;color:#888">${f.nif || '—'}</td>
@@ -5574,11 +5568,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <td>${celdaArchivoFactura(f)}</td>
         <td class="td-acciones" style="flex-wrap:nowrap;overflow-x:auto">${celdaRevision(f, 'revisado_angel', 'facturas_obra', 'Angel')}${chipRevisado(f, 'revisado_emilio', 'facturas_obra', 'Emilio')}</td>
         <td class="td-acciones">${celdaRevision(f, 'revisado_cynthia', 'facturas_obra', 'Cynthia')}</td>
-<td>
-  <button class="btn-toggle-pago pendiente" onclick="abrirModalEditar(${f.id},'facturas_obra')" title="Editar factura">
-    <i class="fa-solid fa-pen"></i>
-  </button>
-</td>
 <td>
   <button class="btn-toggle-pago ${eR}" onclick="toggleEstado(${f.id},'${est}','facturas_obra')">
     ${est === 'pagado'
@@ -5641,7 +5630,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   <th>Nº Factura</th><th>Concepto</th>
       <th>Albaranes</th>
       <th class="num-cell">Base 1</th><th class="pct-cell">%IVA1</th><th class="num-cell">IVA1</th>
-      <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th></th><th>Editar</th><th>Acción</th><th>Imputar</th><th>Impreso</th><th>Excel</th><th></th><th></th>
+      <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th></th><th>Acción</th><th>Imputar</th><th>Impreso</th><th>Excel</th><th></th><th></th>
       <th class="pct-cell">%RE1</th><th class="num-cell">RE1</th>
       <th class="num-cell">Tasas</th>
       <th class="num-cell">Base 2</th><th class="pct-cell">%IVA2</th><th class="num-cell">IVA2</th>
@@ -5657,14 +5646,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const estReal = f.imputado ? 'imputado' : (esVenc ? 'vencido' : (f.estado || 'pendiente'));
           return mQ && mObra && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_csg'));
         });
-        if (!lista.length) { bdy.innerHTML = emptyRow(37, 'No se encontraron facturas'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(36, 'No se encontraron facturas'); return; }
         bdy.innerHTML = lista.map(f => {
           const est = f.estado || 'pendiente';
           const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
           const eR = f.imputado ? 'imputado' : (esVenc ? 'vencido' : est);
           const claseFila = claseFilaVencimiento(f, est, esVenc, hoyD);
-          return `<tr data-id="${f.id}" class="${claseFila}">
-            <td>${celdaCheck(f.id)}</td>
+          return `<tr data-id="${f.id}" class="${claseFila}" style="cursor:pointer" onclick="filaClicEditar(event,${f.id},'facturas_csg')">            <td>${celdaCheck(f.id)}</td>
         <td style="font-size:.78rem;color:#888">${nvl(f.numero_interno)}</td>
         <td>${fmtF(f.fecha)}</td><td>${fmtF(f.fecha_recibido)}</td><td>${fmtF(f.fecha_vencimiento)}</td>
         <td style="font-size:.78rem;color:#888">${f.nif || '—'}</td>
@@ -5686,11 +5674,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <td>${celdaArchivoFactura(f)}</td>
         <td class="td-acciones">${celdaRevision(f, 'revisado_angel', 'facturas_csg', 'Angel')}${chipRevisado(f, 'revisado_emilio', 'facturas_csg', 'Emilio')}</td>
         <td class="td-acciones">${celdaRevision(f, 'revisado_cynthia', 'facturas_csg', 'Cynthia')}</td>
-<td>
-  <button class="btn-toggle-pago pendiente" onclick="abrirModalEditar(${f.id},'facturas_csg')" title="Editar factura">
-    <i class="fa-solid fa-pen"></i>
-  </button>
-</td>
 <td>
   <button class="btn-toggle-pago ${eR}" onclick="toggleEstado(${f.id},'${est}','facturas_csg')">
     ${est === 'pagado'
@@ -6019,9 +6002,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         });
         if (!lista.length) { bdy.innerHTML = emptyRow(10, 'No hay albaranes de venta registrados'); return; }
         bdy.innerHTML = lista.map(f => {
-  const forma = f.forma_cobro || 'facturar';
-  const fact = !!f.facturado;
-  return `<tr data-id="${f.id}">
+          const forma = f.forma_cobro || 'facturar';
+          const fact = !!f.facturado;
+          return `<tr data-id="${f.id}">
     <td><strong>${f.numero_albaran || '—'}</strong></td>
     <td>${fmtF(f.fecha)}</td>
     <td class="td-nombre">${f.cliente_nombre || '—'}</td>
@@ -6052,7 +6035,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       </button>
     </td>
   </tr>`;
-}).join('');
+        }).join('');
 
       } else if (tablaActual === 'ingresos') {
         hdr.innerHTML = `<tr>
@@ -6620,14 +6603,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     async function toggleFacturadoVenta(id, actual) {
-  try {
-    await apiPatch('albaranes_venta', id, { facturado: !actual });
-    const reg = registros.find(r => r.id === id);
-    if (reg) reg.facturado = !actual;
-    renderTablaConScroll();
-    toast(`Albarán de venta: <strong>${!actual ? 'FACTURADO' : 'SIN FACTURAR'}</strong>`);
-  } catch (e) { toast('Error: ' + e.message, 'err'); }
-}
+      try {
+        await apiPatch('albaranes_venta', id, { facturado: !actual });
+        const reg = registros.find(r => r.id === id);
+        if (reg) reg.facturado = !actual;
+        renderTablaConScroll();
+        toast(`Albarán de venta: <strong>${!actual ? 'FACTURADO' : 'SIN FACTURAR'}</strong>`);
+      } catch (e) { toast('Error: ' + e.message, 'err'); }
+    }
 
     async function toggleFormaCobroAlbaranVenta(id, actual) {
       const nueva = actual === 'efectivo' ? 'facturar' : 'efectivo';
@@ -10127,6 +10110,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       }, 60);
     }
 
+    // Abre el modal de edición al hacer click en la fila, pero ignora los
+    // clics que vienen de botones, checkboxes, selects o enlaces dentro de ella
+    // (para no interferir con revisar, pagar, borrar, ver archivo, etc.)
+    function filaClicEditar(event, id, tabla) {
+      if (event.target.closest('button, input, select, a, .archivo-chip, .link-badge')) return;
+      abrirModalEditar(id, tabla);
+    }
+
 
     // MODAL NUEVO REGISTRO
     function abrirModalNuevo(tablaOverride) {
@@ -11684,30 +11675,30 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     };
 
     // en notificarRevisoresFactura, en vez de un fetch por revisor:
-async function notificarRevisoresFactura(tabla, factura) {
-  const revisores = REVISORES[tabla] || [];
-  if (!revisores.length) return;
-  const tipo = tabla === 'facturas_obra' ? 'revision_obra'
-    : tabla === 'facturas_csg' ? 'revision_csg' : 'revision_almacen';
+    async function notificarRevisoresFactura(tabla, factura) {
+      const revisores = REVISORES[tabla] || [];
+      if (!revisores.length) return;
+      const tipo = tabla === 'facturas_obra' ? 'revision_obra'
+        : tabla === 'facturas_csg' ? 'revision_csg' : 'revision_almacen';
 
-  try {
-    await fetch('https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
-      body: JSON.stringify({
-        tipo,
-        destinatarios: revisores.map(r => ({ email: r.email, nombre: r.nombre })), // 👈 lista, no una sola persona
-        factura: {
-          proveedor: factura.proveedor,
-          numero_factura: factura.numero_factura,
-          fecha: factura.fecha,
-          total: factura.total,
-          nombre_obra: factura.nombre_obra || null
-        }
-      })
-    });
-  } catch (e) { console.error('Error notificando revisores:', e); }
-}
+      try {
+        await fetch('https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+          body: JSON.stringify({
+            tipo,
+            destinatarios: revisores.map(r => ({ email: r.email, nombre: r.nombre })), // 👈 lista, no una sola persona
+            factura: {
+              proveedor: factura.proveedor,
+              numero_factura: factura.numero_factura,
+              fecha: factura.fecha,
+              total: factura.total,
+              nombre_obra: factura.nombre_obra || null
+            }
+          })
+        });
+      } catch (e) { console.error('Error notificando revisores:', e); }
+    }
 
 
     async function comprobarFacturasVencidasSinRevisar() {

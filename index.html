@@ -3412,14 +3412,16 @@
       consumo_interno: ['Consumo Interno', 'fa-user-check', false],
     };
 
-    function aplicarPermisosMenu() { // creo que no es necesaria
-      document.querySelectorAll('.btn-nav').forEach(btn => { // Busca en todo el documento aquello que tenga .btn-nav y para cada uno hace
-        const m = (btn.getAttribute('onclick') || '').match(/cambiarSeccion\('([^']+)'\)/); // coge el onclick del boton es decir, lo que tine que pasar cuando le clicas, coge de esa funcion que dice lo que hacer cuando le das, lo que hay entre comillas y lo guarda en m
-        if (!m) return; // Si no tiene onclick lo ignora y pasa al siguiente
-        btn.style.display = tieneAccesoSeccion(currentPersona, m[1]) ? '' : 'none'; // Mira si tiene acceso a esa seccion a la que quiere cambiar, si lo tiene, se queda vacio, si no desaparece el boton 
+    function aplicarPermisosMenu() {
+      document.querySelectorAll('.btn-nav').forEach(btn => {
+        const m = (btn.getAttribute('onclick') || '').match(/cambiarSeccion\('([^']+)'\)/);
+        if (!m) return;
+        const sec = m[1];
+        const enGrupo = !_grupoActual || (GRUPOS_SECCIONES[_grupoActual] || []).includes(sec); // 👈 añadir
+        btn.style.display = (tieneAccesoSeccion(currentPersona, sec) && enGrupo) ? '' : 'none'; // 👈 cambiar
       });
-      const badge = document.getElementById('usuarioConectado'); // ahora busca en toda la pagina al usuario conectado y lo guarda en badge
-      if (badge) badge.textContent = currentPersona ? ('Conectado como ' + (NOMBRES_PERSONAS[currentPersona] || currentPersona)) : ''; // si existe, mira si hay una persona conectado y pone quien es
+      const badge = document.getElementById('usuarioConectado');
+      if (badge) badge.textContent = currentPersona ? ('Conectado como ' + (NOMBRES_PERSONAS[currentPersona] || currentPersona)) : '';
     }
 
     let cachesIniciales = null; // Promise compartida para no recargar cachés al volver al selector

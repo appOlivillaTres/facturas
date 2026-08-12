@@ -6538,7 +6538,11 @@ async function toggleEstado(id, estadoActual, tabla) {
     const reg = registros.find(r => r.id === id);
     if (reg) reg.estado = nuevo;
     actualizarStats(); renderAlertas(); renderTablaConScroll();
-    if (modalEditId === id) renderAccionesModal(tabla, reg); // 👈 añadir
+    if (modalEditId === id) {
+      renderAccionesModal(tabla, reg);
+      const selEst = document.getElementById('f_est'); // 👈 añadir
+      if (selEst) selEst.value = nuevo;                // 👈 añadir
+    }
     toast(`Factura marcada como <strong>${nuevo.toUpperCase()}</strong>`);
   } catch (e) { toast('Error: ' + e.message, 'err'); }
 }
@@ -10287,11 +10291,11 @@ function renderAccionesModal(tabla, f) {
 </div>
         <div class="form-group"><label>Vencimiento</label><input type="date" id="f_venc"></div>
         <div class="form-group"><label>Estado</label><select id="f_est"><option value="pendiente">Pendiente</option><option value="pagado">Pagada</option></select></div>
-      <div class="form-seccion" id="revisionModalWrap" style="display:none">Revisión</div>
-      <div class="td-acciones" id="revisionChipsCont" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px"></div>
-      <div class="form-seccion">Acciones</div>
-<div class="td-acciones" id="accionesModalCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
       </div>
+      <div class="form-seccion" id="revisionModalWrap" style="display:none">Revisión</div>
+      <div class="td-acciones" id="revisionChipsCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+      <div class="form-seccion">Acciones</div>
+      <div class="td-acciones" id="accionesModalCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
       ${htmlCampoArchivo()}
       ${htmlCamposExcel()}
       <div class="form-seccion">Historial de ediciones</div>
@@ -10358,11 +10362,11 @@ function renderAccionesModal(tabla, f) {
 </div>
         <div class="form-group"><label>Vencimiento</label><input type="date" id="f_venc"></div>
         <div class="form-group"><label>Estado</label><select id="f_est"><option value="pendiente">Pendiente</option><option value="pagado">Pagada</option></select></div>
-      <div class="form-seccion" id="revisionModalWrap" style="display:none">Revisión</div>
-      <div class="td-acciones" id="revisionChipsCont" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px"></div>
-      <div class="form-seccion">Acciones</div>
-<div class="td-acciones" id="accionesModalCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
       </div>
+      <div class="form-seccion" id="revisionModalWrap" style="display:none">Revisión</div>
+      <div class="td-acciones" id="revisionChipsCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+      <div class="form-seccion">Acciones</div>
+      <div class="td-acciones" id="accionesModalCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
       ${htmlCampoArchivo()}
       ${htmlCamposExcel()}
       <div class="form-seccion">Historial de ediciones</div>
@@ -10429,11 +10433,11 @@ function renderAccionesModal(tabla, f) {
 </div>
         <div class="form-group"><label>Vencimiento</label><input type="date" id="f_venc"></div>
         <div class="form-group"><label>Estado</label><select id="f_est"><option value="pendiente">Pendiente</option><option value="pagado">Pagada</option></select></div>
-      <div class="form-seccion" id="revisionModalWrap" style="display:none">Revisión</div>
-      <div class="td-acciones" id="revisionChipsCont" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px"></div>
-      <div class="form-seccion">Acciones</div>
-<div class="td-acciones" id="accionesModalCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
       </div>
+      <div class="form-seccion" id="revisionModalWrap" style="display:none">Revisión</div>
+      <div class="td-acciones" id="revisionChipsCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+      <div class="form-seccion">Acciones</div>
+      <div class="td-acciones" id="accionesModalCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
       ${htmlCampoArchivo()}
       ${htmlCamposExcel()}
       <div class="form-seccion">Historial de ediciones</div>

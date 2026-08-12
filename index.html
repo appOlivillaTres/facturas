@@ -192,6 +192,14 @@
       gap: 14px;
     }
 
+    .categoria-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
+      max-width: 460px;
+      margin: 0 auto;
+    }
+
     .selector-item {
       background: #f7f9fa;
       border: 1.5px solid #ede5f5;
@@ -2063,10 +2071,10 @@
   </div>
   <!-- SELECTOR DE CATEGORÍA (Almacén / Obra) -->
   <div class="selector-wrap" id="categoriaView">
-    <div class="selector-card">
+    <div class="selector-card" style="max-width:520px">
       <h2>¿Dónde quieres entrar?</h2>
       <p>Elige el área de trabajo</p>
-      <div class="selector-grid" id="categoriaGrid"></div>
+      <div class="categoria-grid" id="categoriaGrid"></div>
       <button class="selector-salir" onclick="doLogout()"><i
           class="fa-solid fa-right-from-bracket me-1"></i>Salir</button>
     </div>
@@ -2074,14 +2082,16 @@
 
   <!-- SELECTOR DE PANEL (tras el login, antes de entrar a una sección) -->
   <div class="selector-wrap" id="selectorView">
-  <div class="selector-card">
-    <h2>¿A dónde quieres ir?</h2>
-    <p>Elige el panel que quieres abrir</p>
-    <div class="selector-grid" id="selectorGrid"></div>
-    <button class="selector-salir" onclick="mostrarCategorias()"><i class="fa-solid fa-arrow-left me-1"></i>Cambiar de área</button>
-    <button class="selector-salir" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket me-1"></i>Salir</button>
+    <div class="selector-card">
+      <h2>¿A dónde quieres ir?</h2>
+      <p>Elige el panel que quieres abrir</p>
+      <div class="selector-grid" id="selectorGrid"></div>
+      <button class="selector-salir" onclick="mostrarCategorias()"><i class="fa-solid fa-arrow-left me-1"></i>Cambiar de
+        área</button>
+      <button class="selector-salir" onclick="doLogout()"><i
+          class="fa-solid fa-right-from-bracket me-1"></i>Salir</button>
+    </div>
   </div>
-</div>
 
   <!-- APP -->
   <div id="appView" style="display:none;flex-direction:column;flex:1;">
@@ -3416,18 +3426,18 @@
     let realtimeIniciado = false;
 
     async function entrarEnApp() {
-  document.getElementById('loginView').style.display = 'none';
-  document.getElementById('appView').style.display = 'none';
-  if (!cachesIniciales) {
-    cachesIniciales = Promise.all([
-      cargarInventarioCache(), cargarClientesCache(), cargarProveedoresCache(),
-      cargarObrasCache(), cargarMaterialesExclusivosCache(),
-      cargarMaquinariaCache()
-    ]);
-  }
-  await cachesIniciales;
-  mostrarCategorias(); // 👈 antes era mostrarSelectorPanel()
-}
+      document.getElementById('loginView').style.display = 'none';
+      document.getElementById('appView').style.display = 'none';
+      if (!cachesIniciales) {
+        cachesIniciales = Promise.all([
+          cargarInventarioCache(), cargarClientesCache(), cargarProveedoresCache(),
+          cargarObrasCache(), cargarMaterialesExclusivosCache(),
+          cargarMaquinariaCache()
+        ]);
+      }
+      await cachesIniciales;
+      mostrarCategorias(); // 👈 antes era mostrarSelectorPanel()
+    }
 
     // Pinta las tarjetas del panel según las secciones a las que tiene acceso currentPersona
     let _grupoActual = null;

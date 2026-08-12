@@ -11683,37 +11683,31 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       ]
     };
 
-    async function notificarRevisoresFactura(tabla, factura) {
-      const revisores = REVISORES[tabla] || [];
-      if (!revisores.length) return;
-      const tipo = tabla === 'facturas_obra' ? 'revision_obra' : tabla === 'facturas_csg' ? 'revision_csg' : 'revision_almacen';
+    // en notificarRevisoresFactura, en vez de un fetch por revisor:
+async function notificarRevisoresFactura(tabla, factura) {
+  const revisores = REVISORES[tabla] || [];
+  if (!revisores.length) return;
+  const tipo = tabla === 'facturas_obra' ? 'revision_obra'
+    : tabla === 'facturas_csg' ? 'revision_csg' : 'revision_almacen';
 
-      for (const rev of revisores) {
-        try {
-          await fetch(
-            'https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker',
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
-              body: JSON.stringify({
-                tipo,
-                email: rev.email,
-                nombre: rev.nombre,
-                factura: {
-                  proveedor: factura.proveedor,
-                  numero_factura: factura.numero_factura,
-                  fecha: factura.fecha,
-                  total: factura.total,
-                  nombre_obra: factura.nombre_obra || null
-                }
-              })
-            }
-          );
-        } catch (e) {
-          console.error('Error notificando a', rev.nombre, e);
+  try {
+    await fetch('https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      body: JSON.stringify({
+        tipo,
+        destinatarios: revisores.map(r => ({ email: r.email, nombre: r.nombre })), // 👈 lista, no una sola persona
+        factura: {
+          proveedor: factura.proveedor,
+          numero_factura: factura.numero_factura,
+          fecha: factura.fecha,
+          total: factura.total,
+          nombre_obra: factura.nombre_obra || null
         }
-      }
-    }
+      })
+    });
+  } catch (e) { console.error('Error notificando revisores:', e); }
+}
 
 
     async function comprobarFacturasVencidasSinRevisar() {

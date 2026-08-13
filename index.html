@@ -5914,7 +5914,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       } else if (tablaActual === 'clientes') {
         hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Nombre</th><th>NIF</th><th>Email</th><th>Teléfono</th><th>Puntos</th><th>Última compra</th><th>Acciones</th><th></th></tr>`;
         const lista = registros.filter(f => [f.nombre, f.nif, f.email].some(v => (v || '').toLowerCase().includes(q)));
-        if (!lista.length) { bdy.innerHTML = emptyRow(8, 'No se encontraron clientes'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(7, 'No se encontraron clientes'); return; }
         bdy.innerHTML = lista.map(f => {
           const uc = f.ultima_compra ? new Date(f.ultima_compra) : null;
           const meses = uc ? Math.floor((new Date() - uc) / (1000 * 60 * 60 * 24 * 30)) : null;
@@ -5958,7 +5958,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const lista = registros
           .filter(f => [f.cliente, f.email_cliente, f.asunto].some(v => (v || '').toLowerCase().includes(q)))
           .filter(f => !fEst || (fEst === 'respondido' ? f.respondido : !f.respondido));
-        if (!lista.length) { bdy.innerHTML = emptyRow(8, 'No se encontraron presupuestos'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(7, 'No se encontraron presupuestos'); return; }
         bdy.innerHTML = lista.map(f => {
           const respondido = !!f.respondido;
           const vencido = !respondido && f.fecha_recordatorio && f.fecha_recordatorio <= hoy();
@@ -5990,7 +5990,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       } else if (tablaActual === 'inventario') {
         hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Producto</th><th>Stock</th><th>Pts/unidad</th><th class="num-cell">Costo</th><th class="num-cell">Venta</th><th class="num-cell">Margen</th><th></th></tr>`;
         const lista = registros.filter(p => (p.nombre || '').toLowerCase().includes(q));
-        if (!lista.length) { bdy.innerHTML = emptyRow(8, 'No se encontraron productos'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(7, 'No se encontraron productos'); return; }
         bdy.innerHTML = lista.map(p => {
           const agotado = parseFloat(p.stock || 0) <= 0;
           const costo = p.costo != null ? parseFloat(p.costo) : null;
@@ -6017,7 +6017,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       } else if (tablaActual === 'materiales_obra') {
         hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Obra</th><th>Empleado</th><th>Fecha</th><th>Materiales</th><th>Detalle</th><th></th></tr>`;
         const lista = registros.filter(f => [f.nombre_obra, f.nombre_empleado].some(v => (v || '').toLowerCase().includes(q)));
-        if (!lista.length) { bdy.innerHTML = emptyRow(6, 'No hay materiales registrados'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(5, 'No hay materiales registrados'); return; }
         bdy.innerHTML = lista.map(f => {
           const items = f.materiales_obra_items || [];
           const itemsExcl = f.materiales_exclusivos_obra_items || [];
@@ -6056,7 +6056,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const mE = !fEst || fEst === forma;
           return mQ && mE;
         });
-        if (!lista.length) { bdy.innerHTML = emptyRow(10, 'No hay albaranes de venta registrados'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(9, 'No hay albaranes de venta registrados'); return; }
         bdy.innerHTML = lista.map(f => {
           const forma = f.forma_cobro || 'facturar';
           const fact = !!f.facturado;
@@ -6110,7 +6110,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const estReal = esVenc ? 'vencido' : (f.estado || 'pendiente');
           return mQ && mObra && (!fEst || fEst === estReal) && (!filtroPorRevisar || faltaPorRevisar(f, 'ingresos'));
         });
-        if (!lista.length) { bdy.innerHTML = emptyRow(18, 'No se encontraron ingresos'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(17, 'No se encontraron ingresos'); return; }
         bdy.innerHTML = lista.map(f => {
           const est = f.estado || 'pendiente';
           const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;

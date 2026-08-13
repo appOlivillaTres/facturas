@@ -2724,6 +2724,34 @@
       </div>
     </div>
   </div>
+  <!-- MODAL CLIENTE RÁPIDO (desde Albaranes de Venta) -->
+  <div class="modal-overlay" id="modalClienteRapido">
+    <div class="modal-box-sm">
+      <h3><i class="fa-solid fa-user-plus" style="color:#b53987"></i>Nuevo Cliente</h3>
+      <div class="form-group"><label>Nombre *</label><input type="text" id="cr_nombre" placeholder="Nombre completo">
+      </div>
+      <div class="form-group"><label>NIF</label><input type="text" id="cr_nif" placeholder="45123456B"></div>
+      <div class="form-group"><label>Teléfono</label><input type="text" id="cr_tel" placeholder="612345678"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="cr_email" placeholder="correo@ejemplo.com">
+      </div>
+      <div class="form-group"><label>Domicilio</label><input type="text" id="cr_domicilio"
+          placeholder="Calle, número..."></div>
+      <div class="form-grid-2">
+        <div class="form-group"><label>Población</label><input type="text" id="cr_poblacion" placeholder="Toledo"></div>
+        <div class="form-group"><label>Código postal</label><input type="text" id="cr_cp" placeholder="45001"></div>
+      </div>
+      <div class="form-group"><label>Provincia</label><input type="text" id="cr_provincia" placeholder="Toledo"></div>
+      <div class="form-group">
+        <label>Aviso al hacer albarán de venta <span style="font-size:.72rem;color:#888">(opcional)</span></label>
+        <input type="text" id="cr_aviso_albaran" placeholder="Ej: Poner obra, nombre de quien recoge y DNI">
+      </div>
+      <div class="modal-btns">
+        <button class="btn-cancelar" onclick="cerrarModal('modalClienteRapido')">Cancelar</button>
+        <button class="btn-guardar" onclick="guardarClienteRapido()"><i class="fa-solid fa-floppy-disk me-1"></i>Guardar
+          cliente</button>
+      </div>
+    </div>
+  </div>
   <!-- MODAL DESCARGAR ARCHIVOS POR FECHA -->
   <div class="modal-overlay" id="modalExportarArchivos">
     <div class="modal-box-sm">
@@ -8587,8 +8615,15 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           alert(c.aviso_albaran);
         }
       }
-      function render(items) {
-        if (!items.length) { lista.style.display = 'none'; return; }
+      function render(items, textoEscrito) {
+        if (!items.length) {
+          // 👇 Sin resultados: mostramos el botón para crear cliente nuevo
+          lista.innerHTML = `<div class="ac-item" style="color:#2d7a4f;font-weight:600" onmousedown="event.preventDefault(); abrirModalClienteRapido('${textoEscrito.replace(/'/g, "\\'")}', {inputNombre:'${inputNombreId}', inputNif:'${inputNifId}', inputId:'${inputIdId}', setSelId: v => clienteVentaSelId = v})">
+        <i class="fa-solid fa-plus me-1"></i>Añadir "${textoEscrito}" como cliente nuevo
+      </div>`;
+          lista.style.display = textoEscrito ? 'block' : 'none';
+          return;
+        }
         lista.innerHTML = items.map(c =>
           `<div class="ac-item" data-id="${c.id}">
         <span class="ac-nombre">${c.nombre || '—'}</span>
@@ -8605,9 +8640,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       }
       inpN.addEventListener('input', () => {
         inpId.value = ''; clienteVentaSelId = null;
-        render(filtrar(inpN.value.toLowerCase().trim()));
+        const q = inpN.value.toLowerCase().trim();
+        render(filtrar(q), inpN.value.trim());
       });
-      inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim())); });
+      inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim()), inpN.value.trim()); });
       inpN.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
     }
 
@@ -8637,8 +8673,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         document.getElementById('aa_provincia').value = c.provincia || '';
         lista.style.display = 'none';
       }
-      function render(items) {
-        if (!items.length) { lista.style.display = 'none'; return; }
+      function render(items, textoEscrito) {
+        if (!items.length) {
+          lista.innerHTML = `<div class="ac-item" style="color:#2d7a4f;font-weight:600" onmousedown="event.preventDefault(); abrirModalClienteRapido('${textoEscrito.replace(/'/g, "\\'")}', {inputNombre:'aa_cliente', inputNif:'aa_nif', inputId:'aa_cliente_id', setSelId: v => clienteAltaSelId = v, camposDireccion:{domicilio:'aa_direccion', poblacion:'aa_poblacion', codigo_postal:'aa_cp', provincia:'aa_provincia'}})">
+        <i class="fa-solid fa-plus me-1"></i>Añadir "${textoEscrito}" como cliente nuevo
+      </div>`;
+          lista.style.display = textoEscrito ? 'block' : 'none';
+          return;
+        }
         lista.innerHTML = items.map(c =>
           `<div class="ac-item" data-id="${c.id}">
         <span class="ac-nombre">${c.nombre || '—'}</span>
@@ -8655,9 +8697,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       }
       inpN.addEventListener('input', () => {
         inpId.value = ''; clienteAltaSelId = null;
-        render(filtrar(inpN.value.toLowerCase().trim()));
+        render(filtrar(inpN.value.toLowerCase().trim()), inpN.value.trim());
       });
-      inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim())); });
+      inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim()), inpN.value.trim()); });
       inpN.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
     }
 
@@ -8669,6 +8711,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const div = document.createElement('div');
       div.id = `lav_${idx}`;
       div.className = 'linea-prod';
+      div.style.gridTemplateColumns = '1fr 110px 90px 70px auto'; // 👈 una columna más
       div.innerHTML = `
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Producto</label>
@@ -8677,7 +8720,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Cantidad <span id="lav_uni_${idx}" style="color:#b53987;font-weight:600"></span></label>
       <div style="display:flex;gap:4px;align-items:center">
-  <input type="number" id="lav_cant_${idx}" value="1" min="0.01" step="0.01" style="text-align:center;width:100%">
+  <input type="number" id="lav_cant_${idx}" value="1" min="0.01" step="0.01" style="text-align:center;width:100%" oninput="recalcBaseDesdeLineasAlbaranVenta()">
   <select id="lav_unidadnueva_${idx}" title="Unidad (solo si el producto es nuevo)" style="width:62px;font-size:.72rem;padding:4px;border:1.5px solid #ddd;border-radius:6px">
     <option value="unidades">uds.</option>
     <option value="metros">m</option>
@@ -8688,17 +8731,19 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   </button>
 </div>
     </div>
-    <div class="form-group" style="margin:0;width:90px">
+    <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Precio Ud. (€)</label>
-      <input type="number" id="lav_precio_${idx}" step="0.01" min="0" value="0" style="text-align:right">
+      <input type="number" id="lav_precio_${idx}" step="0.01" min="0" value="0" style="text-align:right" oninput="recalcBaseDesdeLineasAlbaranVenta()">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Dto. %</label>
+      <input type="number" id="lav_dto_${idx}" step="0.01" min="0" max="100" value="0" style="text-align:right" oninput="recalcBaseDesdeLineasAlbaranVenta()">
     </div>
     <button type="button" onclick="document.getElementById('lav_${idx}').remove(); recalcBaseDesdeLineasAlbaranVenta();"
       style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
       <i class="fa-solid fa-xmark"></i>
     </button>`;
       document.getElementById('lineasAlbaranVenta').appendChild(div);
-      document.getElementById(`lav_cant_${idx}`).addEventListener('input', recalcBaseDesdeLineasAlbaranVenta);
-      document.getElementById(`lav_precio_${idx}`).addEventListener('input', recalcBaseDesdeLineasAlbaranVenta);
     }
 
     // Suma el subtotal de todas las líneas y lo mete en la base imponible automáticamente
@@ -8708,7 +8753,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const idx = inp.id.split('_')[2];
         const cant = parseFloat(document.getElementById(`lav_cant_${idx}`)?.value || 0);
         const precio = parseFloat(document.getElementById(`lav_precio_${idx}`)?.value || 0);
-        base += cant * precio;
+        const dto = parseFloat(document.getElementById(`lav_dto_${idx}`)?.value || 0);
+        const subtotal = cant * precio;
+        base += subtotal - (subtotal * dto / 100); // 👈 descuento por línea, no global
       });
       const baseInput = document.getElementById('f_av_base');
       if (baseInput) { baseInput.value = base.toFixed(2); recalcTotalAlbaranVenta(); }
@@ -8734,11 +8781,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     function recalcTotalAlbaranVenta() {
       const base = parseFloat(document.getElementById('f_av_base')?.value || 0);
-      const pctDto = parseFloat(document.getElementById('f_av_descuento')?.value || 0);
-      const baseConDto = base - (base * pctDto / 100);
       const pct = parseFloat(document.getElementById('f_av_pct_iva')?.value || 0);
-      const iva = baseConDto * pct / 100;
-      const total = baseConDto + iva;
+      const iva = base * pct / 100;
+      const total = base + iva;
       document.getElementById('f_av_total').value = total.toFixed(2);
       document.getElementById('totalPuntosAlbaranVenta').textContent = calcularPuntosPorTotal(total) + ' pts';
     }
@@ -8751,8 +8796,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const idx = inp.id.split('_')[2];
         const cant = parseFloat(document.getElementById(`lav_cant_${idx}`)?.value || 0);
         const precio = parseFloat(document.getElementById(`lav_precio_${idx}`)?.value || 0);
+        const dto = parseFloat(document.getElementById(`lav_dto_${idx}`)?.value || 0); // 👈 nuevo
         if (cant <= 0) continue;
-        lineas.push({ nombre, cantidad: cant, precio, idx });
+        lineas.push({ nombre, cantidad: cant, precio, dto, idx }); // 👈 nuevo
       }
       return lineas;
     }
@@ -8762,17 +8808,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const cliente_nombre = document.getElementById('f_av_cliente').value.trim();
       const nif = document.getElementById('f_av_nif').value.trim() || null;
       const cliente_id = clienteVentaSelId;
-      const base_imponible = parseFloat(document.getElementById('f_av_base').value || 0);
-      const descuento_pct = parseFloat(document.getElementById('f_av_descuento')?.value || 0);
-      const importe_descuento = +(base_imponible * descuento_pct / 100).toFixed(2);
-      const base_con_descuento = +(base_imponible - importe_descuento).toFixed(2);
+      const base_imponible = parseFloat(document.getElementById('f_av_base').value || 0); // ya viene con descuentos aplicados
       const pct_iva = parseFloat(document.getElementById('f_av_pct_iva').value || 0);
-      const importe_iva = +(base_con_descuento * pct_iva / 100).toFixed(2);
-      const total = +(base_con_descuento + importe_iva).toFixed(2);
+      const importe_iva = +(base_imponible * pct_iva / 100).toFixed(2);
+      const total = +(base_imponible + importe_iva).toFixed(2);
       const notas = document.getElementById('f_av_notas').value.trim() || null;
 
       if (!fecha) { toast('La fecha es obligatoria', 'err'); return; }
-      if (!cliente_id) { toast('Selecciona un cliente de la lista (créalo primero en Clientes si es nuevo)', 'err'); return; }
+      if (!cliente_id) { toast('Selecciona un cliente de la lista (o créalo con el botón de nuevo cliente)', 'err'); return; }
       if (!total || total <= 0) { toast('Indica el total del albarán', 'err'); return; }
 
       const lineasInput = _leerLineasAlbaranVenta();
@@ -8793,12 +8836,15 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             return;
           }
         }
+        const subtotal = l.cantidad * l.precio;
+        const importeConDto = +(subtotal - (subtotal * l.dto / 100)).toFixed(2); // 👈 descuento aplicado por línea
         lineasFinales.push({
           producto_id: prod.id,
           producto_nombre: l.nombre,
           cantidad: l.cantidad,
           precio_unitario: l.precio,
-          importe_total: +(l.cantidad * l.precio).toFixed(2)
+          dto_pct: l.dto,               // 👈 se guarda para referencia
+          importe_total: importeConDto  // 👈 ya con descuento
         });
       }
 
@@ -8811,7 +8857,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         let numeroAlbaranAsignado = null;
         const headerPayload = {
           fecha, cliente_id, cliente_nombre, nif,
-          base_imponible: base_con_descuento, descuento_pct, importe_descuento,
+          base_imponible, // ya con descuentos por línea aplicados
           pct_iva, importe_iva, total, puntos_generados: puntosNuevos, notas
         };
 
@@ -8897,7 +8943,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         document.getElementById('f_av_cliente_id').value = f.cliente_id || '';
         clienteVentaSelId = f.cliente_id || null;
         document.getElementById('f_av_base').value = (f.base_imponible || 0) + (f.importe_descuento || 0);
-        document.getElementById('f_av_descuento').value = f.descuento_pct || 0;
         document.getElementById('f_av_pct_iva').value = f.pct_iva != null ? f.pct_iva : 21;
         document.getElementById('f_av_notas').value = f.notas || '';
         recalcTotalAlbaranVenta();
@@ -8910,9 +8955,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             addLineaAlbaranVenta();
             document.getElementById(`lav_prod_${lineasAlbaranVentaCount}`).value = item.producto_nombre || '';
             document.getElementById(`lav_cant_${lineasAlbaranVentaCount}`).value = item.cantidad;
-            document.getElementById(`lav_precio_${lineasAlbaranVentaCount}`).value = item.precio_unitario || 0; // ← añadir
+            document.getElementById(`lav_precio_${lineasAlbaranVentaCount}`).value = item.precio_unitario || 0;
+            document.getElementById(`lav_dto_${lineasAlbaranVentaCount}`).value = item.dto_pct || 0; // 👈 nuevo
             actualizarUnidadLinea('lav', lineasAlbaranVentaCount);
           });
+          recalcBaseDesdeLineasAlbaranVenta();
         } else {
           addLineaAlbaranVenta();
         }
@@ -9609,8 +9656,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         document.getElementById('ba_provincia').value = c.provincia || '';
         lista.style.display = 'none';
       }
-      function render(items) {
-        if (!items.length) { lista.style.display = 'none'; return; }
+      function render(items, textoEscrito) {
+        if (!items.length) {
+          lista.innerHTML = `<div class="ac-item" style="color:#2d7a4f;font-weight:600" onmousedown="event.preventDefault(); abrirModalClienteRapido('${textoEscrito.replace(/'/g, "\\'")}', {inputNombre:'ba_cliente', inputNif:'ba_nif', inputId:'ba_cliente_id', setSelId: v => clienteBajaSelId = v, camposDireccion:{domicilio:'ba_direccion', poblacion:'ba_poblacion', codigo_postal:'ba_cp', provincia:'ba_provincia'}})">
+        <i class="fa-solid fa-plus me-1"></i>Añadir "${textoEscrito}" como cliente nuevo
+      </div>`;
+          lista.style.display = textoEscrito ? 'block' : 'none';
+          return;
+        }
         lista.innerHTML = items.map(c =>
           `<div class="ac-item" data-id="${c.id}">
         <span class="ac-nombre">${c.nombre || '—'}</span>
@@ -9627,9 +9680,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       }
       inpN.addEventListener('input', () => {
         inpId.value = ''; clienteBajaSelId = null;
-        render(filtrar(inpN.value.toLowerCase().trim()));
+        render(filtrar(inpN.value.toLowerCase().trim()), inpN.value.trim());
       });
-      inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim())); });
+      inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim()), inpN.value.trim()); });
       inpN.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
     }
 
@@ -10240,8 +10293,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <div id="lineasAlbaranVenta"></div>
       <button type="button" class="btn-add-linea" onclick="addLineaAlbaranVenta()"><i class="fa-solid fa-plus me-1"></i>Añadir producto</button>
       <div class="form-grid" style="margin-top:14px;padding-top:12px;border-top:1.5px solid #ede5f5">
-  <div class="form-group"><label>Base imponible (€) *</label><input type="number" id="f_av_base" step="0.01" min="0" oninput="recalcTotalAlbaranVenta()"></div>
-  <div class="form-group"><label>Descuento (%)</label><input type="number" id="f_av_descuento" step="0.01" min="0" max="100" value="0" oninput="recalcTotalAlbaranVenta()"></div>
+  <div class="form-group"><label>Base imponible (€)</label><input type="number" id="f_av_base" step="0.01" readonly style="background:#f7f0f5;font-weight:700"></div>
   <div class="form-group"><label>% IVA</label><input type="number" id="f_av_pct_iva" step="0.01" value="21" oninput="recalcTotalAlbaranVenta()"></div>
   <div class="form-group"><label>Total (€)</label><input type="number" id="f_av_total" step="0.01" readonly style="background:#f7f0f5;font-weight:700"></div>
 </div>
@@ -11052,7 +11104,73 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 
 
+    // Guarda a qué campos del formulario que lo llamó hay que devolver el
+    // cliente recién creado (nombre / nif / id), para reutilizar el mismo
+    // modal rápido desde Albaranes de Venta, Alta de Alquiler, etc.
 
+    let _clienteRapidoDestino = null;
+
+    function abrirModalClienteRapido(nombreEscrito, destino) {
+      // destino = { inputNombre, inputNif, inputId, setSelId, camposDireccion? }
+      _clienteRapidoDestino = destino;
+      document.getElementById('cr_nombre').value = nombreEscrito || '';
+      document.getElementById('cr_nif').value = '';
+      document.getElementById('cr_tel').value = '';
+      document.getElementById('cr_email').value = '';
+      document.getElementById('cr_domicilio').value = '';
+      document.getElementById('cr_poblacion').value = '';
+      document.getElementById('cr_cp').value = '';
+      document.getElementById('cr_provincia').value = '';
+      document.getElementById('modalClienteRapido').classList.add('visible');
+    }
+
+    async function guardarClienteRapido() {
+      const nombre = document.getElementById('cr_nombre').value.trim();
+      if (!nombre) { toast('El nombre es obligatorio', 'err'); return; }
+      const payload = {
+        nombre,
+        nif: document.getElementById('cr_nif').value.trim() || null,
+        telefono: document.getElementById('cr_tel').value.trim() || null,
+        email: document.getElementById('cr_email').value.trim() || null,
+        domicilio: document.getElementById('cr_domicilio').value.trim() || null,
+        poblacion: document.getElementById('cr_poblacion').value.trim() || null,
+        codigo_postal: document.getElementById('cr_cp').value.trim() || null,
+        provincia: document.getElementById('cr_provincia').value.trim() || null,
+        aviso_albaran: document.getElementById('cr_aviso_albaran').value.trim() || null,
+        puntos: 0,
+        ultima_compra: new Date().toISOString()
+      };
+
+      try {
+        const [nuevo] = await apiPost('clientes', payload);
+        clientesDB.push(nuevo);
+        toast(`Cliente "${nombre}" creado`, 'ok');
+        cerrarModal('modalClienteRapido');
+
+        if (_clienteRapidoDestino) {
+          const { inputNombre, inputNif, inputId, setSelId, camposDireccion } = _clienteRapidoDestino;
+          const elN = document.getElementById(inputNombre);
+          const elF = document.getElementById(inputNif);
+          const elId = document.getElementById(inputId);
+          if (elN) elN.value = nuevo.nombre || '';
+          if (elF) elF.value = nuevo.nif || '';
+          if (elId) elId.value = nuevo.id;
+          if (setSelId) setSelId(nuevo.id);
+
+          // 👇 nuevo: si el formulario destino tiene campos de dirección, se rellenan también
+          if (camposDireccion) {
+            const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+            setVal(camposDireccion.domicilio, nuevo.domicilio);
+            setVal(camposDireccion.poblacion, nuevo.poblacion);
+            setVal(camposDireccion.codigo_postal, nuevo.codigo_postal);
+            setVal(camposDireccion.provincia, nuevo.provincia);
+          }
+        }
+        _clienteRapidoDestino = null;
+      } catch (e) {
+        toast('Error al crear el cliente: ' + e.message, 'err');
+      }
+    }
 
 
 

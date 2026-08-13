@@ -8918,10 +8918,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         toast(modalEditId
           ? 'Albarán de venta actualizado'
           : (conPuntos ? `Albarán ${numeroAlbaranAsignado || ''} guardado — +${puntosNuevos} pts para ${cliente_nombre}` : `Albarán ${numeroAlbaranAsignado || ''} guardado sin puntos ni aviso`));
+
+        const idParaImprimir = headerId; // 👈 añadir
         modalEditId = null;
         modalDestinoTabla = null;
         cerrarModal('modalNueva');
         cargarDatos();
+        imprimirAlbaranVenta(idParaImprimir); // 👈 añadir
       } catch (e) {
         toast('Error al guardar el albarán: ' + e.message, 'err');
       } finally {
@@ -9408,6 +9411,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         toast(`Alta de alquiler guardada — Nº ${numeroAsignado || ''}`);
         cerrarModal('modalAltaAlquiler');
         altaAlquilerEditId = null;
+        imprimirAltaAlquiler(headerId); // 👈 añadir
       } catch (e) {
         toast('Error al guardar: ' + e.message, 'err');
       }
@@ -9783,6 +9787,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         toast(`Baja de alquiler guardada — Nº ${numeroAsignado || ''}`);
         cerrarModal('modalBajaAlquiler');
         cargarDatos();
+        imprimirBajaAlquiler(headerId); // 👈 añadir
       } catch (e) {
         toast('Error al guardar: ' + e.message, 'err');
       }
@@ -11290,6 +11295,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         toast('Consumo interno registrado y stock descontado');
         cerrarModal('modalConsumoInterno');
         cargarDatos();
+        imprimirConsumoInterno(header.id); // 👈 añadir
       } catch (e) {
         toast('Error al guardar: ' + e.message, 'err');
       }

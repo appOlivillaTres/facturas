@@ -8683,14 +8683,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 
 
-function addLineaAlbaranVenta() {
-  lineasAlbaranVentaCount++;
-  const idx = lineasAlbaranVentaCount;
-  const div = document.createElement('div');
-  div.id = `lav_${idx}`;
-  div.className = 'linea-prod';
-  div.style.gridTemplateColumns = '1fr 150px 100px 80px auto'; // 👈 más ancho para cantidad, algo menos para precio/dto
-  div.innerHTML = `
+    function addLineaAlbaranVenta() {
+      lineasAlbaranVentaCount++;
+      const idx = lineasAlbaranVentaCount;
+      const div = document.createElement('div');
+      div.id = `lav_${idx}`;
+      div.className = 'linea-prod';
+      div.style.gridTemplateColumns = '1fr 150px 100px 80px auto'; // 👈 más ancho para cantidad, algo menos para precio/dto
+      div.innerHTML = `
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Producto</label>
       <input type="text" id="lav_prod_${idx}" list="dl_productos" placeholder="Escribe para buscar o crear nuevo..." oninput="actualizarUnidadLinea('lav',${idx}); autocompletarPrecioLinea(${idx})">
@@ -8721,8 +8721,8 @@ function addLineaAlbaranVenta() {
       style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
       <i class="fa-solid fa-xmark"></i>
     </button>`;
-  document.getElementById('lineasAlbaranVenta').appendChild(div);
-}
+      document.getElementById('lineasAlbaranVenta').appendChild(div);
+    }
 
     // Suma el subtotal de todas las líneas y lo mete en la base imponible automáticamente
     function recalcBaseDesdeLineasAlbaranVenta() {
@@ -10199,11 +10199,11 @@ function addLineaAlbaranVenta() {
     // clics que vienen de botones, checkboxes, selects o enlaces dentro de ella
     // (para no interferir con revisar, pagar, borrar, ver archivo, etc.)
     // Abre lo que se le pase por parámetro al hacer click en la fila, salvo que
-// el click venga de un botón, checkbox, select o enlace dentro de ella.
-function filaClicAbrir(event, fn) {
-  if (event.target.closest('button, input, select, a, .archivo-chip, .link-badge')) return;
-  fn();
-}
+    // el click venga de un botón, checkbox, select o enlace dentro de ella.
+    function filaClicAbrir(event, fn) {
+      if (event.target.closest('button, input, select, a, .archivo-chip, .link-badge')) return;
+      fn();
+    }
 
 
 
@@ -11249,9 +11249,7 @@ function filaClicAbrir(event, fn) {
         if (cant <= 0) { toast(`Cantidad inválida en "${nombre}"`, 'err'); ok = false; return; }
         const prod = buscarProductoPorNombre(nombre);
         if (!prod) { toast(`"${nombre}" no existe en el inventario`, 'err'); ok = false; return; }
-        const stock = parseFloat(prod.stock || 0);
-        if (cant > stock) { toast(`Stock insuficiente para "${nombre}": hay ${fmtStock(stock)}`, 'err'); ok = false; return; }
-        lineas.push({ producto_id: prod.id, producto_nombre: nombre, cantidad: cant, precio_unitario: precio, importe_total: +(cant * precio).toFixed(2), stock });
+        lineas.push({ producto_id: prod.id, producto_nombre: nombre, cantidad: cant, precio_unitario: precio, importe_total: +(cant * precio).toFixed(2) });
       });
       if (!ok) return;
       if (!lineas.length) { toast('Añade al menos un producto', 'err'); return; }
@@ -11259,23 +11257,57 @@ function filaClicAbrir(event, fn) {
       const total = parseFloat(document.getElementById('ci_total').value || 0);
 
       try {
-        const [header] = await apiPost('consumo_interno', {
-          empleado, fecha, total,
-          cliente_id: clienteConsumoSelId || null,
-          creado_por: currentPersona
-        });
+        let headerId;
+
+        if (consumoInternoEditId) {
+          // Devolver stock de las líneas antiguas antes de aplicar las nuevas
+          const antiguas = await apiGet('consumo_interno_items', `consumo_interno_id=eq.${consumoInternoEditId}`);
+          for (const a of antiguas) {
+            const prod = inventarioDB.find(p => p.id == a.producto_id);
+            if (prod) await apiPatch('inventario', a.producto_id, { stock: Number(prod.stock) + Number(a.cantidad) });
+            await apiDelete('consumo_interno_items', a.id);
+          }
+
+          await apiPatch('consumo_interno', consumoInternoEditId, {
+            empleado, fecha, total,
+            cliente_id: clienteConsumoSelId || null
+          });
+          headerId = consumoInternoEditId;
+        } else {
+          const [header] = await apiPost('consumo_interno', {
+            empleado, fecha, total,
+            cliente_id: clienteConsumoSelId || null,
+            creado_por: currentPersona
+          });
+          headerId = header.id;
+        }
+
+        // Comprobar stock disponible con los valores YA actualizados (tras devolver el antiguo)
+        for (const l of lineas) {
+          const prod = inventarioDB.find(p => p.id == l.producto_id);
+          const stockActual = parseFloat(prod?.stock || 0);
+          if (l.cantidad > stockActual) {
+            toast(`Stock insuficiente para "${l.producto_nombre}": hay ${fmtStock(stockActual)}`, 'err');
+            return;
+          }
+        }
+
         await apiPost('consumo_interno_items', lineas.map(l => ({
-          consumo_interno_id: header.id,
+          consumo_interno_id: headerId,
           producto_id: l.producto_id, producto_nombre: l.producto_nombre,
           cantidad: l.cantidad, precio_unitario: l.precio_unitario, importe_total: l.importe_total
         })));
         for (const l of lineas) {
-          await apiPatch('inventario', l.producto_id, { stock: l.stock - l.cantidad });
+          const prod = inventarioDB.find(p => p.id == l.producto_id);
+          await apiPatch('inventario', l.producto_id, { stock: Number(prod.stock) - Number(l.cantidad) });
         }
-        toast('Consumo interno registrado y stock descontado');
+
+        toast(consumoInternoEditId ? 'Consumo interno actualizado' : 'Consumo interno registrado y stock descontado');
         cerrarModal('modalConsumoInterno');
+        const idParaImprimir = headerId;
+        consumoInternoEditId = null;
         cargarDatos();
-        imprimirConsumoInterno(header.id); // 👈 añadir
+        if (!consumoInternoEditId) imprimirConsumoInterno(idParaImprimir); // solo imprime en alta nueva, no en cada edición
       } catch (e) {
         toast('Error al guardar: ' + e.message, 'err');
       }
@@ -11840,6 +11872,68 @@ function filaClicAbrir(event, fn) {
         btn.innerHTML = textoOriginal;
       }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    let consumoInternoEditId = null; // 👈 nueva variable
+
+    function abrirModalConsumoInterno(id) { // 👈 acepta id opcional
+      consumoInternoEditId = id || null;
+      const reg = id ? registros.find(r => r.id === id) : null;
+
+      document.getElementById('ci_empleado').value = reg?.empleado || '';
+      document.getElementById('ci_cliente_id').value = reg?.cliente_id || '';
+      clienteConsumoSelId = reg?.cliente_id || null;
+      document.getElementById('ci_fecha').value = reg?.fecha || hoy();
+      document.getElementById('ci_total').value = reg?.total || '';
+      document.getElementById('lineasConsumoInterno').innerHTML = '';
+      lineasConsumoInternoCount = 0;
+
+      const items = reg?.consumo_interno_items || [];
+      if (items.length) {
+        items.forEach(item => {
+          addLineaConsumoInterno();
+          document.getElementById(`ci_prod_${lineasConsumoInternoCount}`).value = item.producto_nombre || '';
+          document.getElementById(`ci_cant_${lineasConsumoInternoCount}`).value = item.cantidad;
+          document.getElementById(`ci_precio_${lineasConsumoInternoCount}`).value = item.precio_unitario || 0;
+        });
+        recalcTotalCI();
+      } else {
+        addLineaConsumoInterno();
+      }
+
+      // Título y texto del botón, según sea alta o edición
+      document.querySelector('#modalConsumoInterno h3').innerHTML =
+        `<i class="fa-solid fa-user-check" style="color:#b53987"></i>${id ? 'Editar Consumo Interno' : 'Registrar Consumo Interno'}`;
+      document.querySelector('#modalConsumoInterno .btn-guardar').innerHTML =
+        `<i class="fa-solid fa-floppy-disk me-1"></i>${id ? 'Guardar cambios' : 'Guardar'}`;
+
+      document.getElementById('modalConsumoInterno').classList.add('visible');
+      setTimeout(() => setupClienteConsumoAC('ci_empleado', 'ci_cliente_id'), 50);
+    }
+
+
+
+
+
+
+
+
+
+
+
 
 
 

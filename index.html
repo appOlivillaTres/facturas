@@ -6194,7 +6194,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const resumen = items.length
             ? items.slice(0, 2).map(i => `${i.producto_nombre} (${i.cantidad})`).join(', ') + (items.length > 2 ? ` +${items.length - 2} más` : '')
             : 'Sin productos';
-          return `<tr data-id="${f.id}">
+          return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalConsumoInterno(${f.id}))">
       <td class="td-nombre"><strong>${f.empleado || '—'}</strong></td>
       <td>${fmtF(f.fecha)}</td>
       <td class="td-concepto" title="${resumen}">${resumen}</td>
@@ -10807,7 +10807,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     function cerrarModal(id) {
       document.getElementById(id).classList.remove('visible');
-
       aplicarRefrescoTrasModalSiToca();
 
       if (id === 'modalNueva') {
@@ -10818,6 +10817,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         window._prellenadoAlbaran = null;
         window._prellenadoIngreso = null;
         ocultarPdfModal();
+      }
+      if (id === 'modalConsumoInterno') {
+        consumoInternoEditId = null; // 👈 añadir
       }
     }
 

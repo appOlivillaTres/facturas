@@ -6656,6 +6656,18 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       } catch (e) { toast('Error: ' + e.message, 'err'); }
     }
 
+    async function toggleFacturadoDesdeModal(id, actual, numero) {
+      try {
+        await apiPatch('albaranes', id, { facturado: !actual });
+        // si la tabla de Albaranes está cargada, actualizamos también su registro
+        const reg = registros.find(r => r.id === id);
+        if (reg) reg.facturado = !actual;
+        if (tablaActual === 'albaranes') renderTabla();
+        toast(`Albarán: <strong>${!actual ? 'FACTURADO' : 'SIN FACTURAR'}</strong>`);
+        verAlbaranPorNumero(numero); // recarga el modal con el nuevo estado
+      } catch (e) { toast('Error: ' + e.message, 'err'); }
+    }
+
     async function toggleFacturadoVenta(id, actual) {
       try {
         await apiPatch('albaranes_venta', id, { facturado: !actual });
@@ -6708,13 +6720,19 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         document.getElementById('modalDetalleTitulo').innerHTML =
           `<i class="fa-solid fa-file-signature" style="color:#b53987"></i>Albarán ${a.numero_albaran || numero}`;
         document.getElementById('modalDetalleContenido').innerHTML = `
-      <table class="mini-table"><tbody>
-        <tr><td>Proveedor</td><td><strong>${a.empresa || '—'}</strong></td></tr>
-        <tr><td>Fecha</td><td>${fmtF(a.fecha)}</td></tr>
-        <tr><td>Total</td><td><strong>${fmt(a.total)}</strong></td></tr>
-        <tr><td>Facturado</td><td><span class="badge-estado ${a.facturado ? 'badge-pagado' : 'badge-vencido'}">${a.facturado ? 'SÍ' : 'NO'}</span></td></tr>
-        ${a.archivo_url ? `<tr><td>Archivo</td><td><span class="link-badge factura" onclick="verArchivoPanel('${a.archivo_url}','Albarán')"><i class="fa-solid fa-paperclip"></i> Ver</span></td></tr>` : ''}
-      </tbody></table>`;
+  <table class="mini-table"><tbody>
+    <tr><td>Proveedor</td><td><strong>${a.empresa || '—'}</strong></td></tr>
+    <tr><td>Fecha</td><td>${fmtF(a.fecha)}</td></tr>
+    <tr><td>Total</td><td><strong>${fmt(a.total)}</strong></td></tr>
+    <tr><td>Facturado</td><td>
+      <span class="badge-estado ${a.facturado ? 'badge-pagado' : 'badge-vencido'}">${a.facturado ? 'SÍ' : 'NO'}</span>
+      <button class="btn-toggle-facturado ${a.facturado ? 'si' : 'no'}" style="margin-left:8px"
+        onclick="toggleFacturadoDesdeModal(${a.id},${a.facturado},'${(a.numero_albaran || numero).replace(/'/g, "\\'")}')">
+        ${a.facturado ? '<i class="fa-solid fa-rotate-left me-1"></i>Sin facturar' : '<i class="fa-solid fa-file-circle-check me-1"></i>Marcar facturado'}
+      </button>
+    </td></tr>
+    ${a.archivo_url ? `<tr><td>Archivo</td><td><span class="link-badge factura" onclick="verArchivoPanel('${a.archivo_url}','Albarán')"><i class="fa-solid fa-paperclip"></i> Ver</span></td></tr>` : ''}
+  </tbody></table>`;
         document.getElementById('modalDetalle').classList.add('visible');
       } catch (e) { toast('Error: ' + e.message, 'err'); }
     }

@@ -5808,15 +5808,15 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       } else if (tablaActual === 'revisadas_facturadas') {
         hdr.innerHTML = `<tr>
       <th>Origen</th><th>Nº Int. Emp</th><th>Fecha</th><th>NIF</th><th>Proveedor</th>
-      <th>Nº Factura</th><th>Concepto</th><th class="num-cell">Total</th><th>Revisión</th><th>Archivo</th><th>Editar</th>
+      <th>Nº Factura</th><th>Concepto</th><th class="num-cell">Total</th><th>Revisión</th><th>Archivo</th>
     </tr>`;
         const origenLabel = { facturas_almacen: 'Almacén', facturas_obra: 'Obra', facturas_csg: 'CSG' };
         const lista = registros.filter(f => {
           const mQ = [f.numero_factura, f.proveedor, f.nif, f.numero_interno, f.concepto].some(v => (v || '').toLowerCase().includes(q));
           return mQ && (!fEst || fEst === f.origen);
         });
-        if (!lista.length) { bdy.innerHTML = emptyRow(11, 'Todavía no hay facturas revisadas por todos y marcadas como pagadas'); return; }
-        bdy.innerHTML = lista.map(f => `<tr data-id="${f.id}">
+        if (!lista.length) { bdy.innerHTML = emptyRow(10, 'Todavía no hay facturas revisadas por todos y marcadas como pagadas'); return; }
+        bdy.innerHTML = lista.map(f => `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${f.id},'${f.origen}'))">
         <td><span class="badge-estado badge-pagado">${origenLabel[f.origen] || f.origen}</span></td>
         <td style="font-size:.78rem;color:#888">${nvl(f.numero_interno)}</td>
         <td>${fmtF(f.fecha)}</td>
@@ -5827,7 +5827,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <td class="td-total">${fmt(f.total, f.moneda)}</td>
         <td class="td-acciones">${(CAMPOS_REVISION[f.origen] || []).map(c => celdaRevision(f, c.campo, f.origen, c.nombre)).join('')}</td>
         <td>${f.archivo_url ? `<span class="link-badge factura" onclick="verArchivoPanel('${f.archivo_url}','${(f.proveedor || f.numero_factura || 'Factura').replace(/'/g, "\\'")}')"><i class="fa-solid fa-paperclip"></i></span>` : '—'}</td>
-        <td><button class="btn-toggle-pago pendiente" onclick="abrirModalEditar(${f.id},'${f.origen}')" title="Editar factura"><i class="fa-solid fa-pen"></i></button></td>
       </tr>`).join('');
 
         // OBRAS
@@ -5836,13 +5835,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           <th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th>
       <th>Obra</th><th>Dirección</th><th>Cliente</th><th>Fecha inicio</th><th>Estado</th>
       <th class="num-cell">Presupuesto</th><th class="num-cell">Facturado</th><th class="num-cell">Diferencia</th>
-      <th>Rentabilidad</th><th></th><th></th><th></th><th></th><th>Editar</th><th></th>
+      <th>Rentabilidad</th><th></th><th></th><th></th><th></th><th></th>
     </tr>`;
         const lista = registros.filter(o => {
           const mQ = [o.nombre, o.cliente, o.direccion].some(v => (v || '').toLowerCase().includes(q));
           return mQ && (!fEst || fEst === (o.estado || 'en_curso'));
         });
-        if (!lista.length) { bdy.innerHTML = emptyRow(14, 'No hay obras dadas de alta todavía'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(13, 'No hay obras dadas de alta todavía'); return; }
         bdy.innerHTML = lista.map(o => {
           const est = o.estado || 'en_curso';
           const presupuesto = o.presupuesto != null ? parseFloat(o.presupuesto) : null;
@@ -5850,7 +5849,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const tienePresupuesto = presupuesto != null && !isNaN(presupuesto);
           const diferencia = tienePresupuesto ? (presupuesto - facturado) : null;
           const rentable = tienePresupuesto ? diferencia >= 0 : null;
-          return `<tr data-id="${o.id}">
+          return `<tr data-id="${o.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${o.id},'obras'))">
             <td>${celdaCheck(o.id)}</td>
         <td class="td-nombre">${o.nombre || '—'}</td>
         <td>${o.direccion || '—'}</td>
@@ -5867,14 +5866,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <td><span class="link-badge factura" onclick="verAlbaranesDeObra('${(o.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-file-signature"></i>Ver albaranes${o._num_albaranes ? ` (${o._num_albaranes})` : ''}</span></td>
         <td><span class="link-badge factura" onclick="verMaterialExclusivoDeObra('${(o.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-boxes-stacked"></i>Material excl.</span></td>
         <td><span class="link-badge factura" onclick="verMaquinariaDeObra('${(o.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-truck-monster"></i>Maquinaria</span></td>
-        <td><button class="btn-toggle-pago pendiente" onclick="abrirModalEditar(${o.id},'obras')" title="Editar obra"><i class="fa-solid fa-pen"></i></button></td>
         <td><button class="btn-eliminar" onclick="eliminar(${o.id})"><i class="fa-solid fa-trash"></i></button></td>
       </tr>`;
         }).join('');
 
         // ALBARANES
       } else if (tablaActual === 'albaranes') {
-        hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Nº Albarán</th><th>Proveedor</th><th>NIF</th><th>Obra</th><th>Fecha</th><th>Total</th><th>Facturado</th><th>Archivo</th><th>Facturas por NIF</th><th>Acción</th><th>Editar</th><th></th></tr>`;
+        hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Nº Albarán</th><th>Proveedor</th><th>NIF</th><th>Obra</th><th>Fecha</th><th>Total</th><th>Facturado</th><th>Archivo</th><th>Facturas por NIF</th><th>Acción</th><th></th></tr>`;
         const fObraAlb = document.getElementById('filtroObra').value;
         const lista = registros.filter(f => {
           const mQ = [f.numero_albaran, f.empresa, f.nif].some(v => (v || '').toLowerCase().includes(q));
@@ -5882,10 +5880,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const mObra = !fObraAlb || f.nombre_obra === fObraAlb;
           return mQ && mE && mObra;
         });
-        if (!lista.length) { bdy.innerHTML = emptyRow(12, 'No se encontraron albaranes'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(11, 'No se encontraron albaranes'); return; }
         bdy.innerHTML = lista.map(f => {
           const fact = !!f.facturado;
-          return `<tr data-id="${f.id}">
+          return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarAlbaran(${f.id}))">
             <td>${celdaCheck(f.id)}</td>
         <td><strong>${f.numero_albaran || '—'}</strong></td>
         <td class="td-nombre">${f.empresa || '—'}</td>
@@ -5908,7 +5906,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <td><button class="btn-toggle-facturado ${fact ? 'si' : 'no'}" onclick="toggleFacturado(${f.id},${fact})">
           ${fact ? '<i class="fa-solid fa-rotate-left me-1"></i>Sin facturar' : '<i class="fa-solid fa-file-circle-check me-1"></i>Marcar facturado'}
         </button></td>
-        <td><button class="btn-toggle-pago pendiente" onclick="abrirModalEditarAlbaran(${f.id})"><i class="fa-solid fa-pen"></i></button></td>
         <td><button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
       </tr>`;
         }).join('');
@@ -5922,7 +5919,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const uc = f.ultima_compra ? new Date(f.ultima_compra) : null;
           const meses = uc ? Math.floor((new Date() - uc) / (1000 * 60 * 60 * 24 * 30)) : null;
           const alerta = meses !== null && meses >= 5;
-          return `<tr data-id="${f.id}" style="${alerta ? 'background:#fff8e1' : ''}">
+          return `<tr data-id="${f.id}" style="${alerta ? 'background:#fff8e1' : ''};cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${f.id},'clientes'))">
             <td>${celdaCheck(f.id)}</td>
         <td class="td-nombre">
           ${alerta ? '<i class="fa-solid fa-triangle-exclamation" style="color:#c47a00;margin-right:5px"></i>' : ''}
@@ -5937,11 +5934,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         </td>
         <td>
 <div class="td-acciones">
-
-  <button class="btn-toggle-pago pendiente"
-          onclick="abrirModalEditar(${f.id},'clientes')">
-      <i class="fa-solid fa-pen"></i>
-  </button>
 
   <button class="btn-puntos" onclick="abrirModalCompra(${f.id})">
       <i class="fa-solid fa-cart-shopping me-1"></i>
@@ -5970,7 +5962,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         bdy.innerHTML = lista.map(f => {
           const respondido = !!f.respondido;
           const vencido = !respondido && f.fecha_recordatorio && f.fecha_recordatorio <= hoy();
-          return `<tr data-id="${f.id}" style="${vencido ? 'background:#fff8e1' : ''}">
+          return `<tr data-id="${f.id}" style="${vencido ? 'background:#fff8e1' : ''};cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${f.id},'notificaciones_presupuestos'))">
             <td>${celdaCheck(f.id)}</td>
         <td class="td-nombre">${f.cliente || '—'}</td>
         <td style="font-size:.82rem">${f.email_cliente || '—'}</td>
@@ -5987,7 +5979,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         </button></td>
         <td>
           <div class="td-acciones">
-            <button class="btn-toggle-pago pendiente" onclick="abrirModalEditar(${f.id},'notificaciones_presupuestos')"><i class="fa-solid fa-pen"></i></button>
             <button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button>
           </div>
         </td>
@@ -6004,7 +5995,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const agotado = parseFloat(p.stock || 0) <= 0;
           const costo = p.costo != null ? parseFloat(p.costo) : null;
           const venta = p.precio != null ? parseFloat(p.precio) : null;
-          return `<tr data-id="${p.id}">
+          return `<tr data-id="${p.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${p.id},'inventario'))">
     <td>${celdaCheck(p.id)}</td>
     <td><strong>${p.nombre || '—'}</strong></td>
     <td><span style="font-size:1.1rem;font-weight:700;color:${agotado ? '#b53987' : '#2d7a4f'}">${fmtStock(p.stock)}</span>
@@ -6018,7 +6009,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <td>
 <button class="btn-toggle-pago pagado" onclick="sumarStock(${p.id})"><i class="fa-solid fa-plus"></i></button>
 <button class="btn-toggle-pago vencido" onclick="restarStock(${p.id})"><i class="fa-solid fa-minus"></i></button>
-<button class="btn-toggle-pago pendiente" onclick="abrirModalEditar(${p.id},'inventario')"><i class="fa-solid fa-pen"></i></button>
 <button class="btn-eliminar" onclick="eliminar(${p.id})"><i class="fa-solid fa-trash"></i></button>
 </td>
   </tr>`;
@@ -6040,7 +6030,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const resumen = todosItems.length
             ? todosItems.slice(0, 2).map(i => `${i.nombre} (${i.cantidad})`).join(', ') + (todosItems.length > 2 ? ` +${todosItems.length - 2} más` : '')
             : 'Sin materiales';
-          return `<tr data-id="${f.id}">
+          return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${f.id},'materiales_obra'))">
             <td>${celdaCheck(f.id)}</td>
         <td class="td-nombre"><strong>${f.nombre_obra || '—'}</strong></td>
         <td>${f.nombre_empleado || '—'}</td>
@@ -6049,10 +6039,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <td><span class="link-badge" onclick="verDetalleMaterial(${f.id})"><i class="fa-solid fa-list"></i>Ver detalle</span></td>
         <td>
 
-<button class="btn-toggle-pago pendiente"
-        onclick="abrirModalEditar(${f.id},'materiales_obra')">
-    <i class="fa-solid fa-pen"></i>
-</button>
 
 <button class="btn-eliminar"
         onclick="eliminar(${f.id})">
@@ -6074,8 +6060,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         bdy.innerHTML = lista.map(f => {
           const forma = f.forma_cobro || 'facturar';
           const fact = !!f.facturado;
-          return `<tr data-id="${f.id}">
-    <td><strong>${f.numero_albaran || '—'}</strong></td>
+          return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarAlbaranVenta(${f.id}))">    <td><strong>${f.numero_albaran || '—'}</strong></td>
     <td>${fmtF(f.fecha)}</td>
     <td class="td-nombre">${f.cliente_nombre || '—'}</td>
     <td style="font-size:.8rem;color:#888">${f.nif || '—'}</td>
@@ -6131,7 +6116,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
           const eR = esVenc ? 'vencido' : est;
           const claseFila = claseFilaVencimiento(f, est, esVenc, hoyD);
-          return `<tr data-id="${f.id}" class="${claseFila}">
+          return `<tr data-id="${f.id}" class="${claseFila}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${f.id},'ingresos'))">
             <td>${celdaCheck(f.id)}</td>
       <td style="font-size:.78rem;color:#888">${nvl(f.numero_interno)}</td>
       <td>${fmtF(f.fecha)}</td><td>${fmtF(f.fecha_recibido)}</td><td>${fmtF(f.fecha_vencimiento)}</td>
@@ -6184,7 +6169,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const averiada = m.estado === 'averiada';
           const claseBadge = alquilada ? 'badge-vencido' : averiada ? 'badge-pendiente' : 'badge-pagado';
           const textoBadge = alquilada ? 'ALQUILADA' : averiada ? 'AVERIADA' : 'DISPONIBLE';
-          return `<tr data-id="${m.id}">
+          return `<tr data-id="${m.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${m.id},'maquinaria'))">
     <td>${celdaCheck(m.id)}</td>
     <td><strong>${m.codigo || '—'}</strong></td>
     <td class="td-nombre">${m.nombre || '—'}</td>
@@ -6202,7 +6187,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
                 : `<button class="btn-toggle-pago vencido" onclick="marcarMaquinaAveriada(${m.id})"><i class="fa-solid fa-triangle-exclamation me-1"></i>Avería</button>`}
     </td>
     <td>
-      <button class="btn-toggle-pago pendiente" onclick="abrirModalEditar(${m.id},'maquinaria')"><i class="fa-solid fa-pen"></i></button>
       <button class="btn-eliminar" onclick="eliminar(${m.id})"><i class="fa-solid fa-trash"></i></button>
     </td>
   </tr>`;
@@ -8705,14 +8689,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 
 
-    function addLineaAlbaranVenta() {
-      lineasAlbaranVentaCount++;
-      const idx = lineasAlbaranVentaCount;
-      const div = document.createElement('div');
-      div.id = `lav_${idx}`;
-      div.className = 'linea-prod';
-      div.style.gridTemplateColumns = '1fr 110px 90px 70px auto'; // 👈 una columna más
-      div.innerHTML = `
+function addLineaAlbaranVenta() {
+  lineasAlbaranVentaCount++;
+  const idx = lineasAlbaranVentaCount;
+  const div = document.createElement('div');
+  div.id = `lav_${idx}`;
+  div.className = 'linea-prod';
+  div.style.gridTemplateColumns = '1fr 150px 100px 80px auto'; // 👈 más ancho para cantidad, algo menos para precio/dto
+  div.innerHTML = `
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Producto</label>
       <input type="text" id="lav_prod_${idx}" list="dl_productos" placeholder="Escribe para buscar o crear nuevo..." oninput="actualizarUnidadLinea('lav',${idx}); autocompletarPrecioLinea(${idx})">
@@ -8720,31 +8704,31 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Cantidad <span id="lav_uni_${idx}" style="color:#b53987;font-weight:600"></span></label>
       <div style="display:flex;gap:4px;align-items:center">
-  <input type="number" id="lav_cant_${idx}" value="1" min="0.01" step="0.01" style="text-align:center;width:100%" oninput="recalcBaseDesdeLineasAlbaranVenta()">
-  <select id="lav_unidadnueva_${idx}" title="Unidad (solo si el producto es nuevo)" style="width:62px;font-size:.72rem;padding:4px;border:1.5px solid #ddd;border-radius:6px">
-    <option value="unidades">uds.</option>
-    <option value="metros">m</option>
-  </select>
-  <button type="button" title="Añadir como producto nuevo al inventario" onclick="crearProductoRapidoDesdeLineaAlbaranVenta(${idx})"
-    style="background:#2d7a4f;border:none;color:#fff;border-radius:6px;width:30px;height:30px;flex-shrink:0;cursor:pointer">
-    <i class="fa-solid fa-plus"></i>
-  </button>
-</div>
+        <input type="number" id="lav_cant_${idx}" value="1" min="0.01" step="0.01" style="text-align:center;width:56px;flex-shrink:0" oninput="recalcBaseDesdeLineasAlbaranVenta()">
+        <select id="lav_unidadnueva_${idx}" title="Unidad (solo si el producto es nuevo)" style="width:56px;font-size:.72rem;padding:4px;border:1.5px solid #ddd;border-radius:6px;flex-shrink:0">
+          <option value="unidades">uds.</option>
+          <option value="metros">m</option>
+        </select>
+        <button type="button" title="Añadir como producto nuevo al inventario" onclick="crearProductoRapidoDesdeLineaAlbaranVenta(${idx})"
+          style="background:#2d7a4f;border:none;color:#fff;border-radius:6px;width:28px;height:28px;flex-shrink:0;cursor:pointer">
+          <i class="fa-solid fa-plus" style="font-size:.7rem"></i>
+        </button>
+      </div>
     </div>
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Precio Ud. (€)</label>
-      <input type="number" id="lav_precio_${idx}" step="0.01" min="0" value="0" style="text-align:right" oninput="recalcBaseDesdeLineasAlbaranVenta()">
+      <input type="number" id="lav_precio_${idx}" step="0.01" min="0" value="0" style="text-align:right;width:100%" oninput="recalcBaseDesdeLineasAlbaranVenta()">
     </div>
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Dto. %</label>
-      <input type="number" id="lav_dto_${idx}" step="0.01" min="0" max="100" value="0" style="text-align:right" oninput="recalcBaseDesdeLineasAlbaranVenta()">
+      <input type="number" id="lav_dto_${idx}" step="0.01" min="0" max="100" value="0" style="text-align:right;width:100%" oninput="recalcBaseDesdeLineasAlbaranVenta()">
     </div>
     <button type="button" onclick="document.getElementById('lav_${idx}').remove(); recalcBaseDesdeLineasAlbaranVenta();"
       style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
       <i class="fa-solid fa-xmark"></i>
     </button>`;
-      document.getElementById('lineasAlbaranVenta').appendChild(div);
-    }
+  document.getElementById('lineasAlbaranVenta').appendChild(div);
+}
 
     // Suma el subtotal de todas las líneas y lo mete en la base imponible automáticamente
     function recalcBaseDesdeLineasAlbaranVenta() {
@@ -10220,10 +10204,12 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     // Abre el modal de edición al hacer click en la fila, pero ignora los
     // clics que vienen de botones, checkboxes, selects o enlaces dentro de ella
     // (para no interferir con revisar, pagar, borrar, ver archivo, etc.)
-    function filaClicEditar(event, id, tabla) {
-      if (event.target.closest('button, input, select, a, .archivo-chip, .link-badge')) return;
-      abrirModalEditar(id, tabla);
-    }
+    // Abre lo que se le pase por parámetro al hacer click en la fila, salvo que
+// el click venga de un botón, checkbox, select o enlace dentro de ella.
+function filaClicAbrir(event, fn) {
+  if (event.target.closest('button, input, select, a, .archivo-chip, .link-badge')) return;
+  fn();
+}
 
 
 

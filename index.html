@@ -5722,7 +5722,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
           const eR = f.imputado ? 'imputado' : (esVenc ? 'vencido' : est);
           const claseFila = claseFilaVencimiento(f, est, esVenc, hoyD);
-          return `<tr data-id="${f.id}" class="${claseFila}" style="cursor:pointer" onclick="filaClicEditar(event,${f.id},'facturas_csg')">            <td>${celdaCheck(f.id)}</td>
+          return `<tr data-id="${f.id}" class="${claseFila}" style="cursor:pointer" onclick="filaClicAbrir(event,${f.id},'facturas_csg')">            <td>${celdaCheck(f.id)}</td>
         <td style="font-size:.78rem;color:#888">${nvl(f.numero_interno)}</td>
         <td>${fmtF(f.fecha)}</td><td>${fmtF(f.fecha_recibido)}</td><td>${fmtF(f.fecha_vencimiento)}</td>
         <td style="font-size:.78rem;color:#888">${f.nif || '—'}</td>

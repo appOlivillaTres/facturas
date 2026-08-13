@@ -6098,7 +6098,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <th>Nº Int.</th><th>Fecha</th><th>Recibido</th><th>Cobro previsto</th><th>NIF</th><th>Cliente</th><th>Obra</th>
     <th>Nº Factura</th><th>Concepto</th>
     <th class="num-cell">Base</th><th class="pct-cell">%IVA</th><th class="num-cell">IVA</th>
-    <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th>Editar</th><th>Acción</th><th>Cobros</th>
+    <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th>Acción</th><th>Cobros</th>
     <th class="num-cell">Descuento</th><th class="num-cell">Pago permisos</th><th class="pct-cell">%IVA permisos</th><th class="num-cell">Total IVA permisos</th><th class="num-cell">Total con permisos</th>
     <th></th>
   </tr>`;
@@ -6132,7 +6132,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <td><span class="badge-estado badge-${eR}">${eR === 'pagado' ? 'COBRADO' : eR.toUpperCase()}</span></td>
       <td>${celdaArchivoIngreso(f)}</td>
       <td class="td-acciones">${celdaRevision(f, 'revisado_angel', 'ingresos', 'Angel')}${chipRevisado(f, 'revisado_emilio', 'ingresos', 'Emilio')}</td>
-      <td><button class="btn-toggle-pago pendiente" onclick="abrirModalEditar(${f.id},'ingresos')" title="Editar ingreso"><i class="fa-solid fa-pen"></i></button></td>
       <td>
         <button class="btn-toggle-pago ${eR}" onclick="toggleEstado(${f.id},'${est}','ingresos')">
           ${est === 'pagado' ? '<i class="fa-solid fa-rotate-left me-1"></i>Pendiente' : '<i class="fa-solid fa-check me-1"></i>Cobrado'}

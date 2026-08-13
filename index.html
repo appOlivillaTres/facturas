@@ -6049,7 +6049,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       </tr>`;
         }).join('');
       } else if (tablaActual === 'albaranes_venta') {
-        hdr.innerHTML = `<tr><th>Nº Albarán</th><th>Fecha</th><th>Cliente</th><th>NIF</th><th class="num-cell">Total</th><th>Registrado por</th><th>Puntos</th><th>Cobro</th><th>Facturado</th><th>Documento</th><th></th></tr>`;
+        hdr.innerHTML = `<tr><th>Nº Albarán</th><th>Fecha</th><th>Cliente</th><th>NIF</th><th class="num-cell">Total</th><th>Registrado por</th><th>Puntos</th><th>Cobro</th><th>Facturado</th><th>Documento</th></tr>`;
         const lista = registros.filter(f => {
           const mQ = [f.numero_albaran, f.cliente_nombre].some(v => (v || '').toLowerCase().includes(q));
           const forma = f.forma_cobro || 'facturar';
@@ -6068,7 +6068,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <td>${NOMBRES_PERSONAS[f.creado_por] || f.creado_por || '—'}</td>
     <td><span class="badge-puntos"><i class="fa-solid fa-star" style="color:#c47a00;margin-right:3px"></i>${f.puntos_generados || 0} pts</span></td>
     <td>
-  <span class="badge-estado badge-${forma}">${forma === 'efectivo' ? 'FACTURAR AL MOMENTO' : 'A FACTURAR'}</span><br>
+  <span class="badge-estado badge-${forma}">${forma === 'efectivo' ? 'PAGADO AL MOMENTO' : 'A FACTURAR'}</span><br>
   <button class="btn-toggle-pago ${forma === 'efectivo' ? 'pagado' : 'pendiente'}" style="margin-top:4px" onclick="toggleFormaCobroAlbaranVenta(${f.id},'${forma}')">
     <i class="fa-solid fa-rotate me-1"></i>Cambiar
   </button>
@@ -6082,11 +6082,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <td>
       <button class="btn-toggle-pago pendiente" onclick="imprimirAlbaranVenta(${f.id})" title="Imprimir / descargar PDF">
         <i class="fa-solid fa-print"></i>
-      </button>
-    </td>
-    <td>
-      <button class="btn-toggle-pago pendiente" onclick="abrirModalEditarAlbaranVenta(${f.id})" title="Editar">
-        <i class="fa-solid fa-pen"></i>
       </button>
     </td>
   </tr>`;
@@ -6678,7 +6673,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const reg = registros.find(r => r.id === id);
         if (reg) reg.forma_cobro = nueva;
         renderTablaConScroll();
-        toast(`Albarán marcado como <strong>${nueva === 'efectivo' ? 'FACTURAR AL MOMENTO' : 'A FACTURAR'}</strong>`);
+        toast(`Albarán marcado como <strong>${nueva === 'efectivo' ? 'PAGADO AL MOMENTO' : 'A FACTURAR'}</strong>`);
       } catch (e) { toast('Error: ' + e.message, 'err'); }
     }
 
@@ -11361,7 +11356,7 @@ function filaClicAbrir(event, fn) {
           <td><strong>${a.numero_albaran || '—'}</strong></td>
           <td>${fmtF(a.fecha)}</td>
           <td><strong>${fmt(a.total)}</strong></td>
-          <td><span class="badge-estado badge-${a.forma_cobro === 'efectivo' ? 'efectivo' : 'facturar'}">${a.forma_cobro === 'efectivo' ? 'FACTURAR AL MOMENTO' : 'A FACTURAR'}</span></td>
+          <td><span class="badge-estado badge-${a.forma_cobro === 'efectivo' ? 'efectivo' : 'facturar'}">${a.forma_cobro === 'efectivo' ? 'PAGADO AL MOMENTO' : 'A FACTURAR'}</span></td>
           <td><button class="btn-toggle-pago pendiente" onclick="imprimirAlbaranVenta(${a.id})" title="Imprimir"><i class="fa-solid fa-print"></i></button></td>
         </tr>`).join('')}
       </tbody></table>`;

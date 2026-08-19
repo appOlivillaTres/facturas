@@ -2086,9 +2086,7 @@
       <h2>¿A dónde quieres ir?</h2>
       <p>Elige el panel que quieres abrir</p>
       <div class="selector-grid" id="selectorGrid"></div>
-      <button class="selector-salir" onclick="mostrarCategorias()"><i class="fa-solid fa-arrow-left me-1"></i>Cambiar de
-        área</button>
-      <button class="selector-salir" onclick="doLogout()"><i
+       <button class="selector-salir" onclick="doLogout()"><i
           class="fa-solid fa-right-from-bracket me-1"></i>Salir</button>
     </div>
   </div>
@@ -3466,7 +3464,7 @@
         ]);
       }
       await cachesIniciales;
-      mostrarCategorias(); // 👈 antes era mostrarSelectorPanel()
+      mostrarSelectorPanel();
     }
 
     // Pinta las tarjetas del panel según las secciones a las que tiene acceso currentPersona

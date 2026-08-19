@@ -9069,9 +9069,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const idx = inp.id.split('_')[2];
         const cant = parseFloat(document.getElementById(`lav_cant_${idx}`)?.value || 0);
         const precio = parseFloat(document.getElementById(`lav_precio_${idx}`)?.value || 0);
-        const dto = parseFloat(document.getElementById(`lav_dto_${idx}`)?.value || 0); // 👈 nuevo
+        const dto = parseFloat(document.getElementById(`lav_dto_${idx}`)?.value || 0);
+        const unidad = document.getElementById(`lav_unidadnueva_${idx}`)?.value || 'unidades';
         if (cant <= 0) continue;
-        lineas.push({ nombre, cantidad: cant, precio, dto, idx }); // 👈 nuevo
+        lineas.push({ nombre, cantidad: cant, precio, dto, unidad, idx });
       }
       return lineas;
     }
@@ -9125,6 +9126,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           cantidad: l.cantidad,
           precio_unitario: l.precio,
           dto_pct: l.dto,
+          unidad: l.unidad,
           importe_total: importeConDto
         });
       }
@@ -9203,7 +9205,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
           await apiPost('albaranes_venta_items', lineasFinales.map(l => ({
             albaran_venta_id: headerId, producto_id: l.producto_id, producto_nombre: l.producto_nombre,
-            cantidad: l.cantidad, precio_unitario: l.precio_unitario, importe_total: l.importe_total
+            cantidad: l.cantidad, precio_unitario: l.precio_unitario, unidad: l.unidad, importe_total: l.importe_total
           })));
 
           toast(deltaPuntos === 0
@@ -9301,8 +9303,12 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             document.getElementById(`lav_prod_${lineasAlbaranVentaCount}`).value = item.producto_nombre || '';
             document.getElementById(`lav_cant_${lineasAlbaranVentaCount}`).value = item.cantidad;
             document.getElementById(`lav_precio_${lineasAlbaranVentaCount}`).value = item.precio_unitario || 0;
-            document.getElementById(`lav_dto_${lineasAlbaranVentaCount}`).value = item.dto_pct || 0; // 👈 nuevo
+            document.getElementById(`lav_dto_${lineasAlbaranVentaCount}`).value = item.dto_pct || 0;
             actualizarUnidadLinea('lav', lineasAlbaranVentaCount);
+            if (item.unidad) {
+              const selUni = document.getElementById(`lav_unidadnueva_${lineasAlbaranVentaCount}`);
+              if (selUni) selUni.value = item.unidad;
+            }
           });
           recalcBaseDesdeLineasAlbaranVenta();
         } else {
@@ -9354,10 +9360,17 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const filas = items.map(i => {
         const precio = i.precio_unitario != null ? parseFloat(i.precio_unitario) : 0;
         const subtotal = i.importe_total != null ? parseFloat(i.importe_total) : (precio * (parseFloat(i.cantidad) || 0));
+        let unidadTxt;
+        if (i.unidad) {
+          unidadTxt = i.unidad === 'metros' ? 'm' : 'uds.';
+        } else {
+          const prodInv = inventarioDB.find(p => p.id == i.producto_id);
+          unidadTxt = prodInv ? unidadCorta(prodInv) : 'uds.';
+        }
         return `<tr>
       <td>${i.producto_id || ''}</td>
       <td>${i.producto_nombre || ''}</td>
-      <td style="text-align:right">${fmtStock(i.cantidad)}</td>
+      <td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td>
       <td style="text-align:right">${fmtN(precio)}</td>
       <td style="text-align:right">${fmtN(subtotal)}</td>
       <td style="text-align:right">—</td>

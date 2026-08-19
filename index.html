@@ -6062,7 +6062,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <td>${fmtF(f.fecha)}</td>
     <td class="td-nombre">${f.cliente_nombre || '—'}</td>
     <td style="font-size:.8rem;color:#888">${f.nif || '—'}</td>
-    <td class="td-total">${fmt(f.total)}</td>
+    <td class="td-total">${fmt(f.total)}${parseFloat(f.total||0) < 0 ? '<br><span class="badge-estado badge-vencido" style="margin-top:4px;display:inline-block"><i class="fa-solid fa-rotate-left"></i> DEVOLUCIÓN</span>' : ''}</td>
     <td>${NOMBRES_PERSONAS[f.creado_por] || f.creado_por || '—'}</td>
     <td><span class="badge-puntos"><i class="fa-solid fa-star" style="color:#c47a00;margin-right:3px"></i>${f.puntos_generados || 0} pts</span></td>
     <td>
@@ -8764,7 +8764,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById('lineasAlbaranVenta').appendChild(div);
     }
 
-    // Suma el subtotal de todas las líneas y lo mete en la base imponible automáticamente
+        // Suma el subtotal de todas las líneas y lo mete en la base imponible automáticamente
     function recalcBaseDesdeLineasAlbaranVenta() {
       let base = 0;
       document.querySelectorAll('[id^="lav_prod_"]').forEach(inp => {
@@ -8775,6 +8775,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const subtotal = cant * precio;
         base += subtotal - (subtotal * dto / 100); // 👈 descuento por línea, no global
       });
+      const esDevolucion = document.getElementById('f_av_es_devolucion')?.checked;
+      if (esDevolucion) base = -base;
       const baseInput = document.getElementById('f_av_base');
       if (baseInput) { baseInput.value = base.toFixed(2); recalcTotalAlbaranVenta(); }
     }
@@ -8803,7 +8805,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const iva = base * pct / 100;
       const total = base + iva;
       document.getElementById('f_av_total').value = total.toFixed(2);
-      document.getElementById('totalPuntosAlbaranVenta').textContent = calcularPuntosPorTotal(total) + ' pts';
+      const esDevolucion = document.getElementById('f_av_es_devolucion')?.checked;
+      const puntos = calcularPuntosPorTotal(Math.abs(total)) * (esDevolucion ? -1 : 1);
+      document.getElementById('totalPuntosAlbaranVenta').textContent = (puntos > 0 ? '+' : '') + puntos + ' pts';
     }
 
     function _leerLineasAlbaranVenta() {
@@ -8826,7 +8830,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const cliente_nombre = document.getElementById('f_av_cliente').value.trim();
       const nif = document.getElementById('f_av_nif').value.trim() || null;
       const cliente_id = clienteVentaSelId;
-      const base_imponible = parseFloat(document.getElementById('f_av_base').value || 0); // ya viene con descuentos aplicados
+      const esDevolucion = document.getElementById('f_av_es_devolucion')?.checked || false;
+      const base_imponible = parseFloat(document.getElementById('f_av_base').value || 0); // ya viene con descuentos aplicados y con signo si es devolución
       const pct_iva = parseFloat(document.getElementById('f_av_pct_iva').value || 0);
       const importe_iva = +(base_imponible * pct_iva / 100).toFixed(2);
       const total = +(base_imponible + importe_iva).toFixed(2);
@@ -8834,7 +8839,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
       if (!fecha) { toast('La fecha es obligatoria', 'err'); return; }
       if (!cliente_id) { toast('Selecciona un cliente de la lista (o créalo con el botón de nuevo cliente)', 'err'); return; }
-      if (!total || total <= 0) { toast('Indica el total del albarán', 'err'); return; }
+      if (!total) { toast('Indica el total del albarán', 'err'); return; }
+      if (esDevolucion && total > 0) { toast('En una devolución el total debe salir en negativo — revisa las líneas', 'err'); return; }
+      if (!esDevolucion && total < 0) { toast('El total no puede ser negativo salvo que marques "Es una devolución"', 'err'); return; }
 
       const lineasInput = _leerLineasAlbaranVenta();
       if (!lineasInput.length) { toast('Añade al menos un producto', 'err'); return; }
@@ -8855,18 +8862,20 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           }
         }
         const subtotal = l.cantidad * l.precio;
-        const importeConDto = +(subtotal - (subtotal * l.dto / 100)).toFixed(2); // 👈 descuento aplicado por línea
+        let importeConDto = +(subtotal - (subtotal * l.dto / 100)).toFixed(2); // 👈 descuento aplicado por línea
+        if (esDevolucion) importeConDto = -importeConDto;
         lineasFinales.push({
           producto_id: prod.id,
           producto_nombre: l.nombre,
           cantidad: l.cantidad,
           precio_unitario: l.precio,
           dto_pct: l.dto,               // 👈 se guarda para referencia
-          importe_total: importeConDto  // 👈 ya con descuento
+          importe_total: importeConDto  // 👈 ya con descuento (y signo si es devolución)
         });
       }
 
-      const puntosNuevos = conPuntos ? calcularPuntosPorTotal(total) : 0;
+      const puntosBase = calcularPuntosPorTotal(Math.abs(total));
+      const puntosNuevos = conPuntos ? (esDevolucion ? -puntosBase : puntosBase) : 0;
       const btnsWrap = document.querySelector('#modalNueva .modal-btns');
       btnsWrap.querySelectorAll('button').forEach(b => b.disabled = true);
 
@@ -8875,7 +8884,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         let numeroAlbaranAsignado = null;
         const headerPayload = {
           fecha, cliente_id, cliente_nombre, nif,
-          base_imponible, // ya con descuentos por línea aplicados
+          base_imponible, // ya con descuentos por línea aplicados y signo si es devolución
           pct_iva, importe_iva, total, puntos_generados: puntosNuevos, notas
         };
 
@@ -8885,9 +8894,17 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
           const anterior = registros.find(r => r.id === modalEditId);
           const itemsAntiguos = (anterior && anterior.albaranes_venta_items) || [];
+          // Si el registro anterior tenía el total en negativo, era una devolución:
+          // su stock se SUMÓ al guardarla, así que para revertirla hay que RESTARLO.
+          const anteriorEraDevolucion = anterior && parseFloat(anterior.total || 0) < 0;
           for (const it of itemsAntiguos) {
             const prod = inventarioDB.find(p => p.id == it.producto_id);
-            if (prod) await apiPatch('inventario', it.producto_id, { stock: Number(prod.stock) + Number(it.cantidad) });
+            if (prod) {
+              const stockRevertido = anteriorEraDevolucion
+                ? Number(prod.stock) - Number(it.cantidad)
+                : Number(prod.stock) + Number(it.cantidad);
+              await apiPatch('inventario', it.producto_id, { stock: stockRevertido });
+            }
           }
           const clienteAnterior = clientesDB.find(c => c.id === anterior?.cliente_id);
           if (clienteAnterior) {
@@ -8910,21 +8927,25 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           cantidad: l.cantidad, precio_unitario: l.precio_unitario, importe_total: l.importe_total
         })));
 
+        // En una devolución el material vuelve al stock (se suma); en una
+        // venta normal se descuenta, como siempre.
         for (const l of lineasFinales) {
           const prod = inventarioDB.find(p => p.id == l.producto_id);
-          await apiPatch('inventario', l.producto_id, { stock: Number(prod.stock) - Number(l.cantidad) });
+          const nuevoStock = esDevolucion
+            ? Number(prod.stock) + Number(l.cantidad)
+            : Number(prod.stock) - Number(l.cantidad);
+          await apiPatch('inventario', l.producto_id, { stock: nuevoStock });
         }
 
         if (conPuntos) {
           const cliente = clientesDB.find(c => c.id === cliente_id);
           const ahora = new Date().toISOString();
-          const puntosFinales = (cliente?.puntos || 0) + puntosNuevos;
+          const puntosFinales = Math.max(0, (cliente?.puntos || 0) + puntosNuevos);
           await apiPatch('clientes', cliente_id, {
             puntos: puntosFinales,
-            ultima_compra: ahora,
-            puntos_desde: cliente?.puntos_desde || ahora
+            ...(esDevolucion ? {} : { ultima_compra: ahora, puntos_desde: cliente?.puntos_desde || ahora })
           });
-          if (cliente?.email) await enviarEmailPuntos(cliente.email, cliente.nombre, puntosFinales, 'compra');
+          if (cliente?.email && !esDevolucion) await enviarEmailPuntos(cliente.email, cliente.nombre, puntosFinales, 'compra');
 
           registrarHistorial('compra_cliente', {
             cliente: cliente_nombre,
@@ -8934,8 +8955,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         }
 
         toast(modalEditId
-          ? 'Albarán de venta actualizado'
-          : (conPuntos ? `Albarán ${numeroAlbaranAsignado || ''} guardado — +${puntosNuevos} pts para ${cliente_nombre}` : `Albarán ${numeroAlbaranAsignado || ''} guardado sin puntos ni aviso`));
+          ? (esDevolucion ? 'Devolución actualizada' : 'Albarán de venta actualizado')
+          : (esDevolucion
+            ? `Devolución ${numeroAlbaranAsignado || ''} guardada — ${puntosNuevos} pts para ${cliente_nombre}, stock repuesto`
+            : (conPuntos ? `Albarán ${numeroAlbaranAsignado || ''} guardado — +${puntosNuevos} pts para ${cliente_nombre}` : `Albarán ${numeroAlbaranAsignado || ''} guardado sin puntos ni aviso`)));
 
         const idParaImprimir = headerId; // 👈 añadir
         modalEditId = null;
@@ -8965,6 +8988,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         clienteVentaSelId = f.cliente_id || null;
         document.getElementById('f_av_base').value = (f.base_imponible || 0) + (f.importe_descuento || 0);
         document.getElementById('f_av_pct_iva').value = f.pct_iva != null ? f.pct_iva : 21;
+        const chkDevol = document.getElementById('f_av_es_devolucion');
+        if (chkDevol) chkDevol.checked = parseFloat(f.total || 0) < 0;
         document.getElementById('f_av_notas').value = f.notas || '';
         recalcTotalAlbaranVenta();
 
@@ -8988,14 +9013,20 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     async function eliminarAlbaranVenta(id) {
-      if (!confirm('¿Eliminar este albarán? Se devolverá el stock descontado y se restarán los puntos del cliente. No se puede deshacer.')) return;
+      if (!confirm('¿Eliminar este albarán? Se revertirá el stock y los puntos del cliente. No se puede deshacer.')) return;
       const f = registros.find(r => r.id === id);
       if (!f) return;
+      const esDevolucion = parseFloat(f.total || 0) < 0;
       try {
         const items = f.albaranes_venta_items || (await apiGet('albaranes_venta_items', `albaran_venta_id=eq.${id}`));
         for (const it of items) {
           const prod = inventarioDB.find(p => p.id == it.producto_id);
-          if (prod) await apiPatch('inventario', it.producto_id, { stock: Number(prod.stock) + Number(it.cantidad) });
+          if (prod) {
+            const nuevoStock = esDevolucion
+              ? Number(prod.stock) - Number(it.cantidad)
+              : Number(prod.stock) + Number(it.cantidad);
+            await apiPatch('inventario', it.producto_id, { stock: nuevoStock });
+          }
           await apiDelete('albaranes_venta_items', it.id);
         }
         const cliente = clientesDB.find(c => c.id === f.cliente_id);
@@ -10312,8 +10343,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           <p style="font-size:.72rem;color:#888;margin-top:4px">Si el cliente es nuevo, créalo primero en la pestaña Clientes.</p>
         </div>
         <div class="form-group"><label>NIF</label><input type="text" id="f_av_nif" readonly style="background:#f7f0f5"></div>
+        <div class="form-group span2" style="display:flex;align-items:center;gap:8px;background:#fff3e0;border:1.5px solid #f0c060;border-radius:8px;padding:10px 14px;margin-top:4px">
+          <input type="checkbox" id="f_av_es_devolucion" onchange="recalcBaseDesdeLineasAlbaranVenta()" style="width:auto">
+          <label for="f_av_es_devolucion" style="margin:0;font-size:.85rem;font-weight:600;color:#c47a00;cursor:pointer">
+            <i class="fa-solid fa-rotate-left me-1"></i>Es una devolución (el material vuelve al stock, el importe queda en negativo y se restan los puntos)
+          </label>
+        </div>
       </div>
-      <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">Productos que se lleva</div>
+      <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">Productos que se lleva / se devuelven</div>
       <p style="font-size:.78rem;color:#888;margin-top:-8px"><i class="fa-solid fa-info-circle me-1"></i>Cada producto descuenta stock automáticamente.</p>
       <div id="lineasAlbaranVenta"></div>
       <button type="button" class="btn-add-linea" onclick="addLineaAlbaranVenta()"><i class="fa-solid fa-plus me-1"></i>Añadir producto</button>

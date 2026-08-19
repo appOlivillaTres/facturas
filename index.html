@@ -2647,13 +2647,20 @@
           <label>Fecha *</label>
           <input type="date" id="mo_fecha">
         </div>
-        <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">Materiales que se lleva</div>
-        <p style="font-size:.78rem;color:#888;margin-top:-8px"><i class="fa-solid fa-info-circle me-1"></i>Cada producto
+        <div class="form-group" style="display:flex;align-items:center;gap:8px;background:#fff3e0;border:1.5px solid #f0c060;border-radius:8px;padding:10px 14px">
+          <input type="checkbox" id="mo_es_devolucion" onchange="toggleDevolucionMaterialObra()" style="width:auto">
+          <label for="mo_es_devolucion" style="margin:0;font-size:.85rem;font-weight:600;color:#c47a00;cursor:pointer">
+            <i class="fa-solid fa-rotate-left me-1"></i>Es una devolución (material que no se ha usado y vuelve al stock)
+          </label>
+        </div>
+        <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">Materiales que se lleva / se devuelven</div>
+        <p style="font-size:.78rem;color:#888;margin-top:-8px" id="moHintStock"><i class="fa-solid fa-info-circle me-1"></i>Cada producto
           descuenta stock automáticamente.</p>
         <div id="lineasMaterial"></div>
         <button type="button" class="btn-add-linea" onclick="addLineaMaterial()">
           <i class="fa-solid fa-plus me-1"></i>Añadir material
         </button>
+        <div id="bloqueNoDevolucionMO">
         <div class="form-seccion">Material exclusivo de obra <span
             style="font-weight:400;font-size:.75rem;color:#888">(no descuenta del inventario de la tienda)</span></div>
         <p style="font-size:.78rem;color:#888;margin-top:-8px"><i class="fa-solid fa-info-circle me-1"></i>Para
@@ -2669,6 +2676,7 @@
         <button type="button" class="btn-add-linea" onclick="addLineaMaquinariaObra()">
           <i class="fa-solid fa-plus me-1"></i>Añadir máquina
         </button>
+        </div>
       </div>
       <div class="modal-btns">
         <button class="btn-cancelar" onclick="cerrarModal('modalMaterialObra')">Cancelar</button>
@@ -6123,7 +6131,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             : 'Sin materiales';
           return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${f.id},'materiales_obra'))">
             <td>${celdaCheck(f.id)}</td>
-        <td class="td-nombre"><strong>${f.nombre_obra || '—'}</strong></td>
+        <td class="td-nombre"><strong>${f.nombre_obra || '—'}</strong>${f.es_devolucion ? '<br><span class="badge-estado badge-vencido" style="margin-top:4px;display:inline-block"><i class="fa-solid fa-rotate-left"></i> DEVOLUCIÓN</span>' : ''}</td>
         <td>${f.nombre_empleado || '—'}</td>
         <td>${fmtF(f.fecha)}</td>
         <td class="td-concepto" title="${resumen}">${resumen}</td>
@@ -7943,7 +7951,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const itemsExcl = reg.materiales_exclusivos_obra_items || [];
       const itemsMaquina = reg.materiales_obra_maquinaria_items || [];
       document.getElementById('modalDetalleTitulo').innerHTML =
-        `<i class="fa-solid fa-boxes-stacked" style="color:#b53987"></i>Materiales — ${reg.nombre_obra || '—'}`;
+        `<i class="fa-solid fa-boxes-stacked" style="color:#b53987"></i>Materiales — ${reg.nombre_obra || '—'}${reg.es_devolucion ? ' <span class="badge-estado badge-vencido" style="margin-left:6px"><i class="fa-solid fa-rotate-left"></i> DEVOLUCIÓN</span>' : ''}`;
       const tablaNormal = !items.length ? '' : `
     <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">Del inventario</div>
     <table class="mini-table"><thead><tr><th>Producto</th><th>Cantidad</th></tr></thead><tbody>
@@ -7972,11 +7980,22 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById('modalDetalle').classList.add('visible');
     }
 
+        function toggleDevolucionMaterialObra() {
+      const esDevolucion = document.getElementById('mo_es_devolucion')?.checked;
+      const bloque = document.getElementById('bloqueNoDevolucionMO');
+      if (bloque) bloque.style.display = esDevolucion ? 'none' : '';
+      const hint = document.getElementById('moHintStock');
+      if (hint) hint.innerHTML = esDevolucion
+        ? '<i class="fa-solid fa-arrow-trend-up me-1" style="color:#2d7a4f"></i>Cada producto se <strong>sumará al stock</strong> automáticamente.'
+        : '<i class="fa-solid fa-info-circle me-1"></i>Cada producto descuenta stock automáticamente.';
+    }
+
 
     async function guardarMaterialObra() {
       const nombre_obra = document.getElementById('mo_nombre_obra').value.trim();
       const nombre_empleado = document.getElementById('mo_nombre_empleado').value.trim();
       const fecha = document.getElementById('mo_fecha').value;
+      const esDevolucion = document.getElementById('mo_es_devolucion')?.checked || false;
       if (!nombre_obra || !nombre_empleado || !fecha) {
         toast('Obra, empleado y fecha son obligatorios', 'err'); return;
       }
@@ -8014,7 +8033,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         }
 
         const stock = parseFloat(prod.stock || 0);
-        if (cant > stock) { toast(`Stock insuficiente para "${nombre}": hay ${fmtStock(stock)} ${unidadCorta(prod)}`, 'err'); ok = false; continue; }
+        // Si es una salida normal, tiene que haber stock suficiente. Si es
+        // una devolución, el material vuelve al almacén: no hace falta
+        // comprobar stock, siempre se puede sumar.
+        if (!esDevolucion && cant > stock) { toast(`Stock insuficiente para "${nombre}": hay ${fmtStock(stock)} ${unidadCorta(prod)}`, 'err'); ok = false; continue; }
         lineas.push({ producto_id: prod.id, producto_nombre: nombre, cantidad: cant, stock });
 
       }
@@ -8052,9 +8074,18 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
       if (!ok) return;
       if (!lineas.length && !lineasExclusivas.length && !lineasMaquina.length) { toast('Añade al menos un material o una máquina', 'err'); return; }
+      if (esDevolucion && (lineasExclusivas.length || lineasMaquina.length)) {
+        toast('Una devolución solo puede llevar materiales del inventario general (no exclusivos ni maquinaria)', 'err');
+        return;
+      }
 
       try {
         let headerId;
+        // Averigua qué efecto tenían las líneas ANTIGUAS sobre el stock,
+        // para revertirlo en el sentido correcto (si era una salida se
+        // había restado, si era una devolución se había sumado).
+        const anterior = modalEditId ? registros.find(r => r.id === modalEditId) : null;
+        const anteriorEraDevolucion = !!(anterior && anterior.es_devolucion);
 
         if (modalEditId) {
 
@@ -8062,7 +8093,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           await apiPatch('materiales_obra', modalEditId, {
             nombre_obra,
             nombre_empleado,
-            fecha
+            fecha,
+            es_devolucion: esDevolucion
           });
 
           headerId = modalEditId;
@@ -8073,17 +8105,17 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             `materiales_obra_id=eq.${headerId}`
           );
 
-          // Devolver el stock
+          // Revertir el efecto que tenían sobre el stock
           for (const a of antiguas) {
 
             const prod = inventarioDB.find(p => p.id == a.producto_id);
 
             if (prod) {
-
-              await apiPatch('inventario', a.producto_id, {
-                stock: Number(prod.stock) + Number(a.cantidad)
-              });
-
+              const stockRevertido = anteriorEraDevolucion
+                ? Number(prod.stock) - Number(a.cantidad)  // se había sumado al devolver: se resta al revertir
+                : Number(prod.stock) + Number(a.cantidad); // se había restado al sacar: se suma al revertir
+              await apiPatch('inventario', a.producto_id, { stock: stockRevertido });
+              prod.stock = stockRevertido;
             }
 
             await apiDelete('materiales_obra_items', a.id);
@@ -8103,7 +8135,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const [header] = await apiPost('materiales_obra', {
             nombre_obra,
             nombre_empleado,
-            fecha
+            fecha,
+            es_devolucion: esDevolucion
           });
 
           headerId = header.id;
@@ -8119,14 +8152,18 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
         await apiPost('materiales_obra_items', items);
 
-        // Descontar stock otra vez
+        // Aplicar el efecto de las líneas nuevas: si es una devolución, el
+        // material vuelve al stock (se suma); si es una salida normal, se
+        // descuenta, como siempre.
         for (const l of lineas) {
 
           const prod = inventarioDB.find(p => p.id == l.producto_id);
+          const nuevoStock = esDevolucion
+            ? Number(prod.stock) + Number(l.cantidad)
+            : Number(prod.stock) - Number(l.cantidad);
 
-          await apiPatch('inventario', l.producto_id, {
-            stock: Number(prod.stock) - Number(l.cantidad)
-          });
+          await apiPatch('inventario', l.producto_id, { stock: nuevoStock });
+          prod.stock = nuevoStock;
 
         }
         if (lineasExclusivas.length) {
@@ -8153,13 +8190,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           })));
         }
         toast(modalEditId
-          ? 'Material de obra actualizado correctamente'
-          : 'Material de obra registrado correctamente');
+          ? (esDevolucion ? 'Devolución de material actualizada correctamente' : 'Material de obra actualizado correctamente')
+          : (esDevolucion ? 'Devolución de material registrada — stock repuesto' : 'Material de obra registrado correctamente'));
 
         registrarHistorial('material_obra', {
           obra: nombre_obra,
           empleado: nombre_empleado,
-          materiales: lineas.map(l => ({ nombre: l.producto_nombre, cantidad: l.cantidad }))
+          materiales: lineas.map(l => ({ nombre: l.producto_nombre, cantidad: l.cantidad })),
+          es_devolucion: esDevolucion
         });
 
         modalEditId = null;
@@ -8235,15 +8273,17 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const itemsExcl = r.materiales_exclusivos_obra_items || [];
         const itemsMaquina = r.materiales_obra_maquinaria_items || [];
         const fecha = r.fecha ? r.fecha.split('-').reverse().join('/') : '';
+        const movimiento = r.es_devolucion ? 'Devolución' : 'Salida';
 
         if (!items.length && !itemsExcl.length && !itemsMaquina.length) {
-          filas.push({ 'OBRA': r.nombre_obra || '', 'EMPLEADO': r.nombre_empleado || '', 'FECHA': fecha, 'TIPO': '', 'PRODUCTO': '', 'CANTIDAD': '' });
+          filas.push({ 'OBRA': r.nombre_obra || '', 'EMPLEADO': r.nombre_empleado || '', 'FECHA': fecha, 'MOVIMIENTO': movimiento, 'TIPO': '', 'PRODUCTO': '', 'CANTIDAD': '' });
         } else {
           items.forEach(i => {
             filas.push({
               'OBRA': r.nombre_obra || '',
               'EMPLEADO': r.nombre_empleado || '',
               'FECHA': fecha,
+              'MOVIMIENTO': movimiento,
               'TIPO': 'Inventario',
               'PRODUCTO': i.producto_nombre || '',
               'CANTIDAD': i.cantidad != null ? parseFloat(i.cantidad) : ''
@@ -8254,6 +8294,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
               'OBRA': r.nombre_obra || '',
               'EMPLEADO': r.nombre_empleado || '',
               'FECHA': fecha,
+              'MOVIMIENTO': movimiento,
               'TIPO': 'Exclusivo obra',
               'PRODUCTO': i.producto_nombre || '',
               'CANTIDAD': i.cantidad != null ? parseFloat(i.cantidad) : ''
@@ -8267,6 +8308,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
               'OBRA': r.nombre_obra || '',
               'EMPLEADO': r.nombre_empleado || '',
               'FECHA': fecha,
+              'MOVIMIENTO': movimiento,
               'TIPO': 'Maquinaria',
               'PRODUCTO': `${i.maquina_nombre || ''} (${i.maquina_codigo || ''})${infoDevol}`,
               'CANTIDAD': 1
@@ -8276,8 +8318,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       });
 
       const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(filas, { header: ['OBRA', 'EMPLEADO', 'FECHA', 'TIPO', 'PRODUCTO', 'CANTIDAD'] });
-      ws['!cols'] = [{ wch: 28 }, { wch: 22 }, { wch: 12 }, { wch: 14 }, { wch: 30 }, { wch: 10 }];
+      const ws = XLSX.utils.json_to_sheet(filas, { header: ['OBRA', 'EMPLEADO', 'FECHA', 'MOVIMIENTO', 'TIPO', 'PRODUCTO', 'CANTIDAD'] });
+      ws['!cols'] = [{ wch: 28 }, { wch: 22 }, { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 30 }, { wch: 10 }];
       XLSX.utils.book_append_sheet(wb, ws, 'Materiales Obra');
       const fecha = new Date().toISOString().split('T')[0];
       const nombre = `materiales_obra_${obraSel || 'todas'}_${fecha}.xlsx`;
@@ -10275,6 +10317,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         document.getElementById("mo_nombre_obra").value = f.nombre_obra || "";
         document.getElementById("mo_nombre_empleado").value = f.nombre_empleado || "";
         document.getElementById("mo_fecha").value = f.fecha || "";
+        document.getElementById("mo_es_devolucion").checked = !!f.es_devolucion;
+        toggleDevolucionMaterialObra();
 
         const items = f.materiales_obra_items || [];
         if (items.length) {
@@ -10479,6 +10523,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         document.getElementById('mo_nombre_obra').value = '';
         document.getElementById('mo_nombre_empleado').value = '';
         document.getElementById('mo_fecha').value = hoy();
+        document.getElementById('mo_es_devolucion').checked = false;
         document.getElementById('lineasMaterial').innerHTML = '';
         document.getElementById('lineasMaterialExclusivo').innerHTML = '';
         document.getElementById('lineasMaquinariaObra').innerHTML = '';
@@ -10488,6 +10533,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         document.getElementById('modalMaterialObra').classList.add('visible');
         addLineaMaterial();
         addLineaMaterialExclusivo();
+        toggleDevolucionMaterialObra();
         return;
       }
       if (tabla === 'albaranes_venta') {

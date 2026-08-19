@@ -4586,18 +4586,21 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     ];
 
     function renderAlertasInventario() {
+      const negativos = inventarioDB.filter(p => parseFloat(p.stock || 0) < 0)
+        .sort((a, b) => parseFloat(a.stock || 0) - parseFloat(b.stock || 0));
+
       const bajos = inventarioDB.filter(p => {
         const stock = parseFloat(p.stock || 0);
         const min = p.stock_minimo ?? 5;
         return stock > 0 && stock <= min;
       }).sort((a, b) => parseFloat(a.stock || 0) - parseFloat(b.stock || 0));
 
-      const agotados = inventarioDB.filter(p => parseFloat(p.stock || 0) <= 0)
+      const agotados = inventarioDB.filter(p => parseFloat(p.stock || 0) === 0)
         .sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
 
       const wrap = document.getElementById('alertasWrap');
       if (!wrap) return;
-      if (!bajos.length && !agotados.length) { wrap.innerHTML = ''; return; }
+      if (!bajos.length && !agotados.length && !negativos.length) { wrap.innerHTML = ''; return; }
 
       function renderCategoriaStock(catId, titulo, lista, critica) {
         if (!lista.length) return '';
@@ -4618,7 +4621,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     </div>`;
       }
 
-      wrap.innerHTML = renderCategoriaStock('stockagotado', 'Productos agotados', agotados, true)
+      wrap.innerHTML = renderCategoriaStock('stocknegativo', 'Productos en stock negativo', negativos, true)
+        + renderCategoriaStock('stockagotado', 'Productos agotados', agotados, true)
         + renderCategoriaStock('stockbajo', 'Productos con stock bajo', bajos, false);
     }
 
@@ -6179,16 +6183,18 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const lista = registros.filter(p => (p.nombre || '').toLowerCase().includes(q));
         if (!lista.length) { bdy.innerHTML = emptyRow(7, 'No se encontraron productos'); return; }
         bdy.innerHTML = lista.map(p => {
-          const agotado = parseFloat(p.stock || 0) <= 0;
-          const bajo = !agotado && parseFloat(p.stock || 0) <= (p.stock_minimo ?? 5);
+          const stockNum = parseFloat(p.stock || 0);
+          const negativo = stockNum < 0;
+          const agotado = !negativo && stockNum <= 0;
+          const bajo = !negativo && !agotado && stockNum <= (p.stock_minimo ?? 5);
           const costo = p.costo != null ? parseFloat(p.costo) : null;
           const venta = p.precio != null ? parseFloat(p.precio) : null;
           return `<tr data-id="${p.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${p.id},'inventario'))">
     <td>${celdaCheck(p.id)}</td>
     <td><strong>${p.nombre || '—'}</strong></td>
-    <td><span style="font-size:1.1rem;font-weight:700;color:${agotado ? '#b53987' : bajo ? '#c47a00' : '#2d7a4f'}">${fmtStock(p.stock)}</span>
+    <td><span style="font-size:1.1rem;font-weight:700;color:${negativo ? '#e53e3e' : agotado ? '#b53987' : bajo ? '#c47a00' : '#2d7a4f'}">${fmtStock(p.stock)}</span>
 <span style="font-size:.78rem;color:#aaa"> ${unidadCorta(p)}</span>
-      ${agotado ? '<span style="margin-left:8px;font-size:.73rem;background:#fce4ec;color:#b53987;padding:2px 8px;border-radius:20px;font-weight:600">AGOTADO</span>' : ''}
+      ${negativo ? '<span style="margin-left:8px;font-size:.73rem;background:#fde0e0;color:#e53e3e;padding:2px 8px;border-radius:20px;font-weight:600">STOCK NEGATIVO</span>' : agotado ? '<span style="margin-left:8px;font-size:.73rem;background:#fce4ec;color:#b53987;padding:2px 8px;border-radius:20px;font-weight:600">AGOTADO</span>' : ''}
       ${bajo ? '<span style="margin-left:8px;font-size:.73rem;background:#fff3e0;color:#c47a00;padding:2px 8px;border-radius:20px;font-weight:600">STOCK BAJO</span>' : ''}
     </td>
     <td><span class="badge-puntos"><i class="fa-solid fa-star" style="color:#c47a00;margin-right:3px"></i>${p.puntos_por_unidad || 0} pts</span></td>
@@ -9102,6 +9108,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       // descuenta (negativo), en una devolución se repone (positivo).
       const efectoStock = (cant, devol) => devol ? Math.abs(cant) : -Math.abs(cant);
 
+      const avisosStockNegativoAV = [];
       const lineasFinales = [];
       for (const l of lineasInput) {
         let prod = buscarProductoPorNombre(l.nombre);
@@ -9178,8 +9185,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             if (delta === 0) continue; // nada cambió para este producto: no se toca
             const prod = inventarioDB.find(p => p.id == pid);
             if (prod) {
-              await apiPatch('inventario', pid, { stock: Number(prod.stock) + delta });
-              prod.stock = Number(prod.stock) + delta;
+              const nuevoStockProd = Number(prod.stock) + delta;
+              await apiPatch('inventario', pid, { stock: nuevoStockProd });
+              prod.stock = nuevoStockProd;
+              if (nuevoStockProd < 0) avisosStockNegativoAV.push(`${prod.nombre} (${fmtStock(nuevoStockProd)} ${unidadCorta(prod)})`);
             }
           }
 
@@ -9230,6 +9239,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             const nuevoStock = Number(prod.stock) + efectoStock(l.cantidad, esDevolucion);
             await apiPatch('inventario', l.producto_id, { stock: nuevoStock });
             prod.stock = nuevoStock;
+            if (nuevoStock < 0) avisosStockNegativoAV.push(`${prod.nombre} (${fmtStock(nuevoStock)} ${unidadCorta(prod)})`);
           }
 
           if (conPuntos) {
@@ -9261,6 +9271,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             : (conPuntos ? `Albarán ${numeroAlbaranAsignado || ''} guardado — +${puntosNuevos} pts para ${cliente_nombre}` : `Albarán ${numeroAlbaranAsignado || ''} guardado sin puntos ni aviso`));
         }
 
+        if (avisosStockNegativoAV.length) {
+          toast(`⚠️ Stock en negativo: ${avisosStockNegativoAV.join(', ')}`, 'err');
+        }
         const idParaImprimir = headerId;
         modalEditId = null;
         modalDestinoTabla = null;
@@ -11679,13 +11692,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           headerId = header.id;
         }
 
-        // Comprobar stock disponible con los valores YA actualizados (tras devolver el antiguo)
+        // Ya no bloquea el guardado si no hay stock suficiente — se avisa
+        // después de guardar, y el producto puede quedar en negativo.
+        const avisosStockNegativoCI = [];
         for (const l of lineas) {
           const prod = inventarioDB.find(p => p.id == l.producto_id);
           const stockActual = parseFloat(prod?.stock || 0);
           if (l.cantidad > stockActual) {
-            toast(`Stock insuficiente para "${l.producto_nombre}": hay ${fmtStock(stockActual)}`, 'err');
-            return;
+            avisosStockNegativoCI.push(`${l.producto_nombre} (quedará en ${fmtStock(stockActual - l.cantidad)} ${unidadCorta(prod)})`);
           }
         }
 
@@ -11700,6 +11714,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         }
 
         toast(consumoInternoEditId ? 'Consumo interno actualizado' : 'Consumo interno registrado y stock descontado');
+        if (avisosStockNegativoCI.length) {
+          toast(`⚠️ Stock en negativo: ${avisosStockNegativoCI.join(', ')}`, 'err');
+        }
         cerrarModal('modalConsumoInterno');
         const idParaImprimir = headerId;
         consumoInternoEditId = null;

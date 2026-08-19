@@ -4590,15 +4590,36 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const stock = parseFloat(p.stock || 0);
         const min = p.stock_minimo ?? 5;
         return stock > 0 && stock <= min;
-      });
-      const agotados = inventarioDB.filter(p => parseFloat(p.stock || 0) <= 0);
+      }).sort((a, b) => parseFloat(a.stock || 0) - parseFloat(b.stock || 0));
+
+      const agotados = inventarioDB.filter(p => parseFloat(p.stock || 0) <= 0)
+        .sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+
       const wrap = document.getElementById('alertasWrap');
       if (!wrap) return;
       if (!bajos.length && !agotados.length) { wrap.innerHTML = ''; return; }
-      wrap.innerHTML = `
-        ${agotados.length ? `<div class="alerta-item critica"><i class="fa-solid fa-triangle-exclamation"></i><div><strong>${agotados.length} producto(s) agotados:</strong> ${agotados.map(p => p.nombre).join(', ')}</div></div>` : ''}
-        ${bajos.length ? `<div class="alerta-item"><i class="fa-solid fa-triangle-exclamation"></i><div><strong>${bajos.length} producto(s) con stock bajo:</strong> ${bajos.map(p => `${p.nombre} (${fmtStock(p.stock)} ${unidadCorta(p)})`).join(', ')}</div></div>` : ''}
-      `;
+
+      function renderCategoriaStock(catId, titulo, lista, critica) {
+        if (!lista.length) return '';
+        const detalle = lista.map(p => `
+      <div class="alerta-item alerta-subitem ${critica ? 'critica' : ''}">
+        <i class="fa-solid fa-box"></i>
+        <div>${p.nombre || '—'} — <strong>${fmtStock(p.stock)} ${unidadCorta(p)}</strong>
+        <span style="margin-left:8px;color:${critica ? '#e53e3e' : '#c47a00'}">${critica ? 'Agotado' : `Mínimo: ${fmtStock(p.stock_minimo ?? 5)} ${unidadCorta(p)}`}</span></div>
+      </div>`).join('');
+
+        return `<div class="alerta-grupo">
+      <div class="alerta-item ${critica ? 'critica' : ''}" style="cursor:pointer" onclick="toggleGrupoAlerta('${catId}')">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <div style="flex:1"><strong>${titulo}</strong> — ${lista.length} producto${lista.length > 1 ? 's' : ''}</div>
+        <i class="fa-solid fa-chevron-down" id="chevronAlerta${catId}" style="transition:transform .15s"></i>
+      </div>
+      <div class="alerta-detalle" id="detalleAlerta${catId}" style="display:none">${detalle}</div>
+    </div>`;
+      }
+
+      wrap.innerHTML = renderCategoriaStock('stockagotado', 'Productos agotados', agotados, true)
+        + renderCategoriaStock('stockbajo', 'Productos con stock bajo', bajos, false);
     }
 
     async function comprobarStockBajo() {

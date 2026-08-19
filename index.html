@@ -9065,7 +9065,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
               ...(esDevolucion ? {} : { ultima_compra: ahora, puntos_desde: cliente?.puntos_desde || ahora })
             });
             if (cliente) cliente.puntos = puntosFinales;
-            if (cliente?.email && !esDevolucion) await enviarEmailPuntos(cliente.email, cliente.nombre, puntosFinales, 'compra');
+            if (cliente?.email) {
+              if (esDevolucion) {
+                await enviarEmailPuntos(cliente.email, cliente.nombre, Math.abs(puntosNuevos), 'devolucion');
+              } else {
+                await enviarEmailPuntos(cliente.email, cliente.nombre, puntosFinales, 'compra');
+              }
+            }
 
             registrarHistorial('compra_cliente', {
               cliente: cliente_nombre,

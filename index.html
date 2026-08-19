@@ -2086,7 +2086,7 @@
       <h2>¿A dónde quieres ir?</h2>
       <p>Elige el panel que quieres abrir</p>
       <div class="selector-grid" id="selectorGrid"></div>
-       <button class="selector-salir" onclick="doLogout()"><i
+      <button class="selector-salir" onclick="doLogout()"><i
           class="fa-solid fa-right-from-bracket me-1"></i>Salir</button>
     </div>
   </div>
@@ -6062,7 +6062,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <td>${fmtF(f.fecha)}</td>
     <td class="td-nombre">${f.cliente_nombre || '—'}</td>
     <td style="font-size:.8rem;color:#888">${f.nif || '—'}</td>
-    <td class="td-total">${fmt(f.total)}${parseFloat(f.total||0) < 0 ? '<br><span class="badge-estado badge-vencido" style="margin-top:4px;display:inline-block"><i class="fa-solid fa-rotate-left"></i> DEVOLUCIÓN</span>' : ''}</td>
+    <td class="td-total">${fmt(f.total)}${parseFloat(f.total || 0) < 0 ? '<br><span class="badge-estado badge-vencido" style="margin-top:4px;display:inline-block"><i class="fa-solid fa-rotate-left"></i> DEVOLUCIÓN</span>' : ''}</td>
     <td>${NOMBRES_PERSONAS[f.creado_por] || f.creado_por || '—'}</td>
     <td><span class="badge-puntos"><i class="fa-solid fa-star" style="color:#c47a00;margin-right:3px"></i>${f.puntos_generados || 0} pts</span></td>
     <td>
@@ -8764,7 +8764,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById('lineasAlbaranVenta').appendChild(div);
     }
 
-        // Suma el subtotal de todas las líneas y lo mete en la base imponible automáticamente
+    // Suma el subtotal de todas las líneas y lo mete en la base imponible automáticamente
     function recalcBaseDesdeLineasAlbaranVenta() {
       let base = 0;
       document.querySelectorAll('[id^="lav_prod_"]').forEach(inp => {
@@ -8831,7 +8831,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const nif = document.getElementById('f_av_nif').value.trim() || null;
       const cliente_id = clienteVentaSelId;
       const esDevolucion = document.getElementById('f_av_es_devolucion')?.checked || false;
-      const base_imponible = parseFloat(document.getElementById('f_av_base').value || 0); // ya viene con descuentos aplicados y con signo si es devolución
+      const base_imponible = parseFloat(document.getElementById('f_av_base').value || 0); // ya con descuentos y signo si es devolución
       const pct_iva = parseFloat(document.getElementById('f_av_pct_iva').value || 0);
       const importe_iva = +(base_imponible * pct_iva / 100).toFixed(2);
       const total = +(base_imponible + importe_iva).toFixed(2);
@@ -8845,6 +8845,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
       const lineasInput = _leerLineasAlbaranVenta();
       if (!lineasInput.length) { toast('Añade al menos un producto', 'err'); return; }
+
+      // Efecto sobre el stock que produce una línea: en una venta normal se
+      // descuenta (negativo), en una devolución se repone (positivo).
+      const efectoStock = (cant, devol) => devol ? Math.abs(cant) : -Math.abs(cant);
 
       const lineasFinales = [];
       for (const l of lineasInput) {
@@ -8862,15 +8866,15 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           }
         }
         const subtotal = l.cantidad * l.precio;
-        let importeConDto = +(subtotal - (subtotal * l.dto / 100)).toFixed(2); // 👈 descuento aplicado por línea
+        let importeConDto = +(subtotal - (subtotal * l.dto / 100)).toFixed(2);
         if (esDevolucion) importeConDto = -importeConDto;
         lineasFinales.push({
           producto_id: prod.id,
           producto_nombre: l.nombre,
           cantidad: l.cantidad,
           precio_unitario: l.precio,
-          dto_pct: l.dto,               // 👈 se guarda para referencia
-          importe_total: importeConDto  // 👈 ya con descuento (y signo si es devolución)
+          dto_pct: l.dto,
+          importe_total: importeConDto
         });
       }
 
@@ -8884,88 +8888,126 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         let numeroAlbaranAsignado = null;
         const headerPayload = {
           fecha, cliente_id, cliente_nombre, nif,
-          base_imponible, // ya con descuentos por línea aplicados y signo si es devolución
+          base_imponible,
           pct_iva, importe_iva, total, puntos_generados: puntosNuevos, notas
         };
 
         if (modalEditId) {
+          // ── EDICIÓN: solo se aplica la DIFERENCIA respecto a lo que ya
+          // había guardado, no se deshace todo y se vuelve a aplicar todo ──
           headerPayload.numero_albaran = document.getElementById('f_av_num').value.trim() || null;
           numeroAlbaranAsignado = headerPayload.numero_albaran;
 
           const anterior = registros.find(r => r.id === modalEditId);
           const itemsAntiguos = (anterior && anterior.albaranes_venta_items) || [];
-          // Si el registro anterior tenía el total en negativo, era una devolución:
-          // su stock se SUMÓ al guardarla, así que para revertirla hay que RESTARLO.
           const anteriorEraDevolucion = anterior && parseFloat(anterior.total || 0) < 0;
-          for (const it of itemsAntiguos) {
-            const prod = inventarioDB.find(p => p.id == it.producto_id);
+
+          // Efecto de stock que había quedado aplicado por cada producto (línea vieja)
+          const efectoAntiguoPorProducto = {};
+          itemsAntiguos.forEach(it => {
+            const e = efectoStock(parseFloat(it.cantidad) || 0, anteriorEraDevolucion);
+            efectoAntiguoPorProducto[it.producto_id] = (efectoAntiguoPorProducto[it.producto_id] || 0) + e;
+          });
+
+          // Efecto de stock que debería quedar aplicado con las líneas nuevas
+          const efectoNuevoPorProducto = {};
+          lineasFinales.forEach(l => {
+            const e = efectoStock(l.cantidad, esDevolucion);
+            efectoNuevoPorProducto[l.producto_id] = (efectoNuevoPorProducto[l.producto_id] || 0) + e;
+          });
+
+          // Solo se toca el stock de los productos cuyo efecto neto cambió
+          const idsProductos = new Set([...Object.keys(efectoAntiguoPorProducto), ...Object.keys(efectoNuevoPorProducto)]);
+          for (const pid of idsProductos) {
+            const antes = efectoAntiguoPorProducto[pid] || 0;
+            const despues = efectoNuevoPorProducto[pid] || 0;
+            const delta = despues - antes;
+            if (delta === 0) continue; // nada cambió para este producto: no se toca
+            const prod = inventarioDB.find(p => p.id == pid);
             if (prod) {
-              const stockRevertido = anteriorEraDevolucion
-                ? Number(prod.stock) - Number(it.cantidad)
-                : Number(prod.stock) + Number(it.cantidad);
-              await apiPatch('inventario', it.producto_id, { stock: stockRevertido });
+              await apiPatch('inventario', pid, { stock: Number(prod.stock) + delta });
+              prod.stock = Number(prod.stock) + delta;
             }
           }
-          const clienteAnterior = clientesDB.find(c => c.id === anterior?.cliente_id);
-          if (clienteAnterior) {
-            await apiPatch('clientes', clienteAnterior.id, { puntos: Math.max(0, (clienteAnterior.puntos || 0) - (anterior.puntos_generados || 0)) });
+
+          // Puntos: solo se aplica la diferencia entre lo que sumaba/restaba
+          // antes y lo que debería sumar/restar ahora
+          const puntosAntes = (anterior && anterior.puntos_generados) || 0;
+          const deltaPuntos = puntosNuevos - puntosAntes;
+          if (deltaPuntos !== 0) {
+            const cliente = clientesDB.find(c => c.id === cliente_id);
+            if (cliente) {
+              const puntosFinales = Math.max(0, (cliente.puntos || 0) + deltaPuntos);
+              await apiPatch('clientes', cliente_id, { puntos: puntosFinales });
+              cliente.puntos = puntosFinales;
+            }
           }
+
+          // Reemplazar las líneas del detalle (solo son filas informativas,
+          // no afectan de nuevo al stock: el stock ya se ajustó arriba por delta)
           for (const it of itemsAntiguos) await apiDelete('albaranes_venta_items', it.id);
 
           await apiPatch('albaranes_venta', modalEditId, headerPayload);
           headerId = modalEditId;
+
+          await apiPost('albaranes_venta_items', lineasFinales.map(l => ({
+            albaran_venta_id: headerId, producto_id: l.producto_id, producto_nombre: l.producto_nombre,
+            cantidad: l.cantidad, precio_unitario: l.precio_unitario, importe_total: l.importe_total
+          })));
+
+          toast(deltaPuntos === 0
+            ? (esDevolucion ? 'Devolución actualizada (sin cambios en stock ni puntos)' : 'Albarán actualizado (sin cambios en stock ni puntos)')
+            : (esDevolucion ? `Devolución actualizada — ajuste de ${deltaPuntos} pts` : `Albarán actualizado — ajuste de ${deltaPuntos > 0 ? '+' : ''}${deltaPuntos} pts`));
+
         } else {
+          // ── ALTA NUEVA: se aplica todo, no había nada previo ──
           const numsExistentes = registros.filter(r => r.numero_factusol).map(r => r.numero_factusol);
           const siguienteNumFactusol = numsExistentes.length ? Math.max(...numsExistentes) + 1 : 1;
           const [header] = await apiPost('albaranes_venta', { ...headerPayload, numero_factusol: siguienteNumFactusol, creado_por: currentPersona });
           headerId = header.id;
           numeroAlbaranAsignado = header.numero_albaran;
-        }
 
-        await apiPost('albaranes_venta_items', lineasFinales.map(l => ({
-          albaran_venta_id: headerId, producto_id: l.producto_id, producto_nombre: l.producto_nombre,
-          cantidad: l.cantidad, precio_unitario: l.precio_unitario, importe_total: l.importe_total
-        })));
+          await apiPost('albaranes_venta_items', lineasFinales.map(l => ({
+            albaran_venta_id: headerId, producto_id: l.producto_id, producto_nombre: l.producto_nombre,
+            cantidad: l.cantidad, precio_unitario: l.precio_unitario, importe_total: l.importe_total
+          })));
 
-        // En una devolución el material vuelve al stock (se suma); en una
-        // venta normal se descuenta, como siempre.
-        for (const l of lineasFinales) {
-          const prod = inventarioDB.find(p => p.id == l.producto_id);
-          const nuevoStock = esDevolucion
-            ? Number(prod.stock) + Number(l.cantidad)
-            : Number(prod.stock) - Number(l.cantidad);
-          await apiPatch('inventario', l.producto_id, { stock: nuevoStock });
-        }
+          for (const l of lineasFinales) {
+            const prod = inventarioDB.find(p => p.id == l.producto_id);
+            const nuevoStock = Number(prod.stock) + efectoStock(l.cantidad, esDevolucion);
+            await apiPatch('inventario', l.producto_id, { stock: nuevoStock });
+            prod.stock = nuevoStock;
+          }
 
-        if (conPuntos) {
-          const cliente = clientesDB.find(c => c.id === cliente_id);
-          const ahora = new Date().toISOString();
-          const puntosFinales = Math.max(0, (cliente?.puntos || 0) + puntosNuevos);
-          await apiPatch('clientes', cliente_id, {
-            puntos: puntosFinales,
-            ...(esDevolucion ? {} : { ultima_compra: ahora, puntos_desde: cliente?.puntos_desde || ahora })
-          });
-          if (cliente?.email && !esDevolucion) await enviarEmailPuntos(cliente.email, cliente.nombre, puntosFinales, 'compra');
+          if (conPuntos) {
+            const cliente = clientesDB.find(c => c.id === cliente_id);
+            const ahora = new Date().toISOString();
+            const puntosFinales = Math.max(0, (cliente?.puntos || 0) + puntosNuevos);
+            await apiPatch('clientes', cliente_id, {
+              puntos: puntosFinales,
+              ...(esDevolucion ? {} : { ultima_compra: ahora, puntos_desde: cliente?.puntos_desde || ahora })
+            });
+            if (cliente) cliente.puntos = puntosFinales;
+            if (cliente?.email && !esDevolucion) await enviarEmailPuntos(cliente.email, cliente.nombre, puntosFinales, 'compra');
 
-          registrarHistorial('compra_cliente', {
-            cliente: cliente_nombre,
-            productos: lineasFinales.map(l => ({ nombre: l.producto_nombre, cantidad: l.cantidad })),
-            total, puntos: puntosNuevos
-          });
-        }
+            registrarHistorial('compra_cliente', {
+              cliente: cliente_nombre,
+              productos: lineasFinales.map(l => ({ nombre: l.producto_nombre, cantidad: l.cantidad })),
+              total, puntos: puntosNuevos
+            });
+          }
 
-        toast(modalEditId
-          ? (esDevolucion ? 'Devolución actualizada' : 'Albarán de venta actualizado')
-          : (esDevolucion
+          toast(esDevolucion
             ? `Devolución ${numeroAlbaranAsignado || ''} guardada — ${puntosNuevos} pts para ${cliente_nombre}, stock repuesto`
-            : (conPuntos ? `Albarán ${numeroAlbaranAsignado || ''} guardado — +${puntosNuevos} pts para ${cliente_nombre}` : `Albarán ${numeroAlbaranAsignado || ''} guardado sin puntos ni aviso`)));
+            : (conPuntos ? `Albarán ${numeroAlbaranAsignado || ''} guardado — +${puntosNuevos} pts para ${cliente_nombre}` : `Albarán ${numeroAlbaranAsignado || ''} guardado sin puntos ni aviso`));
+        }
 
-        const idParaImprimir = headerId; // 👈 añadir
+        const idParaImprimir = headerId;
         modalEditId = null;
         modalDestinoTabla = null;
         cerrarModal('modalNueva');
         cargarDatos();
-        imprimirAlbaranVenta(idParaImprimir); // 👈 añadir
+        imprimirAlbaranVenta(idParaImprimir);
       } catch (e) {
         toast('Error al guardar el albarán: ' + e.message, 'err');
       } finally {

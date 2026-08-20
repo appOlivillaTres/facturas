@@ -7236,21 +7236,25 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       recalcRepartoRestante();
     }
 
-    function addLineaRepartoObra(obra, importe) {
+    function addLineaRepartoObra(obra, base) {
       lineasRepartoObraCount++;
       const idx = lineasRepartoObraCount;
       const div = document.createElement('div');
       div.id = `lro_${idx}`;
       div.className = 'linea-prod';
-      div.style.gridTemplateColumns = '1fr 130px auto';
+      div.style.gridTemplateColumns = '1fr 120px 120px auto';
       div.innerHTML = `
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Obra</label>
       ${htmlSelectObras(`lro_obra_${idx}`, 'Selecciona una obra...', 'onchange="recalcRepartoRestante()"')}
     </div>
     <div class="form-group" style="margin:0">
-      <label style="font-size:.75rem">Importe (€)</label>
-      <input type="number" id="lro_importe_${idx}" step="0.01" min="0" value="${importe != null ? importe : ''}" oninput="recalcRepartoRestante()">
+      <label style="font-size:.75rem">Base imponible (€)</label>
+      <input type="number" id="lro_base_${idx}" step="0.01" min="0" value="${base != null ? base : ''}" oninput="recalcRepartoRestante()">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Total c/IVA (€)</label>
+      <input type="text" id="lro_total_${idx}" readonly style="background:#f7f0f5;font-weight:600" value="0.00">
     </div>
     <button type="button" onclick="document.getElementById('lro_${idx}').remove(); recalcRepartoRestante();"
       style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
@@ -7258,29 +7262,40 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     </button>`;
       document.getElementById('lineasRepartoObras').appendChild(div);
       if (obra) setSelectObraValue(`lro_obra_${idx}`, obra);
+      recalcRepartoRestante();
     }
 
     function recalcRepartoRestante() {
       const txt = document.getElementById('repartoRestanteTxt');
       if (!txt) return;
+      const pctIva = parseFloat(document.getElementById('f_pct_iva1')?.value || 0);
       let suma = 0;
-      document.querySelectorAll('[id^="lro_importe_"]').forEach(inp => { suma += parseFloat(inp.value || 0); });
+      document.querySelectorAll('[id^="lro_base_"]').forEach(inp => {
+        const idx = inp.id.split('_')[2];
+        const base = parseFloat(inp.value || 0);
+        const totalLinea = +(base * (1 + pctIva / 100)).toFixed(2);
+        const totalInput = document.getElementById(`lro_total_${idx}`);
+        if (totalInput) totalInput.value = totalLinea.toFixed(2);
+        suma += totalLinea;
+      });
       const total = parseFloat(document.getElementById('f_total')?.value || 0);
       const restante = +(total - suma).toFixed(2);
       txt.style.color = Math.abs(restante) < 0.01 ? '#2d7a4f' : '#c0392b';
       txt.textContent = Math.abs(restante) < 0.01
-        ? `Repartido correctamente: ${fmt(suma)} de ${fmt(total)}`
+        ? `Repartido correctamente: ${fmt(suma)} de ${fmt(total)} (con IVA incluido)`
         : `Repartido ${fmt(suma)} de ${fmt(total)} — quedan ${fmt(restante)} por asignar`;
     }
 
     function _leerLineasRepartoObras() {
       const lineas = [];
+      const pctIva = parseFloat(document.getElementById('f_pct_iva1')?.value || 0);
       document.querySelectorAll('[id^="lro_obra_"]').forEach(inp => {
         const nombre = inp.value.trim();
         if (!nombre) return;
         const idx = inp.id.split('_')[2];
-        const importe = parseFloat(document.getElementById(`lro_importe_${idx}`)?.value || 0);
-        if (importe <= 0) return;
+        const base = parseFloat(document.getElementById(`lro_base_${idx}`)?.value || 0);
+        if (base <= 0) return;
+        const importe = +(base * (1 + pctIva / 100)).toFixed(2);
         lineas.push({ nombre_obra: nombre, importe });
       });
       return lineas;
@@ -11151,7 +11166,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
               if (chk) chk.checked = true;
               if (wrapUnica) wrapUnica.style.display = 'none';
               if (wrapReparto) wrapReparto.style.display = '';
-              reparto.forEach(r => addLineaRepartoObra(r.nombre_obra, r.importe));
+              const pctIvaActual = parseFloat(document.getElementById('f_pct_iva1')?.value || 0);
+              reparto.forEach(r => {
+                const baseCalculada = pctIvaActual ? +(r.importe / (1 + pctIvaActual / 100)).toFixed(2) : r.importe;
+                addLineaRepartoObra(r.nombre_obra, baseCalculada);
+              });
               recalcRepartoRestante();
             } else {
               if (chk) chk.checked = false;
@@ -12575,7 +12594,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <div class="form-seccion">Bases e IVA</div>
     <div class="form-grid">
       <div class="form-group"><label>Base 1</label><input type="number" id="f_base1" step="0.01" ></div>
-      <div class="form-group"><label>% IVA 1</label><input type="number" id="f_pct_iva1" step="0.01" value="21"></div>
+      <div class="form-group"><label>% IVA 1</label><input type="number" id="f_pct_iva1" step="0.01" value="21" oninput="recalcRepartoRestante()"></div>
       <div class="form-group"><label>Total IVA 1</label><input type="number" id="f_total_iva1" step="0.01" ></div>
 
       <div class="form-group"><label>% RE 1</label><input type="number" id="f_pct_re1" step="0.01" ></div>

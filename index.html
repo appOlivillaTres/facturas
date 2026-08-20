@@ -2647,35 +2647,41 @@
           <label>Fecha *</label>
           <input type="date" id="mo_fecha">
         </div>
-        <div class="form-group" style="display:flex;align-items:center;gap:8px;background:#fff3e0;border:1.5px solid #f0c060;border-radius:8px;padding:10px 14px">
+        <div class="form-group"
+          style="display:flex;align-items:center;gap:8px;background:#fff3e0;border:1.5px solid #f0c060;border-radius:8px;padding:10px 14px">
           <input type="checkbox" id="mo_es_devolucion" onchange="toggleDevolucionMaterialObra()" style="width:auto">
           <label for="mo_es_devolucion" style="margin:0;font-size:.85rem;font-weight:600;color:#c47a00;cursor:pointer">
-            <i class="fa-solid fa-rotate-left me-1"></i>Es una devolución (material que no se ha usado y vuelve al stock)
+            <i class="fa-solid fa-rotate-left me-1"></i>Es una devolución (material que no se ha usado y vuelve al
+            stock)
           </label>
         </div>
-        <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">Materiales que se lleva / se devuelven</div>
-        <p style="font-size:.78rem;color:#888;margin-top:-8px" id="moHintStock"><i class="fa-solid fa-info-circle me-1"></i>Cada producto
+        <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">Materiales que se lleva / se
+          devuelven</div>
+        <p style="font-size:.78rem;color:#888;margin-top:-8px" id="moHintStock"><i
+            class="fa-solid fa-info-circle me-1"></i>Cada producto
           descuenta stock automáticamente.</p>
         <div id="lineasMaterial"></div>
         <button type="button" class="btn-add-linea" onclick="addLineaMaterial()">
           <i class="fa-solid fa-plus me-1"></i>Añadir material
         </button>
         <div id="bloqueNoDevolucionMO">
-        <div class="form-seccion">Material exclusivo de obra <span
-            style="font-weight:400;font-size:.75rem;color:#888">(no descuenta del inventario de la tienda)</span></div>
-        <p style="font-size:.78rem;color:#888;margin-top:-8px"><i class="fa-solid fa-info-circle me-1"></i>Para
-          materiales que solo existen para esta obra concreta.</p>
-        <div id="lineasMaterialExclusivo"></div>
-        <button type="button" class="btn-add-linea" onclick="addLineaMaterialExclusivo()">
-          <i class="fa-solid fa-plus me-1"></i>Añadir material exclusivo
-        </button>
+          <div class="form-seccion">Material exclusivo de obra <span
+              style="font-weight:400;font-size:.75rem;color:#888">(no descuenta del inventario de la tienda)</span>
+          </div>
+          <p style="font-size:.78rem;color:#888;margin-top:-8px"><i class="fa-solid fa-info-circle me-1"></i>Para
+            materiales que solo existen para esta obra concreta.</p>
+          <div id="lineasMaterialExclusivo"></div>
+          <button type="button" class="btn-add-linea" onclick="addLineaMaterialExclusivo()">
+            <i class="fa-solid fa-plus me-1"></i>Añadir material exclusivo
+          </button>
 
-        <div class="form-seccion">Maquinaria <span style="font-weight:400;font-size:.75rem;color:#888">(máquinas de esta
-            salida a obra propia)</span></div>
-        <div id="lineasMaquinariaObra"></div>
-        <button type="button" class="btn-add-linea" onclick="addLineaMaquinariaObra()">
-          <i class="fa-solid fa-plus me-1"></i>Añadir máquina
-        </button>
+          <div class="form-seccion">Maquinaria <span style="font-weight:400;font-size:.75rem;color:#888">(máquinas de
+              esta
+              salida a obra propia)</span></div>
+          <div id="lineasMaquinariaObra"></div>
+          <button type="button" class="btn-add-linea" onclick="addLineaMaquinariaObra()">
+            <i class="fa-solid fa-plus me-1"></i>Añadir máquina
+          </button>
         </div>
       </div>
       <div class="modal-btns">
@@ -2718,9 +2724,10 @@
         <label>Obra</label>
         <select id="exportObraFiltro"></select>
       </div>
-            <div class="form-group" style="display:flex;align-items:center;gap:8px">
+      <div class="form-group" style="display:flex;align-items:center;gap:8px">
         <input type="checkbox" id="exportIncluirYaExportadas" style="width:auto">
-        <label for="exportIncluirYaExportadas" style="margin:0;cursor:pointer">Incluir facturas ya exportadas antes</label>
+        <label for="exportIncluirYaExportadas" style="margin:0;cursor:pointer">Incluir facturas ya exportadas
+          antes</label>
       </div>
 
       <div class="form-group">
@@ -8085,7 +8092,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById('modalDetalle').classList.add('visible');
     }
 
-        function toggleDevolucionMaterialObra() {
+    function toggleDevolucionMaterialObra() {
       const esDevolucion = document.getElementById('mo_es_devolucion')?.checked;
       const bloque = document.getElementById('bloqueNoDevolucionMO');
       if (bloque) bloque.style.display = esDevolucion ? 'none' : '';
@@ -9098,6 +9105,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const importe_iva = +(base_imponible * pct_iva / 100).toFixed(2);
       const total = +(base_imponible + importe_iva).toFixed(2);
       const notas = document.getElementById('f_av_notas').value.trim() || null;
+            const ocultar_precios = document.getElementById('f_av_ocultar_precios')?.checked || false;
 
       if (!fecha) { toast('La fecha es obligatoria', 'err'); return; }
       if (!cliente_id) { toast('Selecciona un cliente de la lista (o créalo con el botón de nuevo cliente)', 'err'); return; }
@@ -9150,10 +9158,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       try {
         let headerId;
         let numeroAlbaranAsignado = null;
-        const headerPayload = {
+                const headerPayload = {
           fecha, cliente_id, cliente_nombre, nif,
           base_imponible,
-          pct_iva, importe_iva, total, puntos_generados: puntosNuevos, notas
+          pct_iva, importe_iva, total, puntos_generados: puntosNuevos, notas,
+          ocultar_precios
         };
 
         if (modalEditId) {
@@ -9306,8 +9315,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         clienteVentaSelId = f.cliente_id || null;
         document.getElementById('f_av_base').value = (f.base_imponible || 0) + (f.importe_descuento || 0);
         document.getElementById('f_av_pct_iva').value = f.pct_iva != null ? f.pct_iva : 21;
-        const chkDevol = document.getElementById('f_av_es_devolucion');
-        if (chkDevol) chkDevol.checked = parseFloat(f.total || 0) < 0;
+        const chkOcultarPrecios = document.getElementById('f_av_ocultar_precios');
+        if (chkOcultarPrecios) chkOcultarPrecios.checked = !!f.ocultar_precios;
         document.getElementById('f_av_notas').value = f.notas || '';
         recalcTotalAlbaranVenta();
 
@@ -9374,6 +9383,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
       const items = f.albaranes_venta_items || [];
 
+            const ocultarPrecios = !!f.ocultar_precios;
+
       const filas = items.map(i => {
         const precio = i.precio_unitario != null ? parseFloat(i.precio_unitario) : 0;
         const subtotal = i.importe_total != null ? parseFloat(i.importe_total) : (precio * (parseFloat(i.cantidad) || 0));
@@ -9383,6 +9394,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         } else {
           const prodInv = inventarioDB.find(p => p.id == i.producto_id);
           unidadTxt = prodInv ? unidadCorta(prodInv) : 'uds.';
+        }
+        if (ocultarPrecios) {
+          return `<tr>
+      <td>${i.producto_id || ''}</td>
+      <td>${i.producto_nombre || ''}</td>
+      <td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td>
+    </tr>`;
         }
         return `<tr>
       <td>${i.producto_id || ''}</td>
@@ -9455,9 +9473,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     </div>
   </div>
   <table>
-    <thead><tr><th>ARTÍCULO</th><th>DESCRIPCIÓN</th><th style="text-align:right">CANTIDAD</th><th style="text-align:right">PRECIO UD.</th><th style="text-align:right">SUBTOTAL</th><th style="text-align:right">DTO.</th><th style="text-align:right">TOTAL</th></tr></thead>
-    <tbody>${filas || '<tr><td colspan="7">Sin líneas</td></tr>'}</tbody>
+    <thead><tr><th>ARTÍCULO</th><th>DESCRIPCIÓN</th><th style="text-align:right">CANTIDAD</th>${ocultarPrecios ? '' : '<th style="text-align:right">PRECIO UD.</th><th style="text-align:right">SUBTOTAL</th><th style="text-align:right">DTO.</th><th style="text-align:right">TOTAL</th>'}</tr></thead>
+    <tbody>${filas || `<tr><td colspan="${ocultarPrecios ? 3 : 7}">Sin líneas</td></tr>`}</tbody>
   </table>
+  ${ocultarPrecios ? '' : `
   <div class="pie">
     <div class="iva-tabla">
       <table>
@@ -9472,7 +9491,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       </table>
     </div>
     <div class="total-box"><span>TOTAL:</span><span>${fmt(f.total)}</span></div>
-  </div>
+  </div>`}
   <div class="observaciones"><b>OBSERVACIONES:</b><br>${f.notas || ''}</div>
   <button class="btn-imprimir" onclick="window.print()" style="padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
   </body></html>`;
@@ -10683,6 +10702,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             <i class="fa-solid fa-rotate-left me-1"></i>Es una devolución (el material vuelve al stock, el importe queda en negativo y se restan los puntos)
           </label>
         </div>
+                <div class="form-group span2" style="display:flex;align-items:center;gap:8px;background:#f7f0f5;border:1.5px solid #ede5f5;border-radius:8px;padding:10px 14px;margin-top:4px">
+          <input type="checkbox" id="f_av_ocultar_precios" style="width:auto">
+          <label for="f_av_ocultar_precios" style="margin:0;font-size:.85rem;font-weight:600;color:#6a1b9a;cursor:pointer">
+            <i class="fa-solid fa-eye-slash me-1"></i>Ocultar precios en la impresión (solo se verán productos y cantidades)
+          </label>
+        </div>
+      </div>
       </div>
       <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">Productos que se lleva / se devuelven</div>
       <p style="font-size:.78rem;color:#888;margin-top:-8px"><i class="fa-solid fa-info-circle me-1"></i>Cada producto descuenta stock automáticamente.</p>

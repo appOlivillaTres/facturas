@@ -7630,17 +7630,20 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           }
 
         } else if (tabla === 'obras') {
+          const esVehiculo = document.getElementById('modalNueva').dataset.tipoObra === 'vehiculo';
           const nombre = document.getElementById('f_nombre').value.trim();
-          if (!nombre) { toast('El nombre de la obra es obligatorio', 'err'); return; }
-          const presupuestoVal = document.getElementById('f_obra_presupuesto').value;
+          if (!nombre) { toast(esVehiculo ? 'El nombre del vehículo es obligatorio' : 'El nombre de la obra es obligatorio', 'err'); return; }
+          const presupuestoVal = document.getElementById('f_obra_presupuesto')?.value;
           const payload = {
             nombre,
-            direccion: document.getElementById('f_obra_direccion').value.trim() || null,
-            cliente: document.getElementById('f_obra_cliente').value.trim() || null,
-            fecha_inicio: document.getElementById('f_obra_fecha_inicio').value || null,
-            estado: document.getElementById('f_obra_estado').value || 'en_curso',
-            presupuesto: presupuestoVal !== '' ? parseFloat(presupuestoVal) : null,
-            notas: document.getElementById('f_obra_notas').value.trim() || null
+            tipo: esVehiculo ? 'vehiculo' : 'obra',
+            direccion: document.getElementById('f_obra_direccion')?.value.trim() || null,
+            cliente: document.getElementById('f_obra_cliente')?.value.trim() || null,
+            fecha_inicio: document.getElementById('f_obra_fecha_inicio')?.value || null,
+            estado: document.getElementById('f_obra_estado')?.value || 'en_curso',
+            presupuesto: presupuestoVal ? parseFloat(presupuestoVal) : null,
+            notas: document.getElementById('f_obra_notas')?.value.trim() || null,
+            matricula: document.getElementById('f_obra_matricula')?.value.trim() || null
           };
 
           if (modalEditId) {
@@ -11312,31 +11315,23 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
         // ── OBRA ──
       } else if (tabla === 'obras') {
-        const esVehiculo = document.getElementById('modalNueva').dataset.tipoObra === 'vehiculo';
-        const nombre = document.getElementById('f_nombre').value.trim();
-        if (!nombre) { toast(esVehiculo ? 'El nombre del vehículo es obligatorio' : 'El nombre de la obra es obligatorio', 'err'); return; }
-        const presupuestoVal = document.getElementById('f_obra_presupuesto')?.value;
-        const payload = {
-          nombre,
-          tipo: esVehiculo ? 'vehiculo' : 'obra',
-          direccion: document.getElementById('f_obra_direccion')?.value.trim() || null,
-          cliente: document.getElementById('f_obra_cliente')?.value.trim() || null,
-          fecha_inicio: document.getElementById('f_obra_fecha_inicio')?.value || null,
-          estado: document.getElementById('f_obra_estado')?.value || 'en_curso',
-          presupuesto: presupuestoVal ? parseFloat(presupuestoVal) : null,
-          notas: document.getElementById('f_obra_notas')?.value.trim() || null,
-          matricula: document.getElementById('f_obra_matricula')?.value.trim() || null
-        };
+        const esVehiculo = subtipoObra === 'vehiculo';
+        document.getElementById('modalNueva').dataset.tipoObra = esVehiculo ? 'vehiculo' : 'obra';
+        document.getElementById('modalTitulo').textContent = esVehiculo ? 'Nuevo Vehículo' : 'Nueva Obra';
 
-        if (modalEditId) {
-          await apiPatch('obras', modalEditId, payload);
+        if (esVehiculo) {
+          cont.innerHTML = `<div class="form-grid-2">
+      <div class="form-group span2">
+        <label>Nombre del vehículo *</label>
+        <input type="text" id="f_nombre" placeholder="Ej: Furgoneta Ducato">
+        <p style="font-size:.72rem;color:#888;margin-top:4px">Este es el nombre que tendrás que elegir en "Nombre obra" al meter una factura de reparación de este vehículo.</p>
+      </div>
+      <div class="form-group"><label>Matrícula</label><input type="text" id="f_obra_matricula" placeholder="1234 ABC"></div>
+      <div class="form-group"><label>Marca / Modelo</label><input type="text" id="f_obra_direccion" placeholder="Fiat Ducato"></div>
+      <div class="form-group span2"><label>Notas</label><input type="text" id="f_obra_notas" placeholder="Observaciones opcionales"></div>
+    </div>`;
         } else {
-          await apiPost('obras', payload);
-        }
-        await cargarObrasCache();
-
-      } else {
-        cont.innerHTML = `<div class="form-grid-2">
+          cont.innerHTML = `<div class="form-grid-2">
       <div class="form-group span2">
         <label>Nombre de la obra *</label>
         <input type="text" id="f_nombre" placeholder="Ej: Reforma Calle Mayor 12">
@@ -11349,27 +11344,26 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <div class="form-group span2"><label>Presupuesto (€) <span style="font-size:.72rem;color:#888">(para calcular si es rentable)</span></label><input type="number" id="f_obra_presupuesto" step="0.01" min="0" placeholder="0.00"></div>
       <div class="form-group span2"><label>Notas</label><input type="text" id="f_obra_notas" placeholder="Observaciones opcionales"></div>
     </div>`;
-      }
-      document.getElementById('modalNueva').classList.add('visible');
-
-    } else if (tabla === 'maquinaria') {
-      document.getElementById('modalTitulo').textContent = modalEditId ? 'Editar Máquina' : 'Nueva Máquina';
-      cont.innerHTML = `<div class="form-grid-2">
+        }
+        document.getElementById('modalNueva').classList.add('visible');
+      } else if (tabla === 'maquinaria') {
+        document.getElementById('modalTitulo').textContent = modalEditId ? 'Editar Máquina' : 'Nueva Máquina';
+        cont.innerHTML = `<div class="form-grid-2">
     <div class="form-group"><label>Código *</label><input type="text" id="f_maq_codigo" placeholder="MAQ008"></div>
     <div class="form-group"><label>Precio/día (€)</label><input type="number" id="f_maq_precio" step="0.01" min="0" value="0"></div>
     <div class="form-group span2"><label>Nombre *</label><input type="text" id="f_maq_nombre" placeholder="Hilti-Martillo rompedor"></div>
   </div>`;
-      document.getElementById('modalNueva').classList.add('visible');
-      // ── VARIOS ──
-    } else if (tabla === 'varios') {
-      document.getElementById('modalTitulo').textContent = 'Nuevo registro en Varios';
-      cont.innerHTML = `<div class="form-grid-2">
+        document.getElementById('modalNueva').classList.add('visible');
+        // ── VARIOS ──
+      } else if (tabla === 'varios') {
+        document.getElementById('modalTitulo').textContent = 'Nuevo registro en Varios';
+        cont.innerHTML = `<div class="form-grid-2">
       <div class="form-group span2"><label>Remitente</label><input type="text" id="f_remitente" placeholder="nombre@empresa.com o nombre de quien lo envía"></div>
       <div class="form-group span2"><label>Mensaje</label><input type="text" id="f_mensaje" placeholder="Breve descripción o mensaje"></div>
       <div class="form-group span2"><label>Archivo (PDF o imagen) <span style="font-size:.72rem;color:#888">(opcional)</span></label><input type="file" id="f_archivo_varios" accept="application/pdf,image/*"></div>
     </div>`;
-      document.getElementById('modalNueva').classList.add('visible');
-    }
+        document.getElementById('modalNueva').classList.add('visible');
+      }
     }
 
     // Cuando el usuario cambia el desplegable "Estado" a mano dentro del modal

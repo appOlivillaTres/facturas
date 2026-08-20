@@ -2195,6 +2195,10 @@
         </select>
         <button class="btn-nueva" id="btnNuevo" onclick="abrirNuevoRegistro()"><i class="fa-solid fa-plus"></i><span
             id="btnNuevaTxt">Añadir Nuevo</span></button>
+        <button class="btn-nueva" id="btnNuevoVehiculo" onclick="abrirModalNuevo('obras','vehiculo')"
+          style="display:none;background:#2d7a4f">
+          <i class="fa-solid fa-car"></i><span>Nuevo vehículo</span>
+        </button>
         <button class="btn-exportar" id="btnExportar" onclick="abrirModalExportar()" style="display:none"><i
             class="fa-solid fa-file-excel"></i>Exportar Excel</button>
         <button class="btn-exportar" id="btnDescargarArchivos" onclick="abrirModalExportarArchivos()"
@@ -3664,6 +3668,7 @@
       document.getElementById('alertasWrap').innerHTML = '';
       document.getElementById('badgePendientes').style.display = 'none';
       document.getElementById('filtroObra').style.display = (sec === 'facturas_obra' || sec === 'facturas_csg' || sec === 'albaranes' || sec === 'ingresos') ? '' : 'none';
+      document.getElementById('btnNuevoVehiculo').style.display = (sec === 'obras') ? 'flex' : 'none';
       const selOrdenAV = document.getElementById('ordenAlbaranVenta');
       if (selOrdenAV) {
         selOrdenAV.style.display = sec === 'albaranes_venta' ? '' : 'none';
@@ -6082,17 +6087,18 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         // OBRAS
       } else if (tablaActual === 'obras') {
         hdr.innerHTML = `<tr>
-          <th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th>
-      <th>Obra</th><th>Dirección</th><th>Cliente</th><th>Fecha inicio</th><th>Estado</th>
-      <th class="num-cell">Presupuesto</th><th class="num-cell">Facturado</th><th class="num-cell">Diferencia</th>
-      <th>Rentabilidad</th><th></th><th></th><th></th><th></th><th></th>
-    </tr>`;
+      <th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th>
+  <th>Tipo</th><th>Nombre</th><th>Matrícula / Dirección</th><th>Cliente</th><th>Fecha inicio</th><th>Estado</th>
+  <th class="num-cell">Presupuesto</th><th class="num-cell">Gastado</th><th class="num-cell">Diferencia</th>
+  <th>Rentabilidad</th><th></th><th></th><th></th><th></th><th></th>
+</tr>`;
         const lista = registros.filter(o => {
-          const mQ = [o.nombre, o.cliente, o.direccion].some(v => (v || '').toLowerCase().includes(q));
+          const mQ = [o.nombre, o.cliente, o.direccion, o.matricula].some(v => (v || '').toLowerCase().includes(q));
           return mQ && (!fEst || fEst === (o.estado || 'en_curso'));
         });
-        if (!lista.length) { bdy.innerHTML = emptyRow(13, 'No hay obras dadas de alta todavía'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(15, 'No hay obras ni vehículos dados de alta todavía'); return; }
         bdy.innerHTML = lista.map(o => {
+          const esVehiculo = o.tipo === 'vehiculo';
           const est = o.estado || 'en_curso';
           const presupuesto = o.presupuesto != null ? parseFloat(o.presupuesto) : null;
           const facturado = o._total_facturado || 0;
@@ -6100,24 +6106,25 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const diferencia = tienePresupuesto ? (presupuesto - facturado) : null;
           const rentable = tienePresupuesto ? diferencia >= 0 : null;
           return `<tr data-id="${o.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${o.id},'obras'))">
-            <td>${celdaCheck(o.id)}</td>
-        <td class="td-nombre">${o.nombre || '—'}</td>
-        <td>${o.direccion || '—'}</td>
-        <td>${o.cliente || '—'}</td>
-        <td>${fmtF(o.fecha_inicio)}</td>
-        <td><span class="badge-estado ${est === 'cerrada' ? 'badge-pagado' : 'badge-pendiente'}">${est === 'cerrada' ? 'CERRADA' : 'EN CURSO'}</span></td>
-        <td class="num-cell">${tienePresupuesto ? fmt(presupuesto) : '—'}</td>
-        <td class="num-cell">${fmt(facturado)}</td>
-        <td class="num-cell">${tienePresupuesto ? fmt(diferencia) : '—'}</td>
-        <td>${tienePresupuesto
+        <td>${celdaCheck(o.id)}</td>
+    <td><span class="badge-estado ${esVehiculo ? 'badge-facturar' : 'badge-pagado'}"><i class="fa-solid ${esVehiculo ? 'fa-car' : 'fa-helmet-safety'}"></i> ${esVehiculo ? 'VEHÍCULO' : 'OBRA'}</span></td>
+    <td class="td-nombre">${o.nombre || '—'}</td>
+    <td>${esVehiculo ? (o.matricula || '—') : (o.direccion || '—')}</td>
+    <td>${o.cliente || '—'}</td>
+    <td>${fmtF(o.fecha_inicio)}</td>
+    <td>${esVehiculo ? '—' : `<span class="badge-estado ${est === 'cerrada' ? 'badge-pagado' : 'badge-pendiente'}">${est === 'cerrada' ? 'CERRADA' : 'EN CURSO'}</span>`}</td>
+    <td class="num-cell">${tienePresupuesto ? fmt(presupuesto) : '—'}</td>
+    <td class="num-cell">${fmt(facturado)}</td>
+    <td class="num-cell">${tienePresupuesto ? fmt(diferencia) : '—'}</td>
+    <td>${tienePresupuesto
               ? `<span class="badge-estado ${rentable ? 'badge-pagado' : 'badge-vencido'}">${rentable ? 'RENTABLE' : 'NO RENTABLE'}</span>`
               : '<span style="color:#ccc;font-size:.78rem">Sin presupuesto</span>'}</td>
-        <td><span class="link-badge factura" onclick="verFacturasDeObra('${(o.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-folder-open"></i>Ver facturas${o._num_facturas ? ` (${o._num_facturas})` : ''}</span></td>
-        <td><span class="link-badge factura" onclick="verAlbaranesDeObra('${(o.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-file-signature"></i>Ver albaranes${o._num_albaranes ? ` (${o._num_albaranes})` : ''}</span></td>
-        <td><span class="link-badge factura" onclick="verMaterialExclusivoDeObra('${(o.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-boxes-stacked"></i>Material excl.</span></td>
-        <td><span class="link-badge factura" onclick="verMaquinariaDeObra('${(o.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-truck-monster"></i>Maquinaria</span></td>
-        <td><button class="btn-eliminar" onclick="eliminar(${o.id})"><i class="fa-solid fa-trash"></i></button></td>
-      </tr>`;
+    <td><span class="link-badge factura" onclick="verFacturasDeObra('${(o.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-folder-open"></i>Ver facturas${o._num_facturas ? ` (${o._num_facturas})` : ''}</span></td>
+    <td><span class="link-badge factura" onclick="verAlbaranesDeObra('${(o.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-file-signature"></i>Ver albaranes${o._num_albaranes ? ` (${o._num_albaranes})` : ''}</span></td>
+    <td><span class="link-badge factura" onclick="verMaterialExclusivoDeObra('${(o.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-boxes-stacked"></i>Material excl.</span></td>
+    <td><span class="link-badge factura" onclick="verMaquinariaDeObra('${(o.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-truck-monster"></i>Maquinaria</span></td>
+    <td><button class="btn-eliminar" onclick="eliminar(${o.id})"><i class="fa-solid fa-trash"></i></button></td>
+  </tr>`;
         }).join('');
 
         // ALBARANES
@@ -10599,26 +10606,24 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       =========================== */
 
       if (tabla == "obras") {
-
-        abrirModalNuevo("obras");
-
+        const esVehiculo = f.tipo === 'vehiculo';
+        abrirModalNuevo("obras", esVehiculo ? 'vehiculo' : 'obra');
         setTimeout(() => {
-
-          document.getElementById("modalTitulo").textContent = "Editar obra";
-
+          document.getElementById("modalTitulo").textContent = esVehiculo ? "Editar vehículo" : "Editar obra";
           document.getElementById("btnGuardar").innerHTML =
             '<i class="fa-solid fa-floppy-disk me-1"></i>Guardar cambios';
-
           document.getElementById("f_nombre").value = f.nombre || "";
           document.getElementById("f_obra_direccion").value = f.direccion || "";
-          document.getElementById("f_obra_cliente").value = f.cliente || "";
-          document.getElementById("f_obra_fecha_inicio").value = f.fecha_inicio || "";
-          document.getElementById("f_obra_estado").value = f.estado || "en_curso";
-          document.getElementById("f_obra_presupuesto").value = f.presupuesto != null ? f.presupuesto : "";
           document.getElementById("f_obra_notas").value = f.notas || "";
-
+          if (esVehiculo) {
+            document.getElementById("f_obra_matricula").value = f.matricula || "";
+          } else {
+            document.getElementById("f_obra_cliente").value = f.cliente || "";
+            document.getElementById("f_obra_fecha_inicio").value = f.fecha_inicio || "";
+            document.getElementById("f_obra_estado").value = f.estado || "en_curso";
+            document.getElementById("f_obra_presupuesto").value = f.presupuesto != null ? f.presupuesto : "";
+          }
         }, 100);
-
         return;
       }
 
@@ -10855,7 +10860,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 
     // MODAL NUEVO REGISTRO
-    function abrirModalNuevo(tablaOverride) {
+    function abrirModalNuevo(tablaOverride, subtipoObra) {
       const tabla = tablaOverride || tablaActual;
 
       if (tabla === 'materiales_obra') {
@@ -11307,7 +11312,30 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
         // ── OBRA ──
       } else if (tabla === 'obras') {
-        document.getElementById('modalTitulo').textContent = 'Nueva Obra';
+        const esVehiculo = document.getElementById('modalNueva').dataset.tipoObra === 'vehiculo';
+        const nombre = document.getElementById('f_nombre').value.trim();
+        if (!nombre) { toast(esVehiculo ? 'El nombre del vehículo es obligatorio' : 'El nombre de la obra es obligatorio', 'err'); return; }
+        const presupuestoVal = document.getElementById('f_obra_presupuesto')?.value;
+        const payload = {
+          nombre,
+          tipo: esVehiculo ? 'vehiculo' : 'obra',
+          direccion: document.getElementById('f_obra_direccion')?.value.trim() || null,
+          cliente: document.getElementById('f_obra_cliente')?.value.trim() || null,
+          fecha_inicio: document.getElementById('f_obra_fecha_inicio')?.value || null,
+          estado: document.getElementById('f_obra_estado')?.value || 'en_curso',
+          presupuesto: presupuestoVal ? parseFloat(presupuestoVal) : null,
+          notas: document.getElementById('f_obra_notas')?.value.trim() || null,
+          matricula: document.getElementById('f_obra_matricula')?.value.trim() || null
+        };
+
+        if (modalEditId) {
+          await apiPatch('obras', modalEditId, payload);
+        } else {
+          await apiPost('obras', payload);
+        }
+        await cargarObrasCache();
+
+      } else {
         cont.innerHTML = `<div class="form-grid-2">
       <div class="form-group span2">
         <label>Nombre de la obra *</label>
@@ -11321,25 +11349,27 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <div class="form-group span2"><label>Presupuesto (€) <span style="font-size:.72rem;color:#888">(para calcular si es rentable)</span></label><input type="number" id="f_obra_presupuesto" step="0.01" min="0" placeholder="0.00"></div>
       <div class="form-group span2"><label>Notas</label><input type="text" id="f_obra_notas" placeholder="Observaciones opcionales"></div>
     </div>`;
-        document.getElementById('modalNueva').classList.add('visible');
-      } else if (tabla === 'maquinaria') {
-        document.getElementById('modalTitulo').textContent = modalEditId ? 'Editar Máquina' : 'Nueva Máquina';
-        cont.innerHTML = `<div class="form-grid-2">
+      }
+      document.getElementById('modalNueva').classList.add('visible');
+
+    } else if (tabla === 'maquinaria') {
+      document.getElementById('modalTitulo').textContent = modalEditId ? 'Editar Máquina' : 'Nueva Máquina';
+      cont.innerHTML = `<div class="form-grid-2">
     <div class="form-group"><label>Código *</label><input type="text" id="f_maq_codigo" placeholder="MAQ008"></div>
     <div class="form-group"><label>Precio/día (€)</label><input type="number" id="f_maq_precio" step="0.01" min="0" value="0"></div>
     <div class="form-group span2"><label>Nombre *</label><input type="text" id="f_maq_nombre" placeholder="Hilti-Martillo rompedor"></div>
   </div>`;
-        document.getElementById('modalNueva').classList.add('visible');
-        // ── VARIOS ──
-      } else if (tabla === 'varios') {
-        document.getElementById('modalTitulo').textContent = 'Nuevo registro en Varios';
-        cont.innerHTML = `<div class="form-grid-2">
+      document.getElementById('modalNueva').classList.add('visible');
+      // ── VARIOS ──
+    } else if (tabla === 'varios') {
+      document.getElementById('modalTitulo').textContent = 'Nuevo registro en Varios';
+      cont.innerHTML = `<div class="form-grid-2">
       <div class="form-group span2"><label>Remitente</label><input type="text" id="f_remitente" placeholder="nombre@empresa.com o nombre de quien lo envía"></div>
       <div class="form-group span2"><label>Mensaje</label><input type="text" id="f_mensaje" placeholder="Breve descripción o mensaje"></div>
       <div class="form-group span2"><label>Archivo (PDF o imagen) <span style="font-size:.72rem;color:#888">(opcional)</span></label><input type="file" id="f_archivo_varios" accept="application/pdf,image/*"></div>
     </div>`;
-        document.getElementById('modalNueva').classList.add('visible');
-      }
+      document.getElementById('modalNueva').classList.add('visible');
+    }
     }
 
     // Cuando el usuario cambia el desplegable "Estado" a mano dentro del modal

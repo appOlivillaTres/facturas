@@ -5150,7 +5150,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           ingresos: 'order=fecha.desc',
           varios: 'order=fecha_recibido.desc',
           maquinaria: 'order=codigo',
-          consumo_interno: 'select=*,consumo_interno_items(*)&order=fecha.desc',
+          consumo_interno: 'select=*,consumo_interno_items(*)&order=id.desc',
         };
         registros = await apiGetAll(tablaReal(tablaActual), orden[tablaActual] || '');
         inventarioDB = await apiGetAll('inventario', 'order=nombre');

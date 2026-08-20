@@ -2997,6 +2997,8 @@
       'ingresos', 'varios', 'albaranes_venta', 'maquinaria', 'consumo_interno', 'notificaciones_presupuestos', 'facturas_reparto_obras'
     ];
 
+    let canalRealtime = null;
+
     let _refrescoPendiente = null;  // Crea una variable vacia para guardar el temporizador de refresco, para que no se ejecute varias veces seguidas si llegan varios cambios en poco tiempo.
 
     // Primero mira si hay un modal abierto, y si lo hay, no hace nada (para no romper lo que se está editando en ese momento).
@@ -3036,23 +3038,28 @@
 
 
     function iniciarRealtime() {
-      const canal = supabaseClient.channel('panel-cambios'); // Crea un canal de comunicación en tiempo real
-      //El código le dice a Supabase: "Quiero crear una estación de radio privada o frecuencia exclusiva". A esta frecuencia le pone el nombre de 'panel-cambios'. 
-      //A partir de ahora, cualquier aviso viajará a través de la variable canal
+      // Si ya existe un canal (de una sesión anterior sin limpiar), lo quitamos primero
+      if (canalRealtime) {
+        supabaseClient.removeChannel(canalRealtime);
+        canalRealtime = null;
+      }
 
-      TABLAS_REALTIME.forEach(tabla => { // Va uno por uno recorriendo los nombres de esa lista. Para cada tabla de la lista, hace lo siguiente
-        canal.on( // sincroniza todo
+      const canal = supabaseClient.channel('panel-cambios');
+      canalRealtime = canal; // 👈 guardamos la referencia
+
+      TABLAS_REALTIME.forEach(tabla => {
+        canal.on(
           'postgres_changes',
-          { event: '*', schema: 'public', table: tabla }, // te avisa por cualquier cambio en la tabla
-          (payload) => { //Esto inicia la acción que se va a ejecutar de forma automática cada vez que la alarma suene. 
-            console.log('[realtime] cambio recibido en', tabla, payload); // los cambios que se producen en la tabla se muestran en la consola del navegador
+          { event: '*', schema: 'public', table: tabla },
+          (payload) => {
+            console.log('[realtime] cambio recibido en', tabla, payload);
             solicitarRefresco(tabla);
           }
         );
       });
 
-      canal.subscribe((status, err) => { // enciende el canal y ve el estado y los errores
-        console.log('[realtime] estado de la suscripción:', status, err || ''); // pone en el navegador el estado de la suscripción y los errores que haya
+      canal.subscribe((status, err) => {
+        console.log('[realtime] estado de la suscripción:', status, err || '');
         if (status === 'SUBSCRIBED') {
           console.log('[realtime] conectado correctamente, escuchando:', TABLAS_REALTIME.join(', '));
         }
@@ -3545,9 +3552,15 @@
     // Boton para salir
     async function doLogout() {
       await supabaseClient.auth.signOut();
-      currentPersona = null; // dejamos a null la persona
-      cachesIniciales = null; // borramos las caches
-      realtimeIniciado = false; //dejamos a null el realtime
+      currentPersona = null;
+      cachesIniciales = null;
+      realtimeIniciado = false;
+
+      if (canalRealtime) {           // 👈 añadir esto
+        supabaseClient.removeChannel(canalRealtime);
+        canalRealtime = null;
+      }
+
       document.getElementById('loginView').style.display = 'flex';
       document.getElementById('selectorView').style.display = 'none';
       document.getElementById('appView').style.display = 'none';

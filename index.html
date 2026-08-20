@@ -2988,7 +2988,7 @@
     const TABLAS_REALTIME = [
       'facturas_pendientes', 'facturas_almacen', 'facturas_obra', 'facturas_csg',
       'albaranes', 'clientes', 'inventario', 'proveedores', 'materiales_obra', 'citas',
-      'ingresos', 'varios', 'albaranes_venta', 'maquinaria', 'consumo_interno', 'notificaciones_presupuestos'
+      'ingresos', 'varios', 'albaranes_venta', 'maquinaria', 'consumo_interno', 'notificaciones_presupuestos', 'facturas_reparto_obras'
     ];
 
     let _refrescoPendiente = null;  // Crea una variable vacia para guardar el temporizador de refresco, para que no se ejecute varias veces seguidas si llegan varios cambios en poco tiempo.
@@ -5163,16 +5163,35 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         inventarioDB = await apiGetAll('inventario', 'order=nombre');
         clientesDB = await apiGetAll('clientes', 'order=nombre');
         proveedoresDB = await apiGetAll('proveedores', 'order=nombre');
+        if (tablaActual === 'facturas_obra' || tablaActual === 'facturas_csg') {
+          try {
+            const repartoTodos = await apiGetAll('facturas_reparto_obras', `factura_tabla=eq.${tablaActual}`);
+            const repartoPorFactura = {};
+            repartoTodos.forEach(r => { (repartoPorFactura[r.factura_id] = repartoPorFactura[r.factura_id] || []).push(r); });
+            registros.forEach(f => { f._reparto = repartoPorFactura[f.id] || []; });
+          } catch (e) {
+            console.error('No se pudo cargar el reparto entre obras:', e);
+            registros.forEach(f => { f._reparto = []; });
+          }
+        }
 
         if (tablaActual === 'obras') {
           const facturasObra = await apiGetAll('facturas_obra', 'order=fecha.desc');
           const albaranesObra = await apiGetAll('albaranes', 'order=fecha.desc');
+          const repartoObra = await apiGetAll('facturas_reparto_obras', 'factura_tabla=eq.facturas_obra');
           const norm = s => (s || '').toLowerCase().trim();
           registros = registros.map(o => {
             const facturasDeEstaObra = facturasObra.filter(f => norm(f.nombre_obra) === norm(o.nombre));
             const albaranesDeEstaObra = albaranesObra.filter(a => norm(a.nombre_obra) === norm(o.nombre));
-            const total_facturado = facturasDeEstaObra.reduce((acc, f) => acc + (parseFloat(f.total) || 0), 0);
-            return { ...o, _total_facturado: total_facturado, _num_facturas: facturasDeEstaObra.length, _num_albaranes: albaranesDeEstaObra.length };
+            const repartoDeEstaObra = repartoObra.filter(r => norm(r.nombre_obra) === norm(o.nombre));
+            const totalDirecto = facturasDeEstaObra.reduce((acc, f) => acc + (parseFloat(f.total) || 0), 0);
+            const totalRepartido = repartoDeEstaObra.reduce((acc, r) => acc + (parseFloat(r.importe) || 0), 0);
+            return {
+              ...o,
+              _total_facturado: totalDirecto + totalRepartido,
+              _num_facturas: facturasDeEstaObra.length + new Set(repartoDeEstaObra.map(r => r.factura_id)).size,
+              _num_albaranes: albaranesDeEstaObra.length
+            };
           });
         }
 
@@ -5185,7 +5204,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           comprobarStockBajo();
         }
         if (tablaActual === 'facturas_obra' || tablaActual === 'facturas_csg' || tablaActual === 'albaranes' || tablaActual === 'ingresos') {
-          const obras = [...new Set(registros.map(r => r.nombre_obra).filter(Boolean))].sort();
+          const obrasDirectas = registros.map(r => r.nombre_obra).filter(Boolean);
+          const obrasRepartidas = registros.flatMap(r => (r._reparto || []).map(x => x.nombre_obra));
+          const obras = [...new Set([...obrasDirectas, ...obrasRepartidas])].sort();
           const selObra = document.getElementById('filtroObra');
           const actual = selObra.value;
           selObra.innerHTML = `<option value="">Todas las obras</option>` +
@@ -5799,7 +5820,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const fObra = document.getElementById('filtroObra').value;
         const lista = registros.filter(f => {
           const mQ = [f.numero_factura, f.proveedor, f.nif, f.numero_interno, f.concepto, f.nombre_obra].some(v => (v || '').toLowerCase().includes(q));
-          const mObra = !fObra || f.nombre_obra === fObra;
+          const mObra = !fObra || f.nombre_obra === fObra || (f._reparto && f._reparto.some(r => r.nombre_obra === fObra));
           const esVenc = f.estado === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
           const estReal = f.imputado ? 'imputado' : (esVenc ? 'vencido' : (f.estado || 'pendiente'));
           return mQ && mObra && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_obra'));
@@ -5823,7 +5844,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <td>${fmtF(f.fecha)}</td><td>${fmtF(f.fecha_recibido)}</td><td>${fmtF(f.fecha_vencimiento)}</td>
         <td style="font-size:.78rem;color:#888">${f.nif || '—'}</td>
         <td class="td-nombre">${f.proveedor || '—'}</td>
-        <td class="td-nombre">${f.nombre_obra || '—'}</td>
+        <td class="td-nombre">${(f._reparto && f._reparto.length) ? `<span class="link-badge factura" onclick="verRepartoObrasFactura(${f.id})" title="Ver reparto"><i class="fa-solid fa-code-branch"></i> ${f._reparto.length} obras</span>` : (f.nombre_obra || '—')}</td>
         <td><strong>${f.numero_factura || '—'}</strong>${f.veces_reenviada ? `<span title="Reenviada ${f.veces_reenviada} vez${f.veces_reenviada > 1 ? 'es' : ''}${f.ultimo_reenvio ? ' — última vez: ' + new Date(f.ultimo_reenvio).toLocaleString('es-ES') : ''}" style="margin-left:5px;font-size:.68rem;background:#fff3e0;color:#c47a00;padding:1px 6px;border-radius:20px;font-weight:600"><i class="fa-solid fa-clone"></i> ${f.veces_reenviada}</span>` : ''}</td>
         <td class="td-concepto" title="${f.concepto || ''}">${f.concepto || '—'}</td>
               <td>${(f.numeros_albaran && f.numeros_albaran.length)
@@ -5913,7 +5934,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const fObra = document.getElementById('filtroObra').value;
         const lista = registros.filter(f => {
           const mQ = [f.numero_factura, f.proveedor, f.nif, f.numero_interno, f.concepto, f.nombre_obra].some(v => (v || '').toLowerCase().includes(q));
-          const mObra = !fObra || f.nombre_obra === fObra;
+          const mObra = !fObra || f.nombre_obra === fObra || (f._reparto && f._reparto.some(r => r.nombre_obra === fObra));
           const esVenc = f.estado === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
           const estReal = f.imputado ? 'imputado' : (esVenc ? 'vencido' : (f.estado || 'pendiente'));
           return mQ && mObra && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_csg'));
@@ -5929,7 +5950,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <td>${fmtF(f.fecha)}</td><td>${fmtF(f.fecha_recibido)}</td><td>${fmtF(f.fecha_vencimiento)}</td>
         <td style="font-size:.78rem;color:#888">${f.nif || '—'}</td>
         <td class="td-nombre">${f.proveedor || '—'}</td>
-<td class="td-nombre">${f.nombre_obra || '—'}</td>
+                <td class="td-nombre">${(f._reparto && f._reparto.length) ? `<span class="link-badge factura" onclick="verRepartoObrasFactura(${f.id})" title="Ver reparto"><i class="fa-solid fa-code-branch"></i> ${f._reparto.length} obras</span>` : (f.nombre_obra || '—')}</td>
 <td><strong>${f.numero_factura || '—'}</strong>${f.veces_reenviada ? `<span title="Reenviada ${f.veces_reenviada} vez${f.veces_reenviada > 1 ? 'es' : ''}${f.ultimo_reenvio ? ' — última vez: ' + new Date(f.ultimo_reenvio).toLocaleString('es-ES') : ''}" style="margin-left:5px;font-size:.68rem;background:#fff3e0;color:#c47a00;padding:1px 6px;border-radius:20px;font-weight:600"><i class="fa-solid fa-clone"></i> ${f.veces_reenviada}</span>` : ''}</td>
         <td class="td-concepto" title="${f.concepto || ''}">${f.concepto || '—'}</td>
         <td>${(f.numeros_albaran && f.numeros_albaran.length)
@@ -7109,6 +7130,98 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById('lineasFactAlm').appendChild(div);
     }
 
+    function htmlRepartoObras() {
+      return `
+    <div class="form-group span3" style="display:flex;align-items:center;gap:8px;background:#f7f0f5;border:1.5px solid #ede5f5;border-radius:8px;padding:10px 14px;margin-top:4px">
+      <input type="checkbox" id="f_reparto_activo" onchange="toggleRepartoObras()" style="width:auto">
+      <label for="f_reparto_activo" style="margin:0;font-size:.85rem;font-weight:600;color:#6a1b9a;cursor:pointer">
+        <i class="fa-solid fa-code-branch me-1"></i>Esta factura corresponde a varias obras (repartir el importe)
+      </label>
+    </div>
+    <div class="form-group span3" id="bloqueRepartoObras" style="display:none">
+      <div id="lineasRepartoObras"></div>
+      <button type="button" class="btn-add-linea" onclick="addLineaRepartoObra()"><i class="fa-solid fa-plus me-1"></i>Añadir obra</button>
+      <p id="repartoRestanteTxt" style="font-size:.8rem;margin-top:6px;font-weight:600"></p>
+    </div>`;
+    }
+
+    let lineasRepartoObraCount = 0;
+
+    function toggleRepartoObras() {
+      const activo = document.getElementById('f_reparto_activo')?.checked;
+      const wrapUnica = document.getElementById('obraUnicaWrap');
+      const wrapReparto = document.getElementById('bloqueRepartoObras');
+      if (wrapUnica) wrapUnica.style.display = activo ? 'none' : '';
+      if (wrapReparto) wrapReparto.style.display = activo ? '' : 'none';
+      if (activo && !document.getElementById('lineasRepartoObras').children.length) {
+        addLineaRepartoObra();
+        addLineaRepartoObra();
+      }
+      recalcRepartoRestante();
+    }
+
+    function addLineaRepartoObra(obra, importe) {
+      lineasRepartoObraCount++;
+      const idx = lineasRepartoObraCount;
+      const div = document.createElement('div');
+      div.id = `lro_${idx}`;
+      div.className = 'linea-prod';
+      div.style.gridTemplateColumns = '1fr 130px auto';
+      div.innerHTML = `
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Obra</label>
+      <input type="text" id="lro_obra_${idx}" list="dl_obras" value="${(obra || '').replace(/"/g, '&quot;')}" placeholder="Ej: Reforma Calle Mayor 12" oninput="recalcRepartoRestante()">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Importe (€)</label>
+      <input type="number" id="lro_importe_${idx}" step="0.01" min="0" value="${importe != null ? importe : ''}" oninput="recalcRepartoRestante()">
+    </div>
+    <button type="button" onclick="document.getElementById('lro_${idx}').remove(); recalcRepartoRestante();"
+      style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
+      <i class="fa-solid fa-xmark"></i>
+    </button>`;
+      document.getElementById('lineasRepartoObras').appendChild(div);
+    }
+
+    function recalcRepartoRestante() {
+      const txt = document.getElementById('repartoRestanteTxt');
+      if (!txt) return;
+      let suma = 0;
+      document.querySelectorAll('[id^="lro_importe_"]').forEach(inp => { suma += parseFloat(inp.value || 0); });
+      const total = parseFloat(document.getElementById('f_total')?.value || 0);
+      const restante = +(total - suma).toFixed(2);
+      txt.style.color = Math.abs(restante) < 0.01 ? '#2d7a4f' : '#c0392b';
+      txt.textContent = Math.abs(restante) < 0.01
+        ? `Repartido correctamente: ${fmt(suma)} de ${fmt(total)}`
+        : `Repartido ${fmt(suma)} de ${fmt(total)} — quedan ${fmt(restante)} por asignar`;
+    }
+
+    function _leerLineasRepartoObras() {
+      const lineas = [];
+      document.querySelectorAll('[id^="lro_obra_"]').forEach(inp => {
+        const nombre = inp.value.trim();
+        if (!nombre) return;
+        const idx = inp.id.split('_')[2];
+        const importe = parseFloat(document.getElementById(`lro_importe_${idx}`)?.value || 0);
+        if (importe <= 0) return;
+        lineas.push({ nombre_obra: nombre, importe });
+      });
+      return lineas;
+    }
+
+    function verRepartoObrasFactura(id) {
+      const f = registros.find(r => r.id === id);
+      const reparto = (f && f._reparto) || [];
+      document.getElementById('modalDetalleTitulo').innerHTML =
+        `<i class="fa-solid fa-code-branch" style="color:#b53987"></i>Reparto entre obras — ${f?.numero_factura || ''}`;
+      document.getElementById('modalDetalleContenido').innerHTML = !reparto.length
+        ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin reparto registrado</p>`
+        : `<table class="mini-table"><thead><tr><th>Obra</th><th>Importe</th></tr></thead><tbody>
+        ${reparto.map(r => `<tr><td>${r.nombre_obra}</td><td><strong>${fmt(r.importe)}</strong></td></tr>`).join('')}
+      </tbody></table>`;
+      document.getElementById('modalDetalle').classList.add('visible');
+    }
+
     async function crearProductoRapidoDesdeLinea(idx) {
       const inp = document.getElementById(`lfa_prod_${idx}`);
       if (!inp) return;
@@ -7161,7 +7274,18 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const prov = document.getElementById('f_prov').value.trim();
           const fecha = document.getElementById('f_fecha').value;
           if (!prov || !fecha) { toast('Proveedor y fecha son obligatorios', 'err'); return; }
-          if (tabla === 'facturas_obra' && !document.getElementById('f_obra').value.trim()) {
+          const repartoActivo = (tabla === 'facturas_obra' || tabla === 'facturas_csg') && document.getElementById('f_reparto_activo')?.checked;
+          let lineasRepartoObras = [];
+          if (repartoActivo) {
+            lineasRepartoObras = _leerLineasRepartoObras();
+            if (lineasRepartoObras.length < 2) { toast('Añade al menos dos obras para poder repartir la factura', 'err'); return; }
+            const sumaReparto = lineasRepartoObras.reduce((s, l) => s + l.importe, 0);
+            const totalFacturaReparto = parseFloat(document.getElementById('f_total').value || 0);
+            if (Math.abs(sumaReparto - totalFacturaReparto) > 0.01) {
+              toast(`El reparto (${fmt(sumaReparto)}) no coincide con el total de la factura (${fmt(totalFacturaReparto)})`, 'err');
+              return;
+            }
+          } else if (tabla === 'facturas_obra' && !document.getElementById('f_obra').value.trim()) {
             toast('Indica el nombre de la obra', 'err'); return;
           }
 
@@ -7207,7 +7331,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             payload.archivo_url = null;
             payload.archivos_urls = [];
           }
-          if (tabla === 'facturas_obra' || tabla === 'facturas_csg') payload.nombre_obra = document.getElementById('f_obra').value.trim();
+          if (tabla === 'facturas_obra' || tabla === 'facturas_csg') {
+            payload.nombre_obra = repartoActivo ? null : document.getElementById('f_obra').value.trim();
+          }
 
           const prevReg = modalEditId ? registros.find(r => r.id === modalEditId && (r.origen ? r.origen === tabla : true)) : null;
           const productosPrevios = (prevReg && prevReg.productos_recibidos) || [];
@@ -7224,16 +7350,19 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             payload.productos_registrados = true;
           }
 
+          let facturaIdGuardada = modalEditId;
+
           if (modalEditId) {
             const historialPrevio = (prevReg && prevReg.historial_ediciones) || [];
             payload.historial_ediciones = [...historialPrevio, { persona: currentPersona, fecha: new Date().toISOString() }];
             await apiPatch(tabla, modalEditId, payload);
           } else {
             try {
-              await apiPost(tabla, payload);
+              const [nuevaFactura] = await apiPost(tabla, payload);
+              facturaIdGuardada = nuevaFactura.id;
             } catch (e) {
               if (esErrorDuplicado(e.message)) {
-                await registrarDuplicado({ tabla, id: null }, {
+                await registrarDuplicado(duplicado, {
                   numero_factura: numFactura, nif: nifCampo, proveedor: prov,
                   total: totalCampo, archivo_url: payload.archivo_url
                 }, 'manual');
@@ -7242,7 +7371,22 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
               }
               throw e;
             }
-            notificarRevisoresFactura(tabla, payload); // no bloqueante, no esperamos con await aquí para no ralentizar el guardado
+            notificarRevisoresFactura(tabla, payload);
+          }
+
+          if (tabla === 'facturas_obra' || tabla === 'facturas_csg') {
+            try {
+              const antiguas = await apiGet('facturas_reparto_obras', `factura_tabla=eq.${tabla}&factura_id=eq.${facturaIdGuardada}`);
+              for (const a of antiguas) await apiDelete('facturas_reparto_obras', a.id);
+              if (repartoActivo) {
+                await apiPost('facturas_reparto_obras', lineasRepartoObras.map(l => ({
+                  factura_tabla: tabla, factura_id: facturaIdGuardada,
+                  nombre_obra: l.nombre_obra, importe: l.importe
+                })));
+              }
+            } catch (e) {
+              toast('La factura se guardó, pero hubo un error guardando el reparto entre obras: ' + e.message, 'err');
+            }
           }
 
           const lineas = [];
@@ -9105,7 +9249,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const importe_iva = +(base_imponible * pct_iva / 100).toFixed(2);
       const total = +(base_imponible + importe_iva).toFixed(2);
       const notas = document.getElementById('f_av_notas').value.trim() || null;
-            const ocultar_precios = document.getElementById('f_av_ocultar_precios')?.checked || false;
+      const ocultar_precios = document.getElementById('f_av_ocultar_precios')?.checked || false;
 
       if (!fecha) { toast('La fecha es obligatoria', 'err'); return; }
       if (!cliente_id) { toast('Selecciona un cliente de la lista (o créalo con el botón de nuevo cliente)', 'err'); return; }
@@ -9158,7 +9302,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       try {
         let headerId;
         let numeroAlbaranAsignado = null;
-                const headerPayload = {
+        const headerPayload = {
           fecha, cliente_id, cliente_nombre, nif,
           base_imponible,
           pct_iva, importe_iva, total, puntos_generados: puntosNuevos, notas,
@@ -9383,7 +9527,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
       const items = f.albaranes_venta_items || [];
 
-            const ocultarPrecios = !!f.ocultar_precios;
+      const ocultarPrecios = !!f.ocultar_precios;
 
       const filas = items.map(i => {
         const precio = i.precio_unitario != null ? parseFloat(i.precio_unitario) : 0;
@@ -10579,6 +10723,26 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         set('f_exento', f.exento); set('f_descuento', f.descuento);
         set('f_base_ret', f.base_retencion); set('f_pct_ret', f.pct_retencion); set('f_total_ret', f.total_retencion);
         set('f_num_albaranes', (f.numeros_albaran || []).join(', '));
+        if (tabla === 'facturas_obra' || tabla === 'facturas_csg') {
+          apiGet('facturas_reparto_obras', `factura_tabla=eq.${tabla}&factura_id=eq.${f.id}`).then(reparto => {
+            const chk = document.getElementById('f_reparto_activo');
+            const wrapUnica = document.getElementById('obraUnicaWrap');
+            const wrapReparto = document.getElementById('bloqueRepartoObras');
+            document.getElementById('lineasRepartoObras').innerHTML = '';
+            lineasRepartoObraCount = 0;
+            if (reparto && reparto.length) {
+              if (chk) chk.checked = true;
+              if (wrapUnica) wrapUnica.style.display = 'none';
+              if (wrapReparto) wrapReparto.style.display = '';
+              reparto.forEach(r => addLineaRepartoObra(r.nombre_obra, r.importe));
+              recalcRepartoRestante();
+            } else {
+              if (chk) chk.checked = false;
+              if (wrapUnica) wrapUnica.style.display = '';
+              if (wrapReparto) wrapReparto.style.display = 'none';
+            }
+          }).catch(() => { });
+        }
 
         renderChipsRevisionModal(tabla, f);
         renderHistorialEdicionesModal(f);
@@ -10865,7 +11029,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           <input type="text" id="f_nif" placeholder="Se rellena al elegir proveedor">
         </div>
 
-        <div class="form-group span3"><label>Nombre de la obra *</label><input type="text" id="f_obra" placeholder="Ej: Reforma Calle Mayor 12"></div>
+        <div class="form-group span3" id="obraUnicaWrap"><label>Nombre de la obra *</label><input type="text" id="f_obra" list="dl_obras" placeholder="Ej: Reforma Calle Mayor 12"></div>
+        ${htmlRepartoObras()}
         <div class="form-group span3"><label>Concepto</label><input type="text" id="f_concepto" placeholder="Descripción de la factura"></div>
 <div class="form-group span2"><label>Números de albarán <span style="font-size:.72rem;color:#888">(separados por coma)</span></label><input type="text" id="f_num_albaranes" placeholder="ALB-001, ALB-002, ALB-003"></div>
         <div class="form-group"><label>Total *</label><input type="number" id="f_total" value="0" step="0.01" min="0"></div>
@@ -10899,6 +11064,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           setupProveedorAC('f_prov', 'f_nif');
           addLineaFactAlm();
           _aplicarPrellenado();
+          document.getElementById('f_reparto_activo').checked = false;
+          document.getElementById('bloqueRepartoObras').style.display = 'none';
+          document.getElementById('lineasRepartoObras').innerHTML = '';
+          lineasRepartoObraCount = 0;
           if (window._prellenado && window._prellenado.archivo_url) {
             archivosFacturaSeleccionados = [{ url: window._prellenado.archivo_url, nombre: window._prellenado.proveedor || 'Factura' }];
             mostrarPdfModal(window._prellenado.archivo_url, window._prellenado.proveedor || 'Factura');
@@ -10936,7 +11105,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           <input type="text" id="f_nif" placeholder="Se rellena al elegir proveedor">
         </div>
 
-        <div class="form-group span3"><label>Nombre de la obra <span style="font-size:.72rem;color:#888">(opcional)</span></label><input type="text" id="f_obra" list="dl_obras" placeholder="Ej: Reforma Calle Mayor 12"></div>
+        <div class="form-group span3" id="obraUnicaWrap"><label>Nombre de la obra <span style="font-size:.72rem;color:#888">(opcional)</span></label><input type="text" id="f_obra" list="dl_obras" placeholder="Ej: Reforma Calle Mayor 12"></div>
+        ${htmlRepartoObras()}
 <div class="form-group span3"><label>Concepto</label><input type="text" id="f_concepto" placeholder="Descripción de la factura"></div>
 <div class="form-group span2"><label>Números de albarán <span style="font-size:.72rem;color:#888">(separados por coma)</span></label><input type="text" id="f_num_albaranes" placeholder="ALB-001, ALB-002, ALB-003"></div>
         <div class="form-group"><label>Total *</label><input type="number" id="f_total" value="0" step="0.01" min="0"></div>
@@ -10970,6 +11140,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           setupProveedorAC('f_prov', 'f_nif');
           addLineaFactAlm();
           _aplicarPrellenado();
+          document.getElementById('f_reparto_activo').checked = false;
+          document.getElementById('bloqueRepartoObras').style.display = 'none';
+          document.getElementById('lineasRepartoObras').innerHTML = '';
+          lineasRepartoObraCount = 0;
           if (window._prellenado && window._prellenado.archivo_url) {
             archivosFacturaSeleccionados = [{ url: window._prellenado.archivo_url, nombre: window._prellenado.proveedor || 'Factura' }];
             mostrarPdfModal(window._prellenado.archivo_url, window._prellenado.proveedor || 'Factura');

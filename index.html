@@ -6880,6 +6880,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         } else {
           alert(typeof e === "string" ? e : JSON.stringify(e, null, 2));
         }
+      } finally {
+        _moviendoFactura = false;
       }
     }
 

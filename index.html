@@ -2637,7 +2637,9 @@
       <div style="display:flex;flex-direction:column;gap:12px;">
         <div class="form-group">
           <label>Nombre de la obra *</label>
-          <input type="text" id="mo_nombre_obra" placeholder="Ej: Reforma Calle Mayor 12">
+          <select id="mo_nombre_obra"></select>
+          <p style="font-size:.72rem;color:#888;margin-top:4px">Si la obra no existe todavía, créala primero en la
+            pestaña Obras.</p>
         </div>
         <div class="form-group">
           <label>Nombre del empleado *</label>
@@ -4981,6 +4983,31 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       dl.innerHTML = obrasDB.map(o => `<option value="${(o.nombre || '').replace(/"/g, '&quot;')}"></option>`).join('');
     }
 
+    function opcionesObrasHTML() {
+      return obrasDB.map(o =>
+        `<option value="${(o.nombre || '').replace(/"/g, '&quot;')}">${(o.nombre || '').replace(/</g, '&lt;')}</option>`
+      ).join('');
+    }
+    function htmlSelectObras(id, placeholder, extraAttrs) {
+      return `<select id="${id}" ${extraAttrs || ''}><option value="">${placeholder}</option>${opcionesObrasHTML()}</select>`;
+    }
+    function poblarSelectObras(id, placeholder) {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      sel.innerHTML = `<option value="">${placeholder || 'Selecciona una obra...'}</option>` + opcionesObrasHTML();
+    }
+    function setSelectObraValue(id, valor) {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      if (valor && ![...sel.options].some(o => o.value === valor)) {
+        const opt = document.createElement('option');
+        opt.value = valor;
+        opt.textContent = valor + ' (no está en Obras)';
+        sel.appendChild(opt);
+      }
+      sel.value = valor || '';
+    }
+
     function actualizarDatalistProductos() {
       const dl = document.getElementById('dl_productos');
       if (!dl) return;
@@ -7170,7 +7197,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       div.innerHTML = `
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Obra</label>
-      <input type="text" id="lro_obra_${idx}" list="dl_obras" value="${(obra || '').replace(/"/g, '&quot;')}" placeholder="Ej: Reforma Calle Mayor 12" oninput="recalcRepartoRestante()">
+      ${htmlSelectObras(`lro_obra_${idx}`, 'Selecciona una obra...', 'onchange="recalcRepartoRestante()"')}
     </div>
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Importe (€)</label>
@@ -7181,6 +7208,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <i class="fa-solid fa-xmark"></i>
     </button>`;
       document.getElementById('lineasRepartoObras').appendChild(div);
+      if (obra) setSelectObraValue(`lro_obra_${idx}`, obra);
     }
 
     function recalcRepartoRestante() {
@@ -7613,6 +7641,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           } else {
             await apiPost('obras', payload);
           }
+          await cargarObrasCache();
         } else if (tabla === 'varios') {
           const remitente = document.getElementById('f_remitente').value.trim();
           const mensaje = document.getElementById('f_mensaje').value.trim();
@@ -8154,7 +8183,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         set('f_nif', f.nif);
         set('f_total', f.total);
         set('f_num_pedido', f.numero_pedido);
-        set('f_obra_alb', f.nombre_obra);
+        setSelectObraValue('f_obra_alb', f.nombre_obra);
 
         archivosAlbaranSeleccionados = (f.archivos_urls && f.archivos_urls.length)
           ? f.archivos_urls.map((url, i) => ({ url, nombre: `Archivo ${i + 1}` }))
@@ -10603,7 +10632,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         lineasMaterialCount = 0;
 
         document.getElementById("modalTitulo").textContent = "Editar salida de material";
-        document.getElementById("mo_nombre_obra").value = f.nombre_obra || "";
+        poblarSelectObras('mo_nombre_obra', 'Selecciona una obra...');
+        setSelectObraValue('mo_nombre_obra', f.nombre_obra || '');
         document.getElementById("mo_nombre_empleado").value = f.nombre_empleado || "";
         document.getElementById("mo_fecha").value = f.fecha || "";
         document.getElementById("mo_es_devolucion").checked = !!f.es_devolucion;
@@ -10652,7 +10682,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           set('f_fecha_recibido', f.fecha_recibido);
           set('f_nif', f.nif);
           set('f_cliente', f.cliente);
-          set('f_obra', f.nombre_obra);
+          setSelectObraValue('f_obra', f.nombre_obra);
           set('f_concepto', f.concepto);
           set('f_base1', f.base1);
           set('f_pct_iva1', f.pct_iva1 != null ? f.pct_iva1 : 21);
@@ -10715,7 +10745,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         set('f_metodo_pago', f.metodo_pago || '');
         set('f_iban', f.iban || '');
         set('f_est', f.estado || 'pendiente');
-        if (tabla === 'facturas_obra' || tabla === 'facturas_csg') set('f_obra', f.nombre_obra);
+        if (tabla === 'facturas_obra' || tabla === 'facturas_csg') setSelectObraValue('f_obra', f.nombre_obra);
         set('f_base1', f.base1); set('f_pct_iva1', f.pct_iva1 != null ? f.pct_iva1 : 21); set('f_total_iva1', f.total_iva1);
         set('f_pct_re1', f.pct_re1); set('f_total_re1', f.total_re1); set('f_tasas', f.tasas);
         set('f_base2', f.base2); set('f_pct_iva2', f.pct_iva2); set('f_total_iva2', f.total_iva2);
@@ -10829,7 +10859,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const tabla = tablaOverride || tablaActual;
 
       if (tabla === 'materiales_obra') {
-        document.getElementById('mo_nombre_obra').value = '';
+        poblarSelectObras('mo_nombre_obra', 'Selecciona una obra...');
         document.getElementById('mo_nombre_empleado').value = '';
         document.getElementById('mo_fecha').value = hoy();
         document.getElementById('mo_es_devolucion').checked = false;
@@ -11029,7 +11059,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           <input type="text" id="f_nif" placeholder="Se rellena al elegir proveedor">
         </div>
 
-        <div class="form-group span3" id="obraUnicaWrap"><label>Nombre de la obra *</label><input type="text" id="f_obra" list="dl_obras" placeholder="Ej: Reforma Calle Mayor 12"></div>
+        <div class="form-group span3" id="obraUnicaWrap"><label>Nombre de la obra *</label>${htmlSelectObras('f_obra', 'Selecciona una obra...')}<p style="font-size:.72rem;color:#888;margin-top:4px">Si la obra no existe todavía, créala primero en la pestaña Obras.</p></div>
         ${htmlRepartoObras()}
         <div class="form-group span3"><label>Concepto</label><input type="text" id="f_concepto" placeholder="Descripción de la factura"></div>
 <div class="form-group span2"><label>Números de albarán <span style="font-size:.72rem;color:#888">(separados por coma)</span></label><input type="text" id="f_num_albaranes" placeholder="ALB-001, ALB-002, ALB-003"></div>
@@ -11105,7 +11135,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           <input type="text" id="f_nif" placeholder="Se rellena al elegir proveedor">
         </div>
 
-        <div class="form-group span3" id="obraUnicaWrap"><label>Nombre de la obra <span style="font-size:.72rem;color:#888">(opcional)</span></label><input type="text" id="f_obra" list="dl_obras" placeholder="Ej: Reforma Calle Mayor 12"></div>
+        <div class="form-group span3" id="obraUnicaWrap"><label>Nombre de la obra <span style="font-size:.72rem;color:#888">(opcional)</span></label>${htmlSelectObras('f_obra', 'Sin obra')}</div>
         ${htmlRepartoObras()}
 <div class="form-group span3"><label>Concepto</label><input type="text" id="f_concepto" placeholder="Descripción de la factura"></div>
 <div class="form-group span2"><label>Números de albarán <span style="font-size:.72rem;color:#888">(separados por coma)</span></label><input type="text" id="f_num_albaranes" placeholder="ALB-001, ALB-002, ALB-003"></div>
@@ -11163,7 +11193,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 <div class="form-group span2"><label>Cliente *</label><input type="text" id="f_cliente" placeholder="Nombre del cliente"></div>
 <div class="form-group"><label>NIF</label><input type="text" id="f_nif" placeholder="45123456B"></div>
-<div class="form-group"><label>Nombre de la obra *</label><input type="text" id="f_obra" list="dl_obras" placeholder="Ej: Reforma Calle Mayor 12"></div>
+<div class="form-group"><label>Nombre de la obra *</label>${htmlSelectObras('f_obra', 'Selecciona una obra...')}</div>
 
       <div class="form-group span3"><label>Concepto</label><input type="text" id="f_concepto" placeholder="Descripción del ingreso"></div>
 
@@ -11213,7 +11243,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   </div>
   <div class="form-group"><label>Total (€)</label><input type="number" id="f_total" value="0" step="0.01" min="0"></div>
   <div class="form-group"><label>Nº Pedido</label><input type="text" id="f_num_pedido" placeholder="Se usa para cruzar con la factura"></div>
-  <div class="form-group span2"><label>Obra <span style="font-size:.72rem;color:#888">(opcional)</span></label><input type="text" id="f_obra_alb" list="dl_obras" placeholder="Ej: Reforma Calle Mayor 12"></div>
+<div class="form-group span2"><label>Obra <span style="font-size:.72rem;color:#888">(opcional)</span></label>${htmlSelectObras('f_obra_alb', 'Sin obra')}</div>
   <div class="form-group span2"><label>Archivos (PDF o imagen) <span style="font-size:.72rem;color:#888">(puedes seleccionar varios)</span></label><input type="file" id="f_archivo_albaran" accept="application/pdf,image/*" multiple onchange="_leerArchivosAlbaran(this)">
     <div class="archivos-lista" id="archivosAlbaranLista"></div>
   </div>

@@ -2801,9 +2801,10 @@
         <label>Año</label>
         <select id="exportArchivosYear"></select>
       </div>
-            <div class="form-group" style="display:flex;align-items:center;gap:8px">
+      <div class="form-group" style="display:flex;align-items:center;gap:8px">
         <input type="checkbox" id="exportArchivosIncluirYaExportados" style="width:auto">
-        <label for="exportArchivosIncluirYaExportados" style="margin:0;cursor:pointer">Incluir archivos ya exportados antes</label>
+        <label for="exportArchivosIncluirYaExportados" style="margin:0;cursor:pointer">Incluir archivos ya exportados
+          antes</label>
       </div>
 
       <div class="form-group">
@@ -5254,6 +5255,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         inventarioDB = await apiGetAll('inventario', 'order=nombre');
         clientesDB = await apiGetAll('clientes', 'order=nombre');
         proveedoresDB = await apiGetAll('proveedores', 'order=nombre');
+        if (tablaActual === 'albaranes_venta') {
+          const alquileres = await apiGetAll('alquileres', 'select=*,alquileres_items(*)&order=fecha.desc');
+          registros = [...registros, ...(alquileres || []).map(a => ({ ...a, _esAlquiler: true, _tipoAlquiler: a.tipo === 'baja' ? 'baja' : 'alta' }))];
+        }
         if (tablaActual === 'facturas_obra' || tablaActual === 'facturas_csg') {
           try {
             const repartoTodos = await apiGetAll('facturas_reparto_obras', `factura_tabla=eq.${tablaActual}`);
@@ -6436,6 +6441,26 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           return cmp * signo;
         });
         bdy.innerHTML = lista.map(f => {
+          if (f._esAlquiler) {
+            const esAlta = f._tipoAlquiler === 'alta';
+            const fnImprimir = esAlta ? 'imprimirAltaAlquiler' : 'imprimirBajaAlquiler';
+            return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => ${fnImprimir}(${f.id}))">
+    <td><strong>${f.numero_albaran || '—'}</strong></td>
+    <td>${fmtF(f.fecha)}</td>
+    <td class="td-nombre">${f.cliente_nombre || '—'}</td>
+    <td style="font-size:.8rem;color:#888">${f.nif || '—'}</td>
+    <td class="td-total">${fmt(f.total)}</td>
+    <td>${NOMBRES_PERSONAS[f.creado_por] || f.creado_por || '—'}</td>
+    <td>—</td>
+    <td><span class="badge-estado ${esAlta ? 'badge-pagado' : 'badge-vencido'}">${esAlta ? 'ALTA ALQUILER' : 'BAJA ALQUILER'}</span></td>
+    <td>—</td>
+    <td>
+      <button class="btn-toggle-pago pendiente" onclick="${fnImprimir}(${f.id})" title="Imprimir / descargar PDF">
+        <i class="fa-solid fa-print"></i>
+      </button>
+    </td>
+  </tr>`;
+          }
           const forma = f.forma_cobro || 'facturar';
           const fact = !!f.facturado;
           return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarAlbaranVenta(${f.id}))">    <td><strong>${f.numero_albaran || '—'}</strong></td>
@@ -7966,14 +7991,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     async function marcarArchivosExportados(tabla, ids) {
-  if (!ids.length) return;
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/${tabla}?id=in.(${ids.join(',')})`, {
-    method: 'PATCH',
-    headers: await authHeaders(),
-    body: JSON.stringify({ archivos_exportados: true })
-  });
-  if (!r.ok) throw new Error(await r.text());
-}
+      if (!ids.length) return;
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/${tabla}?id=in.(${ids.join(',')})`, {
+        method: 'PATCH',
+        headers: await authHeaders(),
+        body: JSON.stringify({ archivos_exportados: true })
+      });
+      if (!r.ok) throw new Error(await r.text());
+    }
 
     async function eliminarSeleccionados() {
       if (!seleccionados.size) return;
@@ -13141,7 +13166,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           document.getElementById('modalDetalle').classList.add('visible');
           toast(`<i class="fa-solid fa-link me-1"></i>Enlace generado y copiado — pégalo en el correo`, 'ok');
         }
-                // Marcar como exportados los archivos de estos registros
+        // Marcar como exportados los archivos de estos registros
         try {
           const idsPorTablaArch = {};
           filtrados.forEach(f => {

@@ -2842,6 +2842,14 @@
         <label>Fecha *</label>
         <input type="date" id="ci_fecha">
       </div>
+      <div class="form-group"
+        style="display:flex;align-items:center;gap:8px;background:#fff3e0;border:1.5px solid #f0c060;border-radius:8px;padding:10px 14px;margin-bottom:4px">
+        <input type="checkbox" id="ci_es_devolucion" onchange="recalcTotalCI()" style="width:auto">
+        <label for="ci_es_devolucion" style="margin:0;font-size:.85rem;font-weight:600;color:#c47a00;cursor:pointer">
+          <i class="fa-solid fa-rotate-left me-1"></i>Es una devolución (el material vuelve al stock y el total queda en
+          negativo)
+        </label>
+      </div>
       <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">¿Qué se lleva?</div>
       <div id="lineasConsumoInterno"></div>
       <button type="button" class="btn-add-linea" onclick="addLineaConsumoInterno()">
@@ -5012,18 +5020,18 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       ).join('');
     }
     function htmlSelectObras(id, placeholder, extraAttrs) {
-  return `<input type="text" id="${id}" placeholder="${placeholder || 'Escribe para buscar una obra...'}" autocomplete="off" ${extraAttrs || ''}>`;
-}
-function poblarSelectObras(id, placeholder) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.placeholder = placeholder || 'Escribe para buscar una obra...';
-}
-function setSelectObraValue(id, valor) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.value = valor || '';
-}
+      return `<input type="text" id="${id}" placeholder="${placeholder || 'Escribe para buscar una obra...'}" autocomplete="off" ${extraAttrs || ''}>`;
+    }
+    function poblarSelectObras(id, placeholder) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.placeholder = placeholder || 'Escribe para buscar una obra...';
+    }
+    function setSelectObraValue(id, valor) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.value = valor || '';
+    }
 
     function actualizarDatalistProductos() {
       const dl = document.getElementById('dl_productos');
@@ -5100,38 +5108,38 @@ function setSelectObraValue(id, valor) {
     }
 
     function setupObraAC(inputId) {
-  const inp = document.getElementById(inputId);
-  if (!inp) return;
-  inp.parentElement.style.position = 'relative';
-  const lista = _crearLista('ac_obra_' + inputId, inp.parentElement);
+      const inp = document.getElementById(inputId);
+      if (!inp) return;
+      inp.parentElement.style.position = 'relative';
+      const lista = _crearLista('ac_obra_' + inputId, inp.parentElement);
 
-  function filtrar(q) {
-    return obrasDB.filter(o => (o.nombre || '').toLowerCase().includes(q)).slice(0, 10);
-  }
-  function seleccionar(o) {
-    inp.value = o.nombre || '';
-    lista.style.display = 'none';
-    inp.dispatchEvent(new Event('input', { bubbles: true }));
-    inp.dispatchEvent(new Event('change', { bubbles: true }));
-  }
-  function render(items) {
-    if (!items.length) { lista.style.display = 'none'; return; }
-    lista.innerHTML = items.map(o =>
-      `<div class="ac-item" data-id="${o.id}"><span class="ac-nombre">${o.nombre || '—'}</span></div>`
-    ).join('');
-    lista.style.display = 'block';
-    lista.querySelectorAll('.ac-item').forEach(el => {
-      el.addEventListener('mousedown', e => {
-        e.preventDefault();
-        const o = obrasDB.find(x => x.id == el.dataset.id);
-        if (o) seleccionar(o);
-      });
-    });
-  }
-  inp.addEventListener('input', () => render(filtrar(inp.value.toLowerCase().trim())));
-  inp.addEventListener('focus', () => render(filtrar(inp.value.toLowerCase().trim())));
-  inp.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
-}
+      function filtrar(q) {
+        return obrasDB.filter(o => (o.nombre || '').toLowerCase().includes(q)).slice(0, 10);
+      }
+      function seleccionar(o) {
+        inp.value = o.nombre || '';
+        lista.style.display = 'none';
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+        inp.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      function render(items) {
+        if (!items.length) { lista.style.display = 'none'; return; }
+        lista.innerHTML = items.map(o =>
+          `<div class="ac-item" data-id="${o.id}"><span class="ac-nombre">${o.nombre || '—'}</span></div>`
+        ).join('');
+        lista.style.display = 'block';
+        lista.querySelectorAll('.ac-item').forEach(el => {
+          el.addEventListener('mousedown', e => {
+            e.preventDefault();
+            const o = obrasDB.find(x => x.id == el.dataset.id);
+            if (o) seleccionar(o);
+          });
+        });
+      }
+      inp.addEventListener('input', () => render(filtrar(inp.value.toLowerCase().trim())));
+      inp.addEventListener('focus', () => render(filtrar(inp.value.toLowerCase().trim())));
+      inp.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
+    }
 
     // Busca un proveedor ya existente en la base de datos por nombre exacto
     // (ignorando mayúsculas/espacios) y devuelve su NIF si lo encuentra.
@@ -6551,7 +6559,7 @@ function setSelectObraValue(id, valor) {
       <td class="td-nombre"><strong>${f.empleado || '—'}</strong></td>
       <td>${fmtF(f.fecha)}</td>
       <td class="td-concepto" title="${resumen}">${resumen}</td>
-      <td class="td-total">${fmt(f.total)}</td>
+      <td class="td-total">${fmt(f.total)}${parseFloat(f.total || 0) < 0 ? '<br><span class="badge-estado badge-vencido" style="margin-top:4px;display:inline-block"><i class="fa-solid fa-rotate-left"></i> DEVOLUCIÓN</span>' : ''}</td>
       <td>${NOMBRES_PERSONAS[f.creado_por] || f.creado_por || '—'}</td>
       <td><span class="link-badge" onclick="verDetalleConsumoInterno(${f.id})"><i class="fa-solid fa-list"></i>Ver detalle</span></td>
       <td><button class="btn-toggle-pago pendiente" onclick="imprimirConsumoInterno(${f.id})" title="Imprimir ticket"><i class="fa-solid fa-print"></i></button></td>
@@ -12368,12 +12376,14 @@ function setSelectObraValue(id, valor) {
         const precio = parseFloat(document.getElementById(`ci_precio_${idx}`)?.value || 0);
         total += cant * precio;
       });
-      document.getElementById('ci_total').value = total.toFixed(2);
+      const esDevolucion = document.getElementById('ci_es_devolucion')?.checked;
+      document.getElementById('ci_total').value = (esDevolucion ? -total : total).toFixed(2);
     }
 
     async function guardarConsumoInterno() {
       const empleado = document.getElementById('ci_empleado').value.trim();
       const fecha = document.getElementById('ci_fecha').value;
+      const esDevolucion = document.getElementById('ci_es_devolucion')?.checked || false;
       if (!empleado || !fecha) { toast('Indica quién se lo lleva y la fecha', 'err'); return; }
 
       const lineas = [];
@@ -12387,22 +12397,34 @@ function setSelectObraValue(id, valor) {
         if (cant <= 0) { toast(`Cantidad inválida en "${nombre}"`, 'err'); ok = false; return; }
         const prod = buscarProductoPorNombre(nombre);
         if (!prod) { toast(`"${nombre}" no existe en el inventario`, 'err'); ok = false; return; }
-        lineas.push({ producto_id: prod.id, producto_nombre: nombre, cantidad: cant, precio_unitario: precio, importe_total: +(cant * precio).toFixed(2) });
+        const importe = +(cant * precio).toFixed(2);
+        lineas.push({ producto_id: prod.id, producto_nombre: nombre, cantidad: cant, precio_unitario: precio, importe_total: esDevolucion ? -importe : importe });
       });
       if (!ok) return;
       if (!lineas.length) { toast('Añade al menos un producto', 'err'); return; }
 
       const total = parseFloat(document.getElementById('ci_total').value || 0);
+      if (esDevolucion && total > 0) { toast('En una devolución el total debe salir en negativo — revisa las líneas', 'err'); return; }
+      if (!esDevolucion && total < 0) { toast('El total no puede ser negativo salvo que marques "Es una devolución"', 'err'); return; }
+
+      // Efecto sobre el stock: salida normal descuenta, devolución repone.
+      const efectoStock = (cant, devol) => devol ? Math.abs(cant) : -Math.abs(cant);
 
       try {
         let headerId;
 
         if (consumoInternoEditId) {
-          // Devolver stock de las líneas antiguas antes de aplicar las nuevas
+          const anterior = registros.find(r => r.id === consumoInternoEditId);
+          const anteriorEraDevolucion = anterior && parseFloat(anterior.total || 0) < 0;
+
           const antiguas = await apiGet('consumo_interno_items', `consumo_interno_id=eq.${consumoInternoEditId}`);
           for (const a of antiguas) {
             const prod = inventarioDB.find(p => p.id == a.producto_id);
-            if (prod) await apiPatch('inventario', a.producto_id, { stock: Number(prod.stock) + Number(a.cantidad) });
+            if (prod) {
+              const stockRevertido = Number(prod.stock) - efectoStock(Number(a.cantidad), anteriorEraDevolucion);
+              await apiPatch('inventario', a.producto_id, { stock: stockRevertido });
+              prod.stock = stockRevertido;
+            }
             await apiDelete('consumo_interno_items', a.id);
           }
 
@@ -12420,15 +12442,12 @@ function setSelectObraValue(id, valor) {
           headerId = header.id;
         }
 
-        // Ya no bloquea el guardado si no hay stock suficiente — se avisa
-        // después de guardar, y el producto puede quedar en negativo.
         const avisosStockNegativoCI = [];
         for (const l of lineas) {
           const prod = inventarioDB.find(p => p.id == l.producto_id);
           const stockActual = parseFloat(prod?.stock || 0);
-          if (l.cantidad > stockActual) {
-            avisosStockNegativoCI.push(`${l.producto_nombre} (quedará en ${fmtStock(stockActual - l.cantidad)} ${unidadCorta(prod)})`);
-          }
+          const nuevoStock = stockActual + efectoStock(l.cantidad, esDevolucion);
+          if (nuevoStock < 0) avisosStockNegativoCI.push(`${l.producto_nombre} (quedará en ${fmtStock(nuevoStock)} ${unidadCorta(prod)})`);
         }
 
         await apiPost('consumo_interno_items', lineas.map(l => ({
@@ -12438,18 +12457,23 @@ function setSelectObraValue(id, valor) {
         })));
         for (const l of lineas) {
           const prod = inventarioDB.find(p => p.id == l.producto_id);
-          await apiPatch('inventario', l.producto_id, { stock: Number(prod.stock) - Number(l.cantidad) });
+          const nuevoStock = Number(prod.stock) + efectoStock(l.cantidad, esDevolucion);
+          await apiPatch('inventario', l.producto_id, { stock: nuevoStock });
+          prod.stock = nuevoStock;
         }
 
-        toast(consumoInternoEditId ? 'Consumo interno actualizado' : 'Consumo interno registrado y stock descontado');
+        toast(consumoInternoEditId
+          ? (esDevolucion ? 'Devolución actualizada' : 'Consumo interno actualizado')
+          : (esDevolucion ? 'Devolución registrada — stock repuesto' : 'Consumo interno registrado y stock descontado'));
         if (avisosStockNegativoCI.length) {
           toast(`⚠️ Stock en negativo: ${avisosStockNegativoCI.join(', ')}`, 'err');
         }
         cerrarModal('modalConsumoInterno');
         const idParaImprimir = headerId;
+        const eraEdicion = !!consumoInternoEditId;
         consumoInternoEditId = null;
         cargarDatos();
-        if (!consumoInternoEditId) imprimirConsumoInterno(idParaImprimir); // solo imprime en alta nueva, no en cada edición
+        if (!eraEdicion) imprimirConsumoInterno(idParaImprimir);
       } catch (e) {
         toast('Error al guardar: ' + e.message, 'err');
       }
@@ -12457,9 +12481,10 @@ function setSelectObraValue(id, valor) {
     function verDetalleConsumoInterno(id) {
       const reg = registros.find(r => r.id === id);
       if (!reg) return;
+      const esDevolucion = parseFloat(reg.total || 0) < 0;
       const items = reg.consumo_interno_items || [];
       document.getElementById('modalDetalleTitulo').innerHTML =
-        `<i class="fa-solid fa-user-check" style="color:#b53987"></i>Consumo — ${reg.empleado || '—'}`;
+        `<i class="fa-solid fa-user-check" style="color:#b53987"></i>Consumo — ${reg.empleado || '—'}${esDevolucion ? ' <span class="badge-estado badge-vencido" style="margin-left:6px"><i class="fa-solid fa-rotate-left"></i> DEVOLUCIÓN</span>' : ''}`;
       document.getElementById('modalDetalleContenido').innerHTML = !items.length
         ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin productos registrados</p>`
         : `<table class="mini-table"><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Total</th></tr></thead><tbody>
@@ -13049,7 +13074,7 @@ function setSelectObraValue(id, valor) {
       document.getElementById('ci_cliente_id').value = reg?.cliente_id || '';
       clienteConsumoSelId = reg?.cliente_id || null;
       document.getElementById('ci_fecha').value = reg?.fecha || hoy();
-      document.getElementById('ci_total').value = reg?.total || '';
+      document.getElementById('ci_es_devolucion').checked = reg ? parseFloat(reg.total || 0) < 0 : false;
       document.getElementById('lineasConsumoInterno').innerHTML = '';
       lineasConsumoInternoCount = 0;
 
@@ -13058,8 +13083,8 @@ function setSelectObraValue(id, valor) {
         items.forEach(item => {
           addLineaConsumoInterno();
           document.getElementById(`ci_prod_${lineasConsumoInternoCount}`).value = item.producto_nombre || '';
-          document.getElementById(`ci_cant_${lineasConsumoInternoCount}`).value = item.cantidad;
-          document.getElementById(`ci_precio_${lineasConsumoInternoCount}`).value = item.precio_unitario || 0;
+          document.getElementById(`ci_cant_${lineasConsumoInternoCount}`).value = Math.abs(item.cantidad);
+          document.getElementById(`ci_precio_${lineasConsumoInternoCount}`).value = Math.abs(item.precio_unitario || 0);
         });
         recalcTotalCI();
       } else {

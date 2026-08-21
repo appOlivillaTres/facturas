@@ -6333,7 +6333,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
         // INVENTARIO
       } else if (tablaActual === 'inventario') {
-    hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Producto</th><th>Stock</th><th>Pts/unidad</th><th class="num-cell">Costo</th><th class="num-cell">Venta</th><th class="num-cell">Margen</th><th class="num-cell">Descuento</th><th></th></tr>`;
+        hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Producto</th><th>Stock</th><th>Pts/unidad</th><th class="num-cell">Costo</th><th class="num-cell">Venta</th><th class="num-cell">Margen</th><th class="num-cell">Descuento</th><th></th></tr>`;
         const lista = registros.filter(p => (p.nombre || '').toLowerCase().includes(q));
         if (!lista.length) { bdy.innerHTML = emptyRow(7, 'No se encontraron productos'); return; }
         bdy.innerHTML = lista.map(p => {
@@ -6779,7 +6779,33 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       // Si el proveedor detectado ya existe en la base de datos, su NIF
       // guardado manda sobre el que haya podido leer la IA.
       autocompletarNifDesdeDB('f_prov', 'f_nif');
+      renderAvisoRevisionIA(p);
     }
+
+    function renderAvisoRevisionIA(p) {
+      const cont = document.getElementById('avisoRevisionIA');
+      if (!cont) return;
+      const avisos = [];
+
+      if (p.revisar_manualmente) {
+        avisos.push(`<div style="background:#fff3e0;border:1.5px solid #f0c060;border-radius:8px;padding:8px 12px;font-size:.82rem;color:#7a4a00;margin-bottom:6px">
+      <i class="fa-solid fa-triangle-exclamation me-1"></i><b>La IA no está segura de este documento:</b> ${p.motivo_revision || 'revisa los datos con cuidado'}
+    </div>`);
+      }
+      if (p.nif && p.nif_valido === false) {
+        avisos.push(`<div style="background:#fce4ec;border:1.5px solid #f48fb1;border-radius:8px;padding:8px 12px;font-size:.82rem;color:#b3261e;margin-bottom:6px">
+      <i class="fa-solid fa-id-card me-1"></i><b>El NIF "${p.nif}" no pasa el dígito de control</b> — revísalo con el documento original
+    </div>`);
+      }
+      if (p.aviso_cuadre) {
+        avisos.push(`<div style="background:#fce4ec;border:1.5px solid #f48fb1;border-radius:8px;padding:8px 12px;font-size:.82rem;color:#b3261e;margin-bottom:6px">
+      <i class="fa-solid fa-calculator me-1"></i>${p.aviso_cuadre}
+    </div>`);
+      }
+      cont.innerHTML = avisos.join('');
+      cont.style.display = avisos.length ? 'block' : 'none';
+    }
+
     async function clasificarComoVarios(id) {
       const p = registros.find(r => r.id === id);
       if (!p) return;
@@ -7731,15 +7757,15 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           if (!nombre) { toast('El nombre es obligatorio', 'err'); return; }
           const nuevoStock = parseFloat(document.getElementById('f_stock').value || 0);
           const payload = {
-    nombre,
-    stock: nuevoStock,
-    unidad: document.getElementById('f_unidad')?.value || 'unidades',
-    stock_minimo: parseFloat(document.getElementById('f_stock_minimo')?.value || 5),
-    puntos_por_unidad: parseInt(document.getElementById('f_pts').value || 0),
-    costo: parseFloat(document.getElementById('f_costo')?.value || 0),
-    precio: parseFloat(document.getElementById('f_precio')?.value || 0),
-    descuento: parseFloat(document.getElementById('f_descuento')?.value || 0)
-};
+            nombre,
+            stock: nuevoStock,
+            unidad: document.getElementById('f_unidad')?.value || 'unidades',
+            stock_minimo: parseFloat(document.getElementById('f_stock_minimo')?.value || 5),
+            puntos_por_unidad: parseInt(document.getElementById('f_pts').value || 0),
+            costo: parseFloat(document.getElementById('f_costo')?.value || 0),
+            precio: parseFloat(document.getElementById('f_precio')?.value || 0),
+            descuento: parseFloat(document.getElementById('f_descuento')?.value || 0)
+          };
 
           if (modalEditId) {
             const prevProd = inventarioDB.find(p => p.id === modalEditId);
@@ -8256,6 +8282,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       autocompletarNifDesdeDB('f_empresa', 'f_nif');
       if (p.archivo_url) mostrarPdfModal(p.archivo_url, p.empresa || 'Albarán');
       else ocultarPdfModal();
+      renderAvisoRevisionIA(p);
     }
 
     async function buscarAlbaranDuplicado(numAlbaran, nif, fecha, total, idExcluir) {
@@ -8891,6 +8918,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       set('f_total_iva_permisos', p.total_iva_permisos);
       set('f_total_con_permisos', p.total_con_permisos);
       set('f_fecha_recibido', p.fecha_recibido);
+      renderAvisoRevisionIA(p);
     }
 
 
@@ -11529,6 +11557,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <div class="form-seccion" id="revisionModalWrap" style="display:none">Revisión</div>
       <div class="td-acciones" id="revisionChipsCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
       <div class="form-seccion">Acciones</div>
+      <div id="avisoRevisionIA" style="display:none"></div>
       <div class="td-acciones" id="accionesModalCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
       ${htmlCampoArchivo()}
       ${htmlCamposExcel()}
@@ -11601,6 +11630,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <div class="form-seccion" id="revisionModalWrap" style="display:none">Revisión</div>
       <div class="td-acciones" id="revisionChipsCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
       <div class="form-seccion">Acciones</div>
+      <div id="avisoRevisionIA" style="display:none"></div>
       <div class="td-acciones" id="accionesModalCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
       ${htmlCampoArchivo()}
       ${htmlCamposExcel()}
@@ -11678,6 +11708,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <div class="form-seccion" id="revisionModalWrap" style="display:none">Revisión</div>
       <div class="td-acciones" id="revisionChipsCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
       <div class="form-seccion">Acciones</div>
+      <div id="avisoRevisionIA" style="display:none"></div>
       <div class="td-acciones" id="accionesModalCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
       ${htmlCampoArchivo()}
       ${htmlCamposExcel()}

@@ -11612,6 +11612,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         archivosFacturaSeleccionados = [];
         document.getElementById('modalNueva').classList.add('visible');
         setTimeout(() => {
+          setupProveedorAC('f_prov', 'f_nif');
           setupObraAC('f_obra');
           addLineaFactAlm();
           _aplicarPrellenado();
@@ -11688,6 +11689,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         archivosFacturaSeleccionados = [];
         document.getElementById('modalNueva').classList.add('visible');
         setTimeout(() => {
+          setupProveedorAC('f_prov', 'f_nif');
           setupObraAC('f_obra');
           addLineaFactAlm();
           _aplicarPrellenado();

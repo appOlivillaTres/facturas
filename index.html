@@ -5506,6 +5506,15 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       if (chev) chev.style.transform = abierto ? 'rotate(0deg)' : 'rotate(180deg)';
     }
 
+    function toggleGrupoObras(grupo) {
+      const filas = document.querySelectorAll(`.fila-grupo-${grupo}`);
+      const chev = document.getElementById('chevronGrupoObras-' + grupo);
+      if (!filas.length) return;
+      const abierto = filas[0].style.display !== 'none';
+      filas.forEach(f => f.style.display = abierto ? 'none' : '');
+      if (chev) chev.style.transform = abierto ? 'rotate(-90deg)' : 'rotate(0deg)';
+    }
+
 
 
 
@@ -6153,7 +6162,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         });
         if (!lista.length) { bdy.innerHTML = emptyRow(15, 'No hay obras ni vehículos dados de alta todavía'); return; }
 
-        function filaObra(o) {
+        function filaObra(o, grupo) {
           const esVehiculo = o.tipo === 'vehiculo';
           const est = o.estado || 'en_curso';
           const presupuesto = o.presupuesto != null ? parseFloat(o.presupuesto) : null;
@@ -6161,7 +6170,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const tienePresupuesto = presupuesto != null && !isNaN(presupuesto);
           const diferencia = tienePresupuesto ? (presupuesto - facturado) : null;
           const rentable = tienePresupuesto ? diferencia >= 0 : null;
-          return `<tr data-id="${o.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${o.id},'obras'))">
+          return `<tr data-id="${o.id}" class="fila-grupo-${grupo}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${o.id},'obras'))">
         <td>${celdaCheck(o.id)}</td>
     <td><span class="badge-estado ${esVehiculo ? 'badge-facturar' : 'badge-pagado'}"><i class="fa-solid ${esVehiculo ? 'fa-car' : 'fa-helmet-safety'}"></i> ${esVehiculo ? 'VEHÍCULO' : 'OBRA'}</span></td>
     <td class="td-nombre">${o.nombre || '—'}</td>
@@ -6183,17 +6192,26 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   </tr>`;
         }
 
+        function cabeceraGrupoObras(grupo, icono, titulo, cantidad) {
+          return `<tr class="fila-cabecera-grupo" style="cursor:pointer" onclick="toggleGrupoObras('${grupo}')">
+    <td colspan="15" style="background:#f7f0f5;font-weight:700;color:#4a3b68;padding:10px 12px;border-bottom:2px solid #ede5f5">
+      <i class="fa-solid ${icono} me-2"></i>${titulo} (${cantidad})
+      <i class="fa-solid fa-chevron-down" id="chevronGrupoObras-${grupo}" style="float:right;transition:transform .15s"></i>
+    </td>
+  </tr>`;
+        }
+
         const obrasList = lista.filter(o => o.tipo !== 'vehiculo');
         const vehiculosList = lista.filter(o => o.tipo === 'vehiculo');
 
         let htmlObras = '';
         if (obrasList.length) {
-          htmlObras += `<tr><td colspan="15" style="background:#f7f0f5;font-weight:700;color:#4a3b68;padding:10px 12px;border-bottom:2px solid #ede5f5"><i class="fa-solid fa-helmet-safety me-2"></i>OBRAS (${obrasList.length})</td></tr>`;
-          htmlObras += obrasList.map(filaObra).join('');
+          htmlObras += cabeceraGrupoObras('obras', 'fa-helmet-safety', 'OBRAS', obrasList.length);
+          htmlObras += obrasList.map(o => filaObra(o, 'obras')).join('');
         }
         if (vehiculosList.length) {
-          htmlObras += `<tr><td colspan="15" style="background:#f7f0f5;font-weight:700;color:#4a3b68;padding:10px 12px;border-bottom:2px solid #ede5f5"><i class="fa-solid fa-car me-2"></i>VEHÍCULOS (${vehiculosList.length})</td></tr>`;
-          htmlObras += vehiculosList.map(filaObra).join('');
+          htmlObras += cabeceraGrupoObras('vehiculos', 'fa-car', 'VEHÍCULOS', vehiculosList.length);
+          htmlObras += vehiculosList.map(o => filaObra(o, 'vehiculos')).join('');
         }
         bdy.innerHTML = htmlObras;
 

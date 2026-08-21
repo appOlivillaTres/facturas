@@ -5803,7 +5803,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <th>Nº Factura</th><th>Concepto</th>
 <th>Albaranes</th>
       <th class="num-cell">Base 1</th><th class="pct-cell">%IVA1</th><th class="num-cell">IVA1</th>
-      <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th>Acción</th><th>Imputar</th><th>Impreso</th><th>Excel</th><th></th><th></th>
+      <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th>Acción</th><th>Imputar</th><th>Impreso</th><th>Excel</th><th>Archivos</th><th></th><th></th>
       
       <th class="pct-cell">%RE1</th><th class="num-cell">RE1</th>
       <th class="num-cell">Tasas</th>
@@ -5818,7 +5818,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const estReal = f.imputado ? 'imputado' : (esVenc ? 'vencido' : (f.estado || 'pendiente'));
           return mQ && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_almacen'));
         });
-        if (!lista.length) { bdy.innerHTML = emptyRow(35, 'No se encontraron facturas'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(36, 'No se encontraron facturas'); return; }
         bdy.innerHTML = lista.map(f => {
           const est = f.estado || 'pendiente';
           const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
@@ -5860,6 +5860,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 </td>
 <td>${celdaImpreso(f, 'facturas_almacen')}</td>
 <td>${celdaExportado(f)}</td>
+<td>${celdaArchivosExportados(f)}</td>
 <td style="white-space:nowrap">
   <button
     class="btn-toggle-pago pendiente"
@@ -5914,7 +5915,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <th>Nº Factura</th><th>Concepto</th>
 <th>Albaranes</th>
       <th class="num-cell">Base 1</th><th class="pct-cell">%IVA1</th><th class="num-cell">IVA1</th>
-      <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th></th><th>Acción</th><th>Imputar</th><th>Impreso</th><th>Excel</th><th></th><th></th>
+      <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th></th><th>Acción</th><th>Imputar</th><th>Impreso</th><th>Excel</th><th>Archivos</th><th></th><th></th>
       <th class="pct-cell">%RE1</th><th class="num-cell">RE1</th>
       <th class="num-cell">Tasas</th>
       <th class="num-cell">Base 2</th><th class="pct-cell">%IVA2</th><th class="num-cell">IVA2</th>
@@ -5938,7 +5939,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         } else {
           resumenEl.style.display = 'none';
         }
-        if (!lista.length) { bdy.innerHTML = emptyRow(37, 'No se encontraron facturas'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(38, 'No se encontraron facturas'); return; }
         bdy.innerHTML = lista.map(f => {
           const est = f.estado || 'pendiente';
           const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
@@ -5980,6 +5981,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 </td>
 <td>${celdaImpreso(f, 'facturas_obra')}</td>
 <td>${celdaExportado(f)}</td>
+<td>${celdaArchivosExportados(f)}</td>
 <td style="white-space:nowrap">
   <button class="btn-toggle-pago pendiente" style="margin-bottom:4px"
   onclick="moverFactura(${f.id},'facturas_obra','facturas_almacen')">
@@ -6028,7 +6030,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   <th>Nº Factura</th><th>Concepto</th>
       <th>Albaranes</th>
       <th class="num-cell">Base 1</th><th class="pct-cell">%IVA1</th><th class="num-cell">IVA1</th>
-      <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th></th><th>Acción</th><th>Imputar</th><th>Impreso</th><th>Excel</th><th></th><th></th>
+      <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th></th><th>Acción</th><th>Imputar</th><th>Impreso</th><th>Excel</th><th>Archivos</th><th></th><th></th>
       <th class="pct-cell">%RE1</th><th class="num-cell">RE1</th>
       <th class="num-cell">Tasas</th>
       <th class="num-cell">Base 2</th><th class="pct-cell">%IVA2</th><th class="num-cell">IVA2</th>
@@ -6044,7 +6046,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const estReal = f.imputado ? 'imputado' : (esVenc ? 'vencido' : (f.estado || 'pendiente'));
           return mQ && mObra && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_csg'));
         });
-        if (!lista.length) { bdy.innerHTML = emptyRow(36, 'No se encontraron facturas'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(37, 'No se encontraron facturas'); return; }
         bdy.innerHTML = lista.map(f => {
           const est = f.estado || 'pendiente';
           const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
@@ -6086,6 +6088,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 </td>
 <td>${celdaImpreso(f, 'facturas_csg')}</td>
 <td>${celdaExportado(f)}</td>
+<td>${celdaArchivosExportados(f)}</td>
 <td style="white-space:nowrap">
   <button
     class="btn-toggle-pago pendiente"
@@ -7110,6 +7113,15 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       }
       return `<span class="badge-estado badge-pagado" title="Ya exportada a Excel">
     <i class="fa-solid fa-file-excel"></i> Exportado
+  </span>`;
+    }
+
+    function celdaArchivosExportados(f) {
+      if (!f.archivos_exportados) {
+        return `<span style="font-size:.72rem;color:#ccc" title="Archivos todavía no descargados en ZIP"><i class="fa-solid fa-minus"></i></span>`;
+      }
+      return `<span class="badge-estado badge-pagado" title="Archivos ya descargados en ZIP">
+    <i class="fa-solid fa-file-zipper"></i> Exportado
   </span>`;
     }
 

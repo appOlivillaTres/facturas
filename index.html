@@ -5012,18 +5012,18 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       ).join('');
     }
     function htmlSelectObras(id, placeholder, extraAttrs) {
-      return `<input type="text" id="${id}" list="dl_obras" placeholder="${placeholder || 'Escribe para buscar una obra...'}" ${extraAttrs || ''}>`;
-    }
-    function poblarSelectObras(id, placeholder) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.placeholder = placeholder || 'Escribe para buscar una obra...';
-    }
-    function setSelectObraValue(id, valor) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.value = valor || '';
-    }
+  return `<input type="text" id="${id}" placeholder="${placeholder || 'Escribe para buscar una obra...'}" autocomplete="off" ${extraAttrs || ''}>`;
+}
+function poblarSelectObras(id, placeholder) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.placeholder = placeholder || 'Escribe para buscar una obra...';
+}
+function setSelectObraValue(id, valor) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.value = valor || '';
+}
 
     function actualizarDatalistProductos() {
       const dl = document.getElementById('dl_productos');
@@ -5098,6 +5098,40 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       inpF.addEventListener('focus', () => { if (inpF.value.trim()) renderLista(listaF, filtrar(inpF.value.toLowerCase().trim())); });  // si el usuario ya había escrito un NIF a medias antes, vuelve a activar el buscador y reabre el menú desplegable con las sugerencias para que no tenga que borrar y volver a escribir para verlo.
       inpF.addEventListener('blur', () => setTimeout(() => listaF.style.display = 'none', 160));  // Se activa en el milisegundo exacto en el que el usuario hace clic fuera de la casilla del NIF para pasar a otro campo del formulario
     }
+
+    function setupObraAC(inputId) {
+  const inp = document.getElementById(inputId);
+  if (!inp) return;
+  inp.parentElement.style.position = 'relative';
+  const lista = _crearLista('ac_obra_' + inputId, inp.parentElement);
+
+  function filtrar(q) {
+    return obrasDB.filter(o => (o.nombre || '').toLowerCase().includes(q)).slice(0, 10);
+  }
+  function seleccionar(o) {
+    inp.value = o.nombre || '';
+    lista.style.display = 'none';
+    inp.dispatchEvent(new Event('input', { bubbles: true }));
+    inp.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  function render(items) {
+    if (!items.length) { lista.style.display = 'none'; return; }
+    lista.innerHTML = items.map(o =>
+      `<div class="ac-item" data-id="${o.id}"><span class="ac-nombre">${o.nombre || '—'}</span></div>`
+    ).join('');
+    lista.style.display = 'block';
+    lista.querySelectorAll('.ac-item').forEach(el => {
+      el.addEventListener('mousedown', e => {
+        e.preventDefault();
+        const o = obrasDB.find(x => x.id == el.dataset.id);
+        if (o) seleccionar(o);
+      });
+    });
+  }
+  inp.addEventListener('input', () => render(filtrar(inp.value.toLowerCase().trim())));
+  inp.addEventListener('focus', () => render(filtrar(inp.value.toLowerCase().trim())));
+  inp.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
+}
 
     // Busca un proveedor ya existente en la base de datos por nombre exacto
     // (ignorando mayúsculas/espacios) y devuelve su NIF si lo encuentra.
@@ -7255,6 +7289,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <i class="fa-solid fa-xmark"></i>
     </button>`;
       document.getElementById('lineasRepartoObras').appendChild(div);
+      setupObraAC(`lro_obra_${idx}`);
       if (obra) setSelectObraValue(`lro_obra_${idx}`, obra);
       recalcRepartoRestante();
     }
@@ -11030,6 +11065,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         document.getElementById("modalTitulo").textContent = "Editar salida de material";
         poblarSelectObras('mo_nombre_obra', 'Selecciona una obra...');
         setSelectObraValue('mo_nombre_obra', f.nombre_obra || '');
+        setTimeout(() => setupObraAC('mo_nombre_obra'), 50);
         document.getElementById("mo_nombre_empleado").value = f.nombre_empleado || "";
         document.getElementById("mo_fecha").value = f.fecha || "";
         document.getElementById("mo_es_devolucion").checked = !!f.es_devolucion;
@@ -11270,6 +11306,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         lineasMaterialExclusivoCount = 0;
         lineasMaquinariaObraCount = 0;
         document.getElementById('modalMaterialObra').classList.add('visible');
+        setTimeout(() => setupObraAC('mo_nombre_obra'), 50);
         addLineaMaterial();
         addLineaMaterialExclusivo();
         toggleDevolucionMaterialObra();
@@ -11532,7 +11569,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         archivosFacturaSeleccionados = [];
         document.getElementById('modalNueva').classList.add('visible');
         setTimeout(() => {
-          setupProveedorAC('f_prov', 'f_nif');
+          setupObraAC('f_obra');
           addLineaFactAlm();
           _aplicarPrellenado();
           document.getElementById('f_reparto_activo').checked = false;
@@ -11608,7 +11645,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         archivosFacturaSeleccionados = [];
         document.getElementById('modalNueva').classList.add('visible');
         setTimeout(() => {
-          setupProveedorAC('f_prov', 'f_nif');
+          setupObraAC('f_obra');
           addLineaFactAlm();
           _aplicarPrellenado();
           document.getElementById('f_reparto_activo').checked = false;
@@ -11667,7 +11704,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         archivosFacturaSeleccionados = [];
         window._prellenadoIngreso = null;
         document.getElementById('modalNueva').classList.add('visible');
-        setTimeout(() => { ocultarPdfModal(); renderArchivosFacturaChips(); }, 50);
+        setTimeout(() => { ocultarPdfModal(); renderArchivosFacturaChips(); setupObraAC('f_obra'); }, 50);
         // ── ALBARÁN ──
       } else if (tabla === 'albaranes') {
         document.getElementById('modalTitulo').textContent = 'Nuevo Albarán';
@@ -11692,7 +11729,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         archivosAlbaranSeleccionados = [];
         document.getElementById('modalNueva').classList.add('visible');
         setTimeout(() => {
-          setupProveedorAC('f_empresa', 'f_nif');
+          setupObraAC('f_obra_alb');
           _aplicarPrellenadoAlbaran();
         }, 50);
 

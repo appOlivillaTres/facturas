@@ -6447,7 +6447,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           if (f._esAlquiler) {
             const esAlta = f._tipoAlquiler === 'alta';
             const fnImprimir = esAlta ? 'imprimirAltaAlquiler' : 'imprimirBajaAlquiler';
-            return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => ${fnImprimir}(${f.id}))">
+            const fnEditar = esAlta ? 'abrirModalEditarAltaAlquiler' : 'abrirModalEditarBajaAlquiler';
+            return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => ${fnEditar}(${f.id}))">
     <td><strong>${f.numero_albaran || '—'}</strong></td>
     <td>${fmtF(f.fecha)}</td>
     <td class="td-nombre">${f.cliente_nombre || '—'}</td>
@@ -10447,6 +10448,102 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       setTimeout(() => setupClienteAltaAC('aa_cliente', 'aa_nif', 'aa_cliente_id'), 50);
     }
 
+    async function abrirModalEditarAltaAlquiler(id) {
+      try {
+        const [reg] = await apiGet('alquileres', `id=eq.${id}`);
+        if (!reg) { toast('No se ha encontrado el alta de alquiler', 'err'); return; }
+        const items = await apiGet('alquileres_items', `alquiler_id=eq.${id}&order=id`);
+
+        altaAlquilerEditId = id;
+        clienteAltaSelId = reg.cliente_id || null;
+
+        document.getElementById('altaAlquilerTitulo').textContent = 'Editar Alta de Alquiler';
+        document.getElementById('aa_fecha').value = reg.fecha || '';
+        document.getElementById('aa_hora').value = reg.hora_retirada || '';
+        document.getElementById('aa_num').value = reg.numero_albaran || '';
+        document.getElementById('aa_cliente').value = reg.cliente_nombre || '';
+        document.getElementById('aa_cliente_id').value = reg.cliente_id || '';
+        document.getElementById('aa_nif').value = reg.nif || '';
+        document.getElementById('aa_direccion').value = reg.direccion || '';
+        document.getElementById('aa_poblacion').value = reg.poblacion || '';
+        document.getElementById('aa_cp').value = reg.codigo_postal || '';
+        document.getElementById('aa_provincia').value = reg.provincia || '';
+        document.getElementById('aa_obra').value = reg.obra || '';
+        document.getElementById('aa_operario').value = reg.nombre_operario || '';
+        document.getElementById('aa_dni_operario').value = reg.dni_operario || '';
+        document.getElementById('aa_pct_iva').value = reg.pct_iva != null ? reg.pct_iva : 21;
+
+        document.getElementById('lineasAlta').innerHTML = '';
+        lineasAltaCount = 0;
+        if (items.length) {
+          items.forEach(it => {
+            addLineaAlta();
+            document.getElementById(`la_cod_${lineasAltaCount}`).value = it.articulo_codigo || '';
+            document.getElementById(`la_desc_${lineasAltaCount}`).value = it.descripcion || '';
+            document.getElementById(`la_cant_${lineasAltaCount}`).value = it.cantidad;
+            document.getElementById(`la_precio_${lineasAltaCount}`).value = it.precio_unitario || 0;
+            document.getElementById(`la_dto_${lineasAltaCount}`).value = it.dto_pct || 0;
+          });
+        } else {
+          addLineaAlta();
+        }
+        recalcTotalAlta();
+
+        document.getElementById('modalAltaAlquiler').classList.add('visible');
+        setTimeout(() => setupClienteAltaAC('aa_cliente', 'aa_nif', 'aa_cliente_id'), 50);
+      } catch (e) {
+        toast('Error al cargar el alta de alquiler: ' + e.message, 'err');
+      }
+    }
+
+    async function abrirModalEditarBajaAlquiler(id) {
+      try {
+        const [reg] = await apiGet('alquileres', `id=eq.${id}`);
+        if (!reg) { toast('No se ha encontrado la baja de alquiler', 'err'); return; }
+        const items = await apiGet('alquileres_items', `alquiler_id=eq.${id}&order=id`);
+
+        bajaAlquilerEditId = id;
+        clienteBajaSelId = reg.cliente_id || null;
+
+        document.getElementById('bajaAlquilerTitulo').textContent = 'Editar Baja de Alquiler';
+        document.getElementById('ba_fecha').value = reg.fecha || '';
+        document.getElementById('ba_hora').value = reg.hora_retirada || '';
+        document.getElementById('ba_num').value = reg.numero_albaran || '';
+        document.getElementById('ba_cliente').value = reg.cliente_nombre || '';
+        document.getElementById('ba_cliente_id').value = reg.cliente_id || '';
+        document.getElementById('ba_nif').value = reg.nif || '';
+        document.getElementById('ba_direccion').value = reg.direccion || '';
+        document.getElementById('ba_poblacion').value = reg.poblacion || '';
+        document.getElementById('ba_cp').value = reg.codigo_postal || '';
+        document.getElementById('ba_provincia').value = reg.provincia || '';
+        document.getElementById('ba_obra').value = reg.obra || '';
+        document.getElementById('ba_operario').value = reg.nombre_operario || '';
+        document.getElementById('ba_dni_operario').value = reg.dni_operario || '';
+        document.getElementById('ba_pct_iva').value = reg.pct_iva != null ? reg.pct_iva : 21;
+
+        document.getElementById('lineasBaja').innerHTML = '';
+        lineasBajaCount = 0;
+        if (items.length) {
+          items.forEach(it => {
+            addLineaBaja();
+            document.getElementById(`bal_cod_${lineasBajaCount}`).value = it.articulo_codigo || '';
+            document.getElementById(`bal_desc_${lineasBajaCount}`).value = it.descripcion || '';
+            document.getElementById(`bal_cant_${lineasBajaCount}`).value = it.cantidad;
+            document.getElementById(`bal_precio_${lineasBajaCount}`).value = it.precio_unitario || 0;
+            document.getElementById(`bal_dto_${lineasBajaCount}`).value = it.dto_pct || 0;
+          });
+        } else {
+          addLineaBaja();
+        }
+        recalcTotalBaja();
+
+        document.getElementById('modalBajaAlquiler').classList.add('visible');
+        setTimeout(() => setupClienteBajaAC('ba_cliente', 'ba_nif', 'ba_cliente_id'), 50);
+      } catch (e) {
+        toast('Error al cargar la baja de alquiler: ' + e.message, 'err');
+      }
+    }
+
     async function guardarAltaAlquiler() {
       const fecha = document.getElementById('aa_fecha').value;
       const cliente_nombre = document.getElementById('aa_cliente').value.trim();
@@ -10534,10 +10631,12 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           }
         }
 
-        toast(`Alta de alquiler guardada — Nº ${numeroAsignado || ''}`);
+        toast(altaAlquilerEditId ? `Alta de alquiler actualizada — Nº ${numeroAsignado || ''}` : `Alta de alquiler guardada — Nº ${numeroAsignado || ''}`);
         cerrarModal('modalAltaAlquiler');
+        const eraEdicion = !!altaAlquilerEditId;
         altaAlquilerEditId = null;
-        imprimirAltaAlquiler(headerId); // 👈 añadir
+        cargarDatos();
+        if (!eraEdicion) imprimirAltaAlquiler(headerId);
       } catch (e) {
         toast('Error al guardar: ' + e.message, 'err');
       }
@@ -10679,6 +10778,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     let lineasBajaCount = 0;
     let clienteBajaSelId = null;
+    let bajaAlquilerEditId = null;
 
     function addLineaBaja() {
       lineasBajaCount++;
@@ -10810,6 +10910,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       }
       inpN.addEventListener('input', () => {
         inpId.value = ''; clienteBajaSelId = null;
+
         render(filtrar(inpN.value.toLowerCase().trim()), inpN.value.trim());
       });
       inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim()), inpN.value.trim()); });
@@ -10818,6 +10919,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     async function abrirModalBaja() {
       clienteBajaSelId = null;
+      bajaAlquilerEditId = null;
       document.getElementById('bajaAlquilerTitulo').textContent = 'Nueva Baja de Alquiler';
       document.getElementById('ba_fecha').value = hoy();
       document.getElementById('ba_hora').value = '';
@@ -10873,19 +10975,28 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         base_imponible: base,
         pct_iva: pctIva,
         importe_iva: +(total - base).toFixed(2),
-        total,
-        creado_por: currentPersona
+        total
       };
+      if (!bajaAlquilerEditId) payload.creado_por = currentPersona;
 
       try {
-        const [header] = await apiPost('alquileres', payload);
-        const headerId = header.id;
-        const numeroAsignado = header.numero_albaran;
-        document.getElementById('ba_num').value = numeroAsignado || '';
+        let headerId, numeroAsignado;
+
+        if (bajaAlquilerEditId) {
+          await apiPatch('alquileres', bajaAlquilerEditId, payload);
+          headerId = bajaAlquilerEditId;
+          numeroAsignado = document.getElementById('ba_num').value.trim() || null;
+          const antiguas = await apiGet('alquileres_items', `alquiler_id=eq.${headerId}`);
+          for (const a of antiguas) await apiDelete('alquileres_items', a.id);
+        } else {
+          const [header] = await apiPost('alquileres', payload);
+          headerId = header.id;
+          numeroAsignado = header.numero_albaran;
+          document.getElementById('ba_num').value = numeroAsignado || '';
+        }
 
         await apiPost('alquileres_items', lineas.map(l => ({ ...l, alquiler_id: headerId })));
 
-        // Marca como devueltas (disponibles) las máquinas del catálogo que coincidan por código
         for (const l of lineas) {
           if (!l.articulo_codigo) continue;
           const maquina = buscarMaquinaPorCodigo(l.articulo_codigo);
@@ -10910,10 +11021,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           }
         }
 
-        toast(`Baja de alquiler guardada — Nº ${numeroAsignado || ''}`);
+        toast(bajaAlquilerEditId ? `Baja de alquiler actualizada — Nº ${numeroAsignado || ''}` : `Baja de alquiler guardada — Nº ${numeroAsignado || ''}`);
         cerrarModal('modalBajaAlquiler');
+        const idParaImprimir = headerId;
+        const eraEdicion = !!bajaAlquilerEditId;
+        bajaAlquilerEditId = null;
         cargarDatos();
-        imprimirBajaAlquiler(headerId); // 👈 añadir
+        if (!eraEdicion) imprimirBajaAlquiler(idParaImprimir);
       } catch (e) {
         toast('Error al guardar: ' + e.message, 'err');
       }

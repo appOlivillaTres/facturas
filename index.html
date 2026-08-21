@@ -6333,7 +6333,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
         // INVENTARIO
       } else if (tablaActual === 'inventario') {
-        hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Producto</th><th>Stock</th><th>Pts/unidad</th><th class="num-cell">Costo</th><th class="num-cell">Venta</th><th class="num-cell">Margen</th><th></th></tr>`;
+    hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Producto</th><th>Stock</th><th>Pts/unidad</th><th class="num-cell">Costo</th><th class="num-cell">Venta</th><th class="num-cell">Margen</th><th class="num-cell">Descuento</th><th></th></tr>`;
         const lista = registros.filter(p => (p.nombre || '').toLowerCase().includes(q));
         if (!lista.length) { bdy.innerHTML = emptyRow(7, 'No se encontraron productos'); return; }
         bdy.innerHTML = lista.map(p => {
@@ -6355,6 +6355,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <td class="num-cell">${costo != null ? fmt(costo) : '—'}</td>
     <td class="num-cell">${venta != null ? fmt(venta) : '—'}</td>
     <td class="num-cell">${(costo != null && venta != null) ? fmt(venta - costo) : '—'}</td>
+    <td class="num-cell">${p.descuento != null && p.descuento > 0 ? p.descuento + '%' : '—'}</td>
     <td>
 <button class="btn-toggle-pago pagado" onclick="sumarStock(${p.id})"><i class="fa-solid fa-plus"></i></button>
 <button class="btn-toggle-pago vencido" onclick="restarStock(${p.id})"><i class="fa-solid fa-minus"></i></button>

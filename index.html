@@ -6152,7 +6152,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           return mQ && (!fEst || fEst === (o.estado || 'en_curso'));
         });
         if (!lista.length) { bdy.innerHTML = emptyRow(15, 'No hay obras ni vehículos dados de alta todavía'); return; }
-        bdy.innerHTML = lista.map(o => {
+
+        function filaObra(o) {
           const esVehiculo = o.tipo === 'vehiculo';
           const est = o.estado || 'en_curso';
           const presupuesto = o.presupuesto != null ? parseFloat(o.presupuesto) : null;
@@ -6180,7 +6181,21 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <td><span class="link-badge factura" onclick="verMaquinariaDeObra('${(o.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-truck-monster"></i>Maquinaria</span></td>
     <td><button class="btn-eliminar" onclick="eliminar(${o.id})"><i class="fa-solid fa-trash"></i></button></td>
   </tr>`;
-        }).join('');
+        }
+
+        const obrasList = lista.filter(o => o.tipo !== 'vehiculo');
+        const vehiculosList = lista.filter(o => o.tipo === 'vehiculo');
+
+        let htmlObras = '';
+        if (obrasList.length) {
+          htmlObras += `<tr><td colspan="15" style="background:#f7f0f5;font-weight:700;color:#4a3b68;padding:10px 12px;border-bottom:2px solid #ede5f5"><i class="fa-solid fa-helmet-safety me-2"></i>OBRAS (${obrasList.length})</td></tr>`;
+          htmlObras += obrasList.map(filaObra).join('');
+        }
+        if (vehiculosList.length) {
+          htmlObras += `<tr><td colspan="15" style="background:#f7f0f5;font-weight:700;color:#4a3b68;padding:10px 12px;border-bottom:2px solid #ede5f5"><i class="fa-solid fa-car me-2"></i>VEHÍCULOS (${vehiculosList.length})</td></tr>`;
+          htmlObras += vehiculosList.map(filaObra).join('');
+        }
+        bdy.innerHTML = htmlObras;
 
         // ALBARANES
       } else if (tablaActual === 'albaranes') {

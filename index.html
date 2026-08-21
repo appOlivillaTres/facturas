@@ -7730,14 +7730,15 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           if (!nombre) { toast('El nombre es obligatorio', 'err'); return; }
           const nuevoStock = parseFloat(document.getElementById('f_stock').value || 0);
           const payload = {
-            nombre,
-            stock: nuevoStock,
-            unidad: document.getElementById('f_unidad')?.value || 'unidades',
-            stock_minimo: parseFloat(document.getElementById('f_stock_minimo')?.value || 5),
-            puntos_por_unidad: parseInt(document.getElementById('f_pts').value || 0),
-            costo: parseFloat(document.getElementById('f_costo')?.value || 0),
-            precio: parseFloat(document.getElementById('f_precio')?.value || 0)
-          };
+    nombre,
+    stock: nuevoStock,
+    unidad: document.getElementById('f_unidad')?.value || 'unidades',
+    stock_minimo: parseFloat(document.getElementById('f_stock_minimo')?.value || 5),
+    puntos_por_unidad: parseInt(document.getElementById('f_pts').value || 0),
+    costo: parseFloat(document.getElementById('f_costo')?.value || 0),
+    precio: parseFloat(document.getElementById('f_precio')?.value || 0),
+    descuento: parseFloat(document.getElementById('f_descuento')?.value || 0)
+};
 
           if (modalEditId) {
             const prevProd = inventarioDB.find(p => p.id === modalEditId);
@@ -11063,6 +11064,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           document.getElementById("f_pts").value = f.puntos_por_unidad || 0;
           document.getElementById("f_costo").value = f.costo != null ? f.costo : 0;
           document.getElementById("f_precio").value = f.precio != null ? f.precio : 0;
+          document.getElementById("f_descuento").value = f.descuento != null ? f.descuento : 0;
 
         }, 100);
 
@@ -11774,6 +11776,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         archivosAlbaranSeleccionados = [];
         document.getElementById('modalNueva').classList.add('visible');
         setTimeout(() => {
+          setupProveedorAC('f_empresa', 'f_nif');
           setupObraAC('f_obra_alb');
           _aplicarPrellenadoAlbaran();
         }, 50);
@@ -11823,7 +11826,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   <div class="form-group"><label>Stock mínimo (aviso) <span style="font-size:.72rem;color:#888">— avisa a Cynthia y Jose</span></label><input type="number" id="f_stock_minimo" value="5" step="0.01" min="0"></div>
   <div class="form-group"><label>Puntos por unidad</label><input type="number" id="f_pts" value="0" min="0"></div>
   <div class="form-group"><label>Costo (€)</label><input type="number" id="f_costo" value="0" step="0.01" min="0"></div>
-  <div class="form-group"><label>Precio de venta (€)</label><input type="number" id="f_precio" value="0" step="0.01" min="0"></div>
+    <div class="form-group"><label>Precio de venta (€)</label><input type="number" id="f_precio" value="0" step="0.01" min="0"></div>
+  <div class="form-group"><label>Descuento (%)</label><input type="number" id="f_descuento" value="0" step="0.01" min="0" max="100"></div>
 </div>
 <p style="font-size:.78rem;color:#888;margin-top:10px"><i class="fa-solid fa-info-circle me-1"></i>Si el producto se mide por metros, podrás usar decimales al restar/sumar stock (ej. 2,5 m).</p>`;
         document.getElementById('modalNueva').classList.add('visible');

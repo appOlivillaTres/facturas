@@ -2801,6 +2801,10 @@
         <label>Año</label>
         <select id="exportArchivosYear"></select>
       </div>
+            <div class="form-group" style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="exportArchivosIncluirYaExportados" style="width:auto">
+        <label for="exportArchivosIncluirYaExportados" style="margin:0;cursor:pointer">Incluir archivos ya exportados antes</label>
+      </div>
 
       <div class="form-group">
         <label>Meses <span style="font-size:.72rem;color:#888">(ninguno marcado = todos)</span></label>
@@ -7961,6 +7965,16 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       if (!r.ok) throw new Error(await r.text());
     }
 
+    async function marcarArchivosExportados(tabla, ids) {
+  if (!ids.length) return;
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${tabla}?id=in.(${ids.join(',')})`, {
+    method: 'PATCH',
+    headers: await authHeaders(),
+    body: JSON.stringify({ archivos_exportados: true })
+  });
+  if (!r.ok) throw new Error(await r.text());
+}
+
     async function eliminarSeleccionados() {
       if (!seleccionados.size) return;
       if (!confirm(`¿Seguro que deseas eliminar ${seleccionados.size} registro(s)? No se podrá deshacer.`)) return;
@@ -13012,7 +13026,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const year = parseInt(document.getElementById('exportArchivosYear').value);
       const meses = Array.from(document.querySelectorAll('#exportArchivosMeses input:checked')).map(i => parseInt(i.value));
 
-      const filtrados = _ordenarParaExportacion(registros.filter(f => {
+      let filtrados = _ordenarParaExportacion(registros.filter(f => {
         const fechaRef = f.fecha_recibido || f.fecha;
         if (!fechaRef) return false;
         const [y, m] = fechaRef.split('-').map(Number);
@@ -13020,6 +13034,19 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         if (meses.length && !meses.includes(m)) return false;
         return true;
       }));
+
+      const totalDelFiltroArchivos = filtrados.length;
+      const incluirArchivosYaExportados = document.getElementById('exportArchivosIncluirYaExportados')?.checked;
+      if (!incluirArchivosYaExportados) {
+        filtrados = filtrados.filter(f => !f.archivos_exportados);
+      }
+
+      if (!filtrados.length) {
+        toast(totalDelFiltroArchivos
+          ? 'Todos los registros de ese filtro ya tenían sus archivos exportados antes'
+          : 'No hay registros para ese filtro', 'err');
+        return;
+      }
 
       const tareas = [];
       const contadorNombres = {};
@@ -13113,6 +13140,20 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           `;
           document.getElementById('modalDetalle').classList.add('visible');
           toast(`<i class="fa-solid fa-link me-1"></i>Enlace generado y copiado — pégalo en el correo`, 'ok');
+        }
+                // Marcar como exportados los archivos de estos registros
+        try {
+          const idsPorTablaArch = {};
+          filtrados.forEach(f => {
+            const tablaDest = tablaActual === 'revisadas_facturadas' ? f.origen : tablaActual;
+            (idsPorTablaArch[tablaDest] = idsPorTablaArch[tablaDest] || []).push(f.id);
+          });
+          for (const [tabla, ids] of Object.entries(idsPorTablaArch)) {
+            await marcarArchivosExportados(tabla, ids);
+          }
+          cargarDatos();
+        } catch (e) {
+          console.error('No se pudo marcar los archivos como exportados:', e);
         }
         cerrarModal('modalExportarArchivos');
       } catch (e) {

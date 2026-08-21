@@ -2643,7 +2643,7 @@
       <div style="display:flex;flex-direction:column;gap:12px;">
         <div class="form-group">
           <label>Nombre de la obra *</label>
-          <select id="mo_nombre_obra"></select>
+          <input type="text" id="mo_nombre_obra" list="dl_obras" placeholder="Escribe para buscar una obra...">
           <p style="font-size:.72rem;color:#888;margin-top:4px">Si la obra no existe todavía, créala primero en la
             pestaña Obras.</p>
         </div>
@@ -5012,23 +5012,17 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       ).join('');
     }
     function htmlSelectObras(id, placeholder, extraAttrs) {
-      return `<select id="${id}" ${extraAttrs || ''}><option value="">${placeholder}</option>${opcionesObrasHTML()}</select>`;
+      return `<input type="text" id="${id}" list="dl_obras" placeholder="${placeholder || 'Escribe para buscar una obra...'}" ${extraAttrs || ''}>`;
     }
     function poblarSelectObras(id, placeholder) {
-      const sel = document.getElementById(id);
-      if (!sel) return;
-      sel.innerHTML = `<option value="">${placeholder || 'Selecciona una obra...'}</option>` + opcionesObrasHTML();
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.placeholder = placeholder || 'Escribe para buscar una obra...';
     }
     function setSelectObraValue(id, valor) {
-      const sel = document.getElementById(id);
-      if (!sel) return;
-      if (valor && ![...sel.options].some(o => o.value === valor)) {
-        const opt = document.createElement('option');
-        opt.value = valor;
-        opt.textContent = valor + ' (no está en Obras)';
-        sel.appendChild(opt);
-      }
-      sel.value = valor || '';
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.value = valor || '';
     }
 
     function actualizarDatalistProductos() {
@@ -7246,7 +7240,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       div.innerHTML = `
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Obra</label>
-      ${htmlSelectObras(`lro_obra_${idx}`, 'Selecciona una obra...', 'onchange="recalcRepartoRestante()"')}
+      ${htmlSelectObras(`lro_obra_${idx}`, 'Selecciona una obra...', 'onchange="recalcRepartoRestante()" oninput="recalcRepartoRestante()"')}
     </div>
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Base imponible (€)</label>

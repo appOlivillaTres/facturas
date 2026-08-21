@@ -6202,7 +6202,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <td style="font-size:.8rem;color:#888">${f.nif || '—'}</td>
         <td>${f.nombre_obra || '—'}</td>
         <td>${fmtF(f.fecha)}</td>
-        <td class="td-total">${fmt(f.total)}</td>
+        <td class="td-total">${fmt(f.total)}${parseFloat(f.total || 0) < 0 ? '<br><span class="badge-estado badge-vencido" style="margin-top:4px;display:inline-block"><i class="fa-solid fa-rotate-left"></i> DEVOLUCIÓN</span>' : ''}</td>
         <td><span class="badge-estado ${fact ? 'badge-pagado' : 'badge-vencido'}">${fact ? 'SÍ' : 'NO'}</span></td>
         <td>${(f.archivos_urls && f.archivos_urls.length > 1)
               ? `<select class="select-albaranes" onchange="if(this.value) verArchivoPanel(this.value,'${(f.empresa || f.numero_albaran || 'Albarán').replace(/'/g, "\\'")}')">
@@ -9382,6 +9382,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const importe_iva = +(base_imponible * pct_iva / 100).toFixed(2);
       const total = +(base_imponible + importe_iva).toFixed(2);
       const notas = document.getElementById('f_av_notas').value.trim() || null;
+      const nombre_obra = document.getElementById('f_av_obra').value.trim() || null;
       const ocultar_precios = document.getElementById('f_av_ocultar_precios')?.checked || false;
 
       if (!fecha) { toast('La fecha es obligatoria', 'err'); return; }
@@ -9439,7 +9440,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           fecha, cliente_id, cliente_nombre, nif,
           base_imponible,
           pct_iva, importe_iva, total, puntos_generados: puntosNuevos, notas,
-          ocultar_precios
+          ocultar_precios, nombre_obra
         };
 
         if (modalEditId) {
@@ -9595,6 +9596,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const chkOcultarPrecios = document.getElementById('f_av_ocultar_precios');
         if (chkOcultarPrecios) chkOcultarPrecios.checked = !!f.ocultar_precios;
         document.getElementById('f_av_notas').value = f.notas || '';
+        document.getElementById('f_av_obra').value = f.nombre_obra || '';
         recalcTotalAlbaranVenta();
 
         document.getElementById('lineasAlbaranVenta').innerHTML = '';
@@ -9769,7 +9771,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     </div>
     <div class="total-box"><span>TOTAL:</span><span>${fmt(f.total)}</span></div>
   </div>`}
-  <div class="observaciones"><b>OBSERVACIONES:</b><br>${f.notas || ''}</div>
+  <div class="observaciones">${f.nombre_obra ? `<b>OBRA:</b> ${f.nombre_obra}<br>` : ''}<b>OBSERVACIONES:</b><br>${f.notas || ''}</div>
   <button class="btn-imprimir" onclick="window.print()" style="padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
   </body></html>`;
       const w = window.open('', '_blank');
@@ -11341,12 +11343,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             <i class="fa-solid fa-rotate-left me-1"></i>Es una devolución (el material vuelve al stock, el importe queda en negativo y se restan los puntos)
           </label>
         </div>
-                <div class="form-group span2" style="display:flex;align-items:center;gap:8px;background:#f7f0f5;border:1.5px solid #ede5f5;border-radius:8px;padding:10px 14px;margin-top:4px">
+                        <div class="form-group span2" style="display:flex;align-items:center;gap:8px;background:#f7f0f5;border:1.5px solid #ede5f5;border-radius:8px;padding:10px 14px;margin-top:4px">
           <input type="checkbox" id="f_av_ocultar_precios" style="width:auto">
           <label for="f_av_ocultar_precios" style="margin:0;font-size:.85rem;font-weight:600;color:#6a1b9a;cursor:pointer">
             <i class="fa-solid fa-eye-slash me-1"></i>Ocultar precios en la impresión (solo se verán productos y cantidades)
           </label>
         </div>
+                <div class="form-group span2"><label>Obra <span style="font-size:.72rem;color:#888">(opcional — obra del cliente donde se usará el material)</span></label><input type="text" id="f_av_obra" placeholder="Ej: Reforma vivienda calle Mayor 12"></div>
       </div>
       </div>
       <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">Productos que se lleva / se devuelven</div>

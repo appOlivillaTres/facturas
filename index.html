@@ -3425,10 +3425,10 @@
     // Único criterio de orden para Excel y ZIP: por fecha y, si hay empate,
     // por id (fijo e inmutable). Usar SIEMPRE esta misma función en los dos
     // sitios garantiza que la fila del Excel y el archivo del ZIP coincidan.
-    function _ordenarParaExportacion(lista, campoFecha = 'fecha_recibido_o_fecha') {
+    function _ordenarParaExportacion(lista, campoFecha = 'fecha') {
       return lista.slice().sort((a, b) => {
-        const fa = (campoFecha === 'fecha_recibido_o_fecha' ? (a.fecha_recibido || a.fecha) : a[campoFecha]) || '';
-        const fb = (campoFecha === 'fecha_recibido_o_fecha' ? (b.fecha_recibido || b.fecha) : b[campoFecha]) || '';
+        const fa = a[campoFecha] || '';
+        const fb = b[campoFecha] || '';
         const cmp = fa.localeCompare(fb);
         if (cmp !== 0) return cmp;
         return (a.id || 0) - (b.id || 0);

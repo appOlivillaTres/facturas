@@ -13181,7 +13181,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const meses = Array.from(document.querySelectorAll('#exportArchivosMeses input:checked')).map(i => parseInt(i.value));
 
       let filtrados = _ordenarParaExportacion(registros.filter(f => {
-        const fechaRef = f.fecha_recibido || f.fecha;
+        const fechaRef = f.fecha;
         if (!fechaRef) return false;
         const [y, m] = fechaRef.split('-').map(Number);
         if (y !== year) return false;

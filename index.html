@@ -7472,6 +7472,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     async function guardarRegistro() {
       const btn = document.getElementById('btnGuardar');
+      const textoOriginalBtn = btn.innerHTML;
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Guardando...';
       const tabla = modalDestinoTabla || tablaActual;
@@ -7942,6 +7943,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         }
       } finally {
         _moviendoFactura = false;
+        btn.disabled = false;
+        btn.innerHTML = textoOriginalBtn;
       }
     }
 

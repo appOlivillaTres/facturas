@@ -2496,7 +2496,7 @@
       </p>
       <div class="form-group">
         <label>Obra *</label>
-        <input type="text" id="si_obra" list="dl_obras" placeholder="Ej: Reforma Calle Mayor 12">
+        <input type="text" id="si_obra" placeholder="Ej: Reforma Calle Mayor 12" autocomplete="off">
       </div>
       <div class="form-group">
         <label>Empleado *</label>
@@ -4879,6 +4879,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       lineasSalidaMaquinaCount = 0;
       addLineaSalidaMaquina();
       document.getElementById('modalSalidaMaquina').classList.add('visible');
+      setTimeout(() => setupObraAC('si_obra'), 50);
     }
 
     function addLineaSalidaMaquina() {

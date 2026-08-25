@@ -9886,6 +9886,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         </tr></tbody>
       </table>
     </div>
+    <div style="text-align:center">
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://qrco.de/aislamientosolivillatres" style="width:75px;height:75px">
+    <div style="font-size:.6rem;color:#666;margin-top:2px">Danos tu opinión</div>
+  </div>
     <div class="total-box"><span>TOTAL:</span><span>${fmt(f.total)}</span></div>
   </div>`}
   <div class="observaciones">${f.nombre_obra ? `<b>OBRA:</b> ${f.nombre_obra}<br>` : ''}<b>OBSERVACIONES:</b><br>${f.notas || ''}</div>

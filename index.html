@@ -2195,6 +2195,10 @@
           <option value="total_desc">Total (mayor a menor)</option>
           <option value="total_asc">Total (menor a mayor)</option>
         </select>
+        <button class="btn-nueva" id="btnAjusteStock" onclick="abrirModalAjusteStock()"
+          style="display:none;background:#2d7a4f">
+          <i class="fa-solid fa-barcode"></i><span>Ajuste rápido</span>
+        </button>
         <button class="btn-nueva" id="btnNuevo" onclick="abrirNuevoRegistro()"><i class="fa-solid fa-plus"></i><span
             id="btnNuevaTxt">Añadir Nuevo</span></button>
         <button class="btn-nueva" id="btnNuevoVehiculo" onclick="abrirModalNuevo('obras','vehiculo')"
@@ -2580,6 +2584,38 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="modalAjusteStock">
+    <div class="modal-box-sm">
+      <h3><i class="fa-solid fa-barcode" style="color:#2d7a4f"></i>Ajuste rápido de stock</h3>
+      <div class="form-group" style="margin:0 0 12px">
+        <label style="font-size:.78rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanea el
+          producto</label>
+        <input type="text" id="ajuste_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
+          style="border-color:#2d7a4f;font-weight:600">
+      </div>
+      <div id="ajusteStockProductoWrap" style="display:none">
+        <div
+          style="background:#f7f0f5;border:1.5px solid #ede5f5;border-radius:8px;padding:10px 14px;margin-bottom:12px">
+          <div style="font-weight:700;color:#4a3b68" id="ajusteStockNombre">—</div>
+          <div style="font-size:.82rem;color:#888">Stock actual: <strong id="ajusteStockActual">—</strong></div>
+        </div>
+        <div class="form-group">
+          <label>Cantidad</label>
+          <input type="number" id="ajuste_cantidad" value="1" min="0.01" step="0.01">
+        </div>
+        <div style="display:flex;gap:10px;margin-top:10px">
+          <button type="button" class="btn-toggle-pago pagado" style="flex:1;justify-content:center"
+            onclick="confirmarAjusteStock('suma')"><i class="fa-solid fa-plus me-1"></i>Sumar</button>
+          <button type="button" class="btn-toggle-pago vencido" style="flex:1;justify-content:center"
+            onclick="confirmarAjusteStock('resta')"><i class="fa-solid fa-minus me-1"></i>Restar</button>
+        </div>
+      </div>
+      <div id="ajusteStockHistorial" style="margin-top:16px;max-height:180px;overflow-y:auto"></div>
+      <div class="modal-btns">
+        <button class="btn-cancelar" onclick="cerrarModalAjusteStock()">Cerrar</button>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL COMPRA CLIENTE -->
   <div class="modal-overlay" id="modalPuntos">
@@ -3716,6 +3752,7 @@
       document.getElementById('badgePendientes').style.display = 'none';
       document.getElementById('filtroObra').style.display = (sec === 'facturas_obra' || sec === 'facturas_csg' || sec === 'albaranes' || sec === 'ingresos') ? '' : 'none';
       document.getElementById('btnNuevoVehiculo').style.display = (sec === 'obras') ? 'flex' : 'none';
+      document.getElementById('btnAjusteStock').style.display = (sec === 'inventario') ? 'flex' : 'none';
       const selOrdenAV = document.getElementById('ordenAlbaranVenta');
       if (selOrdenAV) {
         selOrdenAV.style.display = sec === 'albaranes_venta' ? '' : 'none';
@@ -8126,6 +8163,80 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       cargarDatos();
     }
 
+
+    let ajusteStockProductoActual = null;
+
+    function abrirModalAjusteStock() {
+      document.getElementById('ajuste_scan').value = '';
+      document.getElementById('ajusteStockProductoWrap').style.display = 'none';
+      document.getElementById('ajusteStockHistorial').innerHTML = '';
+      ajusteStockProductoActual = null;
+      document.getElementById('modalAjusteStock').classList.add('visible');
+      setTimeout(() => {
+        activarInputEscaner('ajuste_scan', mostrarProductoAjusteStock, codigo => {
+          toast(`Código "${codigo}" no reconocido — revisa que el producto tenga código de barras en Inventario`, 'err');
+        });
+        document.getElementById('ajuste_scan').focus();
+      }, 60);
+    }
+
+    function cerrarModalAjusteStock() {
+      document.getElementById('modalAjusteStock').classList.remove('visible');
+      ajusteStockProductoActual = null;
+    }
+
+    function mostrarProductoAjusteStock(prod) {
+      ajusteStockProductoActual = prod;
+      document.getElementById('ajusteStockProductoWrap').style.display = 'block';
+      document.getElementById('ajusteStockNombre').textContent = prod.nombre;
+      document.getElementById('ajusteStockActual').textContent = `${fmtStock(prod.stock)} ${unidadCorta(prod)}`;
+      const inpCant = document.getElementById('ajuste_cantidad');
+      inpCant.value = 1;
+      inpCant.focus();
+      inpCant.select();
+    }
+
+    async function confirmarAjusteStock(accion) {
+      if (!ajusteStockProductoActual) { toast('Escanea primero un producto', 'err'); return; }
+      const cantidad = parseFloat(document.getElementById('ajuste_cantidad').value || 0);
+      if (!cantidad || cantidad <= 0) { toast('Indica una cantidad válida', 'err'); return; }
+
+      const p = ajusteStockProductoActual;
+      const stockAntes = parseFloat(p.stock) || 0;
+      let stockDespues = accion === 'suma' ? stockAntes + cantidad : stockAntes - cantidad;
+      if (accion === 'resta' && stockDespues < 0) stockDespues = 0;
+
+      try {
+        const patch = { stock: stockDespues };
+        if (accion === 'suma' && stockDespues > (p.stock_minimo ?? 5)) patch.aviso_stock_enviado = false;
+        await apiPatch('inventario', p.id, patch);
+        p.stock = stockDespues;
+        if (patch.aviso_stock_enviado === false) p.aviso_stock_enviado = false;
+
+        registrarHistorial('inventario', {
+          producto: p.nombre,
+          accion: accion === 'suma' ? 'suma' : 'resta',
+          cantidad: Math.abs(stockDespues - stockAntes),
+          stock_antes: stockAntes, stock_despues: stockDespues
+        });
+
+        const linea = document.createElement('div');
+        linea.style.cssText = 'font-size:.82rem;padding:4px 0;border-bottom:1px solid #f0eaf8';
+        linea.innerHTML = `<i class="fa-solid ${accion === 'suma' ? 'fa-plus' : 'fa-minus'}" style="color:${accion === 'suma' ? '#2d7a4f' : '#c0392b'};margin-right:6px"></i>${p.nombre}: ${accion === 'suma' ? '+' : '-'}${fmtStock(cantidad)} ${unidadCorta(p)} (${fmtStock(stockAntes)} → ${fmtStock(stockDespues)})`;
+        document.getElementById('ajusteStockHistorial').prepend(linea);
+
+        toast(`Stock ${accion === 'suma' ? 'sumado' : 'restado'} correctamente`, 'ok');
+        if (tablaActual === 'inventario') cargarDatos();
+
+        document.getElementById('ajusteStockProductoWrap').style.display = 'none';
+        ajusteStockProductoActual = null;
+        const inp = document.getElementById('ajuste_scan');
+        inp.value = '';
+        inp.focus();
+      } catch (e) {
+        toast('Error al actualizar el stock: ' + e.message, 'err');
+      }
+    }
 
     async function crearProductoRapidoDesdeLineaCompra(idx) {
       const inp = document.getElementById(`lc_prod_${idx}`);

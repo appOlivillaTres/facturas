@@ -11,6 +11,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -2585,34 +2586,51 @@
   </div>
 
   <div class="modal-overlay" id="modalAjusteStock">
+  <div class="modal-box-sm">
+    <h3><i class="fa-solid fa-barcode" style="color:#2d7a4f"></i>Ajuste rápido de stock</h3>
+
+    <!-- 👇 AQUÍ va el bloque que me preguntaste, sustituyendo al input suelto de antes -->
+    <div class="form-group" style="margin:0 0 12px">
+      <label style="font-size:.78rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanea el producto</label>
+      <div style="display:flex;gap:6px">
+        <input type="text" id="ajuste_scan" placeholder="Escanea con el lector o usa la cámara..." autocomplete="off" style="border-color:#2d7a4f;font-weight:600;flex:1">
+        <button type="button" onclick="escanearConCamara('ajuste_scan')" title="Usar la cámara del móvil"
+          style="background:#2d7a4f;border:none;color:#fff;border-radius:6px;width:38px;flex-shrink:0;cursor:pointer">
+          <i class="fa-solid fa-camera"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="ajusteStockProductoWrap" style="display:none">
+      <div style="background:#f7f0f5;border:1.5px solid #ede5f5;border-radius:8px;padding:10px 14px;margin-bottom:12px">
+        <div style="font-weight:700;color:#4a3b68" id="ajusteStockNombre">—</div>
+        <div style="font-size:.82rem;color:#888">Stock actual: <strong id="ajusteStockActual">—</strong></div>
+      </div>
+      <div class="form-group">
+        <label>Cantidad</label>
+        <input type="number" id="ajuste_cantidad" value="1" min="0.01" step="0.01">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:10px">
+        <button type="button" class="btn-toggle-pago pagado" style="flex:1;justify-content:center" onclick="confirmarAjusteStock('suma')"><i class="fa-solid fa-plus me-1"></i>Sumar</button>
+        <button type="button" class="btn-toggle-pago vencido" style="flex:1;justify-content:center" onclick="confirmarAjusteStock('resta')"><i class="fa-solid fa-minus me-1"></i>Restar</button>
+      </div>
+    </div>
+    <div id="ajusteStockHistorial" style="margin-top:16px;max-height:180px;overflow-y:auto"></div>
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="cerrarModalAjusteStock()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+
+  <div class="modal-overlay" id="modalCamaraLector">
     <div class="modal-box-sm">
-      <h3><i class="fa-solid fa-barcode" style="color:#2d7a4f"></i>Ajuste rápido de stock</h3>
-      <div class="form-group" style="margin:0 0 12px">
-        <label style="font-size:.78rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanea el
-          producto</label>
-        <input type="text" id="ajuste_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
-          style="border-color:#2d7a4f;font-weight:600">
-      </div>
-      <div id="ajusteStockProductoWrap" style="display:none">
-        <div
-          style="background:#f7f0f5;border:1.5px solid #ede5f5;border-radius:8px;padding:10px 14px;margin-bottom:12px">
-          <div style="font-weight:700;color:#4a3b68" id="ajusteStockNombre">—</div>
-          <div style="font-size:.82rem;color:#888">Stock actual: <strong id="ajusteStockActual">—</strong></div>
-        </div>
-        <div class="form-group">
-          <label>Cantidad</label>
-          <input type="number" id="ajuste_cantidad" value="1" min="0.01" step="0.01">
-        </div>
-        <div style="display:flex;gap:10px;margin-top:10px">
-          <button type="button" class="btn-toggle-pago pagado" style="flex:1;justify-content:center"
-            onclick="confirmarAjusteStock('suma')"><i class="fa-solid fa-plus me-1"></i>Sumar</button>
-          <button type="button" class="btn-toggle-pago vencido" style="flex:1;justify-content:center"
-            onclick="confirmarAjusteStock('resta')"><i class="fa-solid fa-minus me-1"></i>Restar</button>
-        </div>
-      </div>
-      <div id="ajusteStockHistorial" style="margin-top:16px;max-height:180px;overflow-y:auto"></div>
+      <h3><i class="fa-solid fa-camera" style="color:#2d7a4f"></i>Escanear con la cámara</h3>
+      <div id="camaraLectorPreview" style="width:100%;border-radius:10px;overflow:hidden;background:#000"></div>
+      <p style="font-size:.78rem;color:#888;margin-top:10px;text-align:center">Apunta al código de barras — se detecta
+        automáticamente</p>
       <div class="modal-btns">
-        <button class="btn-cancelar" onclick="cerrarModalAjusteStock()">Cerrar</button>
+        <button class="btn-cancelar" onclick="cerrarLectorCamara()">Cerrar</button>
       </div>
     </div>
   </div>
@@ -13763,6 +13781,43 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       actualizarUnidadLinea('lav', idx);
       autocompletarPrecioLinea(idx);
       toast(`"${prod.nombre}" añadido (código: ${prod.codigo_barras})`, 'ok');
+    }
+
+    let _html5QrCode = null;
+    let _inputDestinoCamara = null;
+
+    function escanearConCamara(inputId) {
+      _inputDestinoCamara = inputId;
+      document.getElementById('modalCamaraLector').classList.add('visible');
+      document.getElementById('camaraLectorPreview').innerHTML = '<div id="camaraLectorReader" style="width:100%"></div>';
+
+      _html5QrCode = new Html5Qrcode('camaraLectorReader');
+      _html5QrCode.start(
+        { facingMode: 'environment' },          // cámara trasera del móvil
+        { fps: 10, qrbox: { width: 250, height: 150 } },
+        (codigoDecodificado) => _procesarCodigoCamara(codigoDecodificado),
+        () => { } // ignora los frames donde no detecta nada
+      ).catch(err => {
+        toast('No se pudo acceder a la cámara: ' + err, 'err');
+        cerrarLectorCamara();
+      });
+    }
+
+    function _procesarCodigoCamara(codigo) {
+      cerrarLectorCamara();
+      const inp = document.getElementById(_inputDestinoCamara);
+      if (!inp) return;
+      inp.value = codigo;
+      // dispara el mismo evento que espera activarInputEscaner
+      inp.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    }
+
+    function cerrarLectorCamara() {
+      document.getElementById('modalCamaraLector').classList.remove('visible');
+      if (_html5QrCode) {
+        _html5QrCode.stop().then(() => _html5QrCode.clear()).catch(() => { });
+        _html5QrCode = null;
+      }
     }
 
     async function comprobarFacturasVencidasSinRevisar() {

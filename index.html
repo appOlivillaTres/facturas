@@ -9779,6 +9779,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         } else {
           addLineaAlbaranVenta();
         }
+        activarInputEscaner('lav_scan', escanearLineaAlbaranVenta);
+        document.getElementById('lav_scan')?.focus();
       }, 60);
     }
 
@@ -11648,6 +11650,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       </div>
       <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">Productos que se lleva / se devuelven</div>
       <p style="font-size:.78rem;color:#888;margin-top:-8px"><i class="fa-solid fa-info-circle me-1"></i>Cada producto descuenta stock automáticamente.</p>
+      <div class="form-group" style="margin:0 0 10px">
+  <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
+  <input type="text" id="lav_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
+    style="border-color:#2d7a4f;font-weight:600">
+</div>
       <div id="lineasAlbaranVenta"></div>
       <button type="button" class="btn-add-linea" onclick="addLineaAlbaranVenta()"><i class="fa-solid fa-plus me-1"></i>Añadir producto</button>
       <div class="form-grid" style="margin-top:14px;padding-top:12px;border-top:1.5px solid #ede5f5">
@@ -11666,6 +11673,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         document.getElementById('modalNueva').classList.add('visible');
         setTimeout(() => {
           setupClienteVentaAC('f_av_cliente', 'f_av_nif', 'f_av_cliente_id');
+          activarInputEscaner('lav_scan', escanearLineaAlbaranVenta);
+          document.getElementById('lav_scan')?.focus();
           addLineaAlbaranVenta();
           ocultarPdfModal();
 
@@ -13459,6 +13468,12 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
       document.getElementById('modalConsumoInterno').classList.add('visible');
       setTimeout(() => setupClienteConsumoAC('ci_empleado', 'ci_cliente_id'), 50);
+      document.getElementById('modalConsumoInterno').classList.add('visible');
+      setTimeout(() => setupClienteConsumoAC('ci_empleado', 'ci_cliente_id'), 50);
+      setTimeout(() => {
+        activarInputEscaner('ci_scan', escanearLineaConsumoInterno);
+        document.getElementById('ci_scan')?.focus();
+      }, 60);
     }
 
 
@@ -13615,6 +13630,27 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById(`ci_prod_${idx}`).value = prod.nombre;
       document.getElementById(`ci_cant_${idx}`).value = 1;
       autocompletarPrecioLineaCI(idx);
+      toast(`"${prod.nombre}" añadido (código: ${prod.codigo_barras})`, 'ok');
+    }
+
+    function escanearLineaAlbaranVenta(prod) {
+      const inputsExistentes = document.querySelectorAll('[id^="lav_prod_"]');
+      for (const inp of inputsExistentes) {
+        if (inp.value.trim().toLowerCase() === prod.nombre.toLowerCase()) {
+          const idx = inp.id.split('_')[2];
+          const cantInp = document.getElementById(`lav_cant_${idx}`);
+          cantInp.value = (parseFloat(cantInp.value || 0) + 1);
+          recalcBaseDesdeLineasAlbaranVenta();
+          toast(`+1 "${prod.nombre}" (ahora: ${cantInp.value})`, 'ok');
+          return;
+        }
+      }
+      addLineaAlbaranVenta();
+      const idx = lineasAlbaranVentaCount;
+      document.getElementById(`lav_prod_${idx}`).value = prod.nombre;
+      document.getElementById(`lav_cant_${idx}`).value = 1;
+      actualizarUnidadLinea('lav', idx);
+      autocompletarPrecioLinea(idx);
       toast(`"${prod.nombre}" añadido (código: ${prod.codigo_barras})`, 'ok');
     }
 

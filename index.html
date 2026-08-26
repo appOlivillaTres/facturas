@@ -2613,6 +2613,12 @@
         <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">Productos comprados</div>
         <p style="font-size:.78rem;color:#888;margin-top:-8px"><i class="fa-solid fa-info-circle me-1"></i>Cada producto
           descuenta stock y suma sus puntos al cliente automáticamente.</p>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear
+            producto</label>
+          <input type="text" id="lc_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
+            style="border-color:#2d7a4f;font-weight:600">
+        </div>
         <div id="lineasCompra"></div>
         <button type="button" class="btn-add-linea" onclick="addLineaCompra()">
           <i class="fa-solid fa-plus me-1"></i>Añadir producto
@@ -2862,6 +2868,11 @@
         </label>
       </div>
       <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">¿Qué se lleva?</div>
+      <div class="form-group" style="margin:0">
+        <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
+        <input type="text" id="ci_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
+          style="border-color:#2d7a4f;font-weight:600">
+      </div>
       <div id="lineasConsumoInterno"></div>
       <button type="button" class="btn-add-linea" onclick="addLineaConsumoInterno()">
         <i class="fa-solid fa-plus me-1"></i>Añadir producto
@@ -9156,6 +9167,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       if (tcInput) tcInput.value = '';
       document.getElementById("totalPuntosCompra").textContent = '0 pts';
       addLineaCompra();
+      setTimeout(() => {
+        activarInputEscaner('lc_scan', escanearLineaCompra);
+        document.getElementById('lc_scan')?.focus();
+      }, 60);
     }
 
     function addLineaCompra() {
@@ -11527,7 +11542,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         } else {
           ocultarPdfModal();
         }
-
+        activarInputEscaner('lfa_scan', escanearLineaFactura);
+        document.getElementById('lfa_scan')?.focus();
       }, 60);
     }
 
@@ -11781,6 +11797,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <div class="form-seccion">Productos recibidos <span style="font-weight:400;font-size:.75rem;color:#888">(suman stock automáticamente)</span></div>
       <div id="avisoProductosRegistrados" style="margin-bottom:8px"></div>
       <p style="font-size:.78rem;color:#888;margin-bottom:10px"><i class="fa-solid fa-arrow-trend-up me-1" style="color:#2d7a4f"></i>Al guardar, la cantidad se <strong>sumará al stock</strong> del producto.</p>
+      <div class="form-group" style="margin:0 0 10px">
+  <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
+  <input type="text" id="lfa_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
+    style="border-color:#2d7a4f;font-weight:600">
+</div>
       <div id="lineasFactAlm"></div>
       <button type="button" class="btn-add-linea" onclick="addLineaFactAlm()"><i class="fa-solid fa-plus me-1"></i>Añadir producto recibido</button>`;
         window._optsFactAlm = opts;
@@ -11789,6 +11810,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         setTimeout(() => {
           setupProveedorAC('f_prov', 'f_nif');
           addLineaFactAlm();
+          activarInputEscaner('lfa_scan', escanearLineaFactura);
+          document.getElementById('lfa_scan')?.focus();
           _aplicarPrellenado();
           if (window._prellenado && window._prellenado.archivo_url) {
             archivosFacturaSeleccionados = [{ url: window._prellenado.archivo_url, nombre: window._prellenado.proveedor || 'Factura' }];
@@ -11854,6 +11877,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <div class="form-seccion">Productos recibidos <span style="font-weight:400;font-size:.75rem;color:#888">(suman stock automáticamente)</span></div>
       <div id="avisoProductosRegistrados" style="margin-bottom:8px"></div>
       <p style="font-size:.78rem;color:#888;margin-bottom:10px"><i class="fa-solid fa-arrow-trend-up me-1" style="color:#2d7a4f"></i>Al guardar, la cantidad se <strong>sumará al stock</strong> del producto.</p>
+      <div class="form-group" style="margin:0 0 10px">
+  <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
+  <input type="text" id="lfa_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
+    style="border-color:#2d7a4f;font-weight:600">
+</div>
       <div id="lineasFactAlm"></div>
       <button type="button" class="btn-add-linea" onclick="addLineaFactAlm()"><i class="fa-solid fa-plus me-1"></i>Añadir producto recibido</button>`;
         window._optsFactAlm = opts;
@@ -11863,6 +11891,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           setupProveedorAC('f_prov', 'f_nif');
           setupObraAC('f_obra');
           addLineaFactAlm();
+          activarInputEscaner('lfa_scan', escanearLineaFactura);
+          document.getElementById('lfa_scan')?.focus();
           _aplicarPrellenado();
           document.getElementById('f_reparto_activo').checked = false;
           document.getElementById('bloqueRepartoObras').style.display = 'none';
@@ -11932,6 +11962,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <div class="form-seccion">Productos recibidos <span style="font-weight:400;font-size:.75rem;color:#888">(suman stock automáticamente)</span></div>
       <div id="avisoProductosRegistrados" style="margin-bottom:8px"></div>
       <p style="font-size:.78rem;color:#888;margin-bottom:10px"><i class="fa-solid fa-arrow-trend-up me-1" style="color:#2d7a4f"></i>Al guardar, la cantidad se <strong>sumará al stock</strong> del producto.</p>
+      <div class="form-group" style="margin:0 0 10px">
+  <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
+  <input type="text" id="lfa_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
+    style="border-color:#2d7a4f;font-weight:600">
+</div>
       <div id="lineasFactAlm"></div>
       <button type="button" class="btn-add-linea" onclick="addLineaFactAlm()"><i class="fa-solid fa-plus me-1"></i>Añadir producto recibido</button>`;
         window._optsFactAlm = opts;
@@ -11941,6 +11976,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           setupProveedorAC('f_prov', 'f_nif');
           setupObraAC('f_obra');
           addLineaFactAlm();
+          activarInputEscaner('lfa_scan', escanearLineaFactura);
+          document.getElementById('lfa_scan')?.focus();
           _aplicarPrellenado();
           document.getElementById('f_reparto_activo').checked = false;
           document.getElementById('bloqueRepartoObras').style.display = 'none';
@@ -12623,6 +12660,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       addLineaConsumoInterno();
       document.getElementById('modalConsumoInterno').classList.add('visible');
       setTimeout(() => setupClienteConsumoAC('ci_empleado', 'ci_cliente_id'), 50);
+      setTimeout(() => {
+        activarInputEscaner('ci_scan', escanearLineaConsumoInterno);
+        document.getElementById('ci_scan')?.focus();
+      }, 60);
     }
 
     function addLineaConsumoInterno() {
@@ -13518,6 +13559,64 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       toast(`"${prod.nombre}" añadido (código: ${prod.codigo_barras})`, 'ok');
     }
 
+    function escanearLineaFactura(prod) {
+      const inputsExistentes = document.querySelectorAll('[id^="lfa_prod_"]');
+      for (const inp of inputsExistentes) {
+        if (inp.value.trim().toLowerCase() === prod.nombre.toLowerCase()) {
+          const idx = inp.id.split('_')[2];
+          const cantInp = document.getElementById(`lfa_cant_${idx}`);
+          cantInp.value = (parseFloat(cantInp.value || 0) + 1);
+          toast(`+1 "${prod.nombre}" (ahora: ${cantInp.value})`, 'ok');
+          return;
+        }
+      }
+      addLineaFactAlm();
+      const idx = lineasFacturaCount;
+      document.getElementById(`lfa_prod_${idx}`).value = prod.nombre;
+      document.getElementById(`lfa_cant_${idx}`).value = 1;
+      actualizarUnidadLinea('lfa', idx);
+      toast(`"${prod.nombre}" añadido (código: ${prod.codigo_barras})`, 'ok');
+    }
+    function escanearLineaCompra(prod) {
+      const inputsExistentes = document.querySelectorAll('[id^="lc_prod_"]');
+      for (const inp of inputsExistentes) {
+        if (inp.value.trim().toLowerCase() === prod.nombre.toLowerCase()) {
+          const idx = inp.id.split('_')[2];
+          const cantInp = document.getElementById(`lc_cant_${idx}`);
+          cantInp.value = (parseFloat(cantInp.value || 0) + 1);
+          recalcTotalCompraDesdeLineas();
+          toast(`+1 "${prod.nombre}" (ahora: ${cantInp.value})`, 'ok');
+          return;
+        }
+      }
+      addLineaCompra();
+      const idx = lineasCompraCount;
+      document.getElementById(`lc_prod_${idx}`).value = prod.nombre;
+      document.getElementById(`lc_cant_${idx}`).value = 1;
+      actualizarUnidadLinea('lc', idx);
+      autocompletarPrecioLineaCompra(idx);
+      toast(`"${prod.nombre}" añadido (código: ${prod.codigo_barras})`, 'ok');
+    }
+
+    function escanearLineaConsumoInterno(prod) {
+      const inputsExistentes = document.querySelectorAll('[id^="ci_prod_"]');
+      for (const inp of inputsExistentes) {
+        if (inp.value.trim().toLowerCase() === prod.nombre.toLowerCase()) {
+          const idx = inp.id.split('_')[2];
+          const cantInp = document.getElementById(`ci_cant_${idx}`);
+          cantInp.value = (parseFloat(cantInp.value || 0) + 1);
+          recalcTotalCI();
+          toast(`+1 "${prod.nombre}" (ahora: ${cantInp.value})`, 'ok');
+          return;
+        }
+      }
+      addLineaConsumoInterno();
+      const idx = lineasConsumoInternoCount;
+      document.getElementById(`ci_prod_${idx}`).value = prod.nombre;
+      document.getElementById(`ci_cant_${idx}`).value = 1;
+      autocompletarPrecioLineaCI(idx);
+      toast(`"${prod.nombre}" añadido (código: ${prod.codigo_barras})`, 'ok');
+    }
 
     async function comprobarFacturasVencidasSinRevisar() {
       if (tablaActual !== 'facturas_almacen' && tablaActual !== 'facturas_obra' && tablaActual !== 'facturas_csg' && tablaActual !== 'ingresos') return;

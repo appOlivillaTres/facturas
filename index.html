@@ -2586,41 +2586,46 @@
   </div>
 
   <div class="modal-overlay" id="modalAjusteStock">
-  <div class="modal-box-sm">
-    <h3><i class="fa-solid fa-barcode" style="color:#2d7a4f"></i>Ajuste rápido de stock</h3>
+    <div class="modal-box-sm">
+      <h3><i class="fa-solid fa-barcode" style="color:#2d7a4f"></i>Ajuste rápido de stock</h3>
 
-    <!-- 👇 AQUÍ va el bloque que me preguntaste, sustituyendo al input suelto de antes -->
-    <div class="form-group" style="margin:0 0 12px">
-      <label style="font-size:.78rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanea el producto</label>
-      <div style="display:flex;gap:6px">
-        <input type="text" id="ajuste_scan" placeholder="Escanea con el lector o usa la cámara..." autocomplete="off" style="border-color:#2d7a4f;font-weight:600;flex:1">
-        <button type="button" onclick="escanearConCamara('ajuste_scan')" title="Usar la cámara del móvil"
-          style="background:#2d7a4f;border:none;color:#fff;border-radius:6px;width:38px;flex-shrink:0;cursor:pointer">
-          <i class="fa-solid fa-camera"></i>
-        </button>
+      <!-- 👇 AQUÍ va el bloque que me preguntaste, sustituyendo al input suelto de antes -->
+      <div class="form-group" style="margin:0 0 12px">
+        <label style="font-size:.78rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanea el
+          producto</label>
+        <div style="display:flex;gap:6px">
+          <input type="text" id="ajuste_scan" placeholder="Escanea con el lector o usa la cámara..." autocomplete="off"
+            style="border-color:#2d7a4f;font-weight:600;flex:1">
+          <button type="button" onclick="escanearConCamara('ajuste_scan')" title="Usar la cámara del móvil"
+            style="background:#2d7a4f;border:none;color:#fff;border-radius:6px;width:38px;flex-shrink:0;cursor:pointer">
+            <i class="fa-solid fa-camera"></i>
+          </button>
+        </div>
       </div>
-    </div>
 
-    <div id="ajusteStockProductoWrap" style="display:none">
-      <div style="background:#f7f0f5;border:1.5px solid #ede5f5;border-radius:8px;padding:10px 14px;margin-bottom:12px">
-        <div style="font-weight:700;color:#4a3b68" id="ajusteStockNombre">—</div>
-        <div style="font-size:.82rem;color:#888">Stock actual: <strong id="ajusteStockActual">—</strong></div>
+      <div id="ajusteStockProductoWrap" style="display:none">
+        <div
+          style="background:#f7f0f5;border:1.5px solid #ede5f5;border-radius:8px;padding:10px 14px;margin-bottom:12px">
+          <div style="font-weight:700;color:#4a3b68" id="ajusteStockNombre">—</div>
+          <div style="font-size:.82rem;color:#888">Stock actual: <strong id="ajusteStockActual">—</strong></div>
+        </div>
+        <div class="form-group">
+          <label>Cantidad</label>
+          <input type="number" id="ajuste_cantidad" value="1" min="0.01" step="0.01">
+        </div>
+        <div style="display:flex;gap:10px;margin-top:10px">
+          <button type="button" class="btn-toggle-pago pagado" style="flex:1;justify-content:center"
+            onclick="confirmarAjusteStock('suma')"><i class="fa-solid fa-plus me-1"></i>Sumar</button>
+          <button type="button" class="btn-toggle-pago vencido" style="flex:1;justify-content:center"
+            onclick="confirmarAjusteStock('resta')"><i class="fa-solid fa-minus me-1"></i>Restar</button>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Cantidad</label>
-        <input type="number" id="ajuste_cantidad" value="1" min="0.01" step="0.01">
+      <div id="ajusteStockHistorial" style="margin-top:16px;max-height:180px;overflow-y:auto"></div>
+      <div class="modal-btns">
+        <button class="btn-cancelar" onclick="cerrarModalAjusteStock()">Cerrar</button>
       </div>
-      <div style="display:flex;gap:10px;margin-top:10px">
-        <button type="button" class="btn-toggle-pago pagado" style="flex:1;justify-content:center" onclick="confirmarAjusteStock('suma')"><i class="fa-solid fa-plus me-1"></i>Sumar</button>
-        <button type="button" class="btn-toggle-pago vencido" style="flex:1;justify-content:center" onclick="confirmarAjusteStock('resta')"><i class="fa-solid fa-minus me-1"></i>Restar</button>
-      </div>
-    </div>
-    <div id="ajusteStockHistorial" style="margin-top:16px;max-height:180px;overflow-y:auto"></div>
-    <div class="modal-btns">
-      <button class="btn-cancelar" onclick="cerrarModalAjusteStock()">Cerrar</button>
     </div>
   </div>
-</div>
 
 
   <div class="modal-overlay" id="modalCamaraLector">
@@ -2672,6 +2677,18 @@
             producto</label>
           <input type="text" id="lc_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
             style="border-color:#2d7a4f;font-weight:600">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear
+            producto</label>
+          <div style="display:flex;gap:6px">
+            <input type="text" id="lc_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
+              style="border-color:#2d7a4f;font-weight:600;flex:1">
+            <button type="button" onclick="escanearConCamara('lc_scan')" title="Usar la cámara del móvil"
+              style="background:#2d7a4f;border:none;color:#fff;border-radius:6px;width:38px;flex-shrink:0;cursor:pointer">
+              <i class="fa-solid fa-camera"></i>
+            </button>
+          </div>
         </div>
         <div id="lineasCompra"></div>
         <button type="button" class="btn-add-linea" onclick="addLineaCompra()">
@@ -2733,6 +2750,18 @@
             producto</label>
           <input type="text" id="mo_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
             style="border-color:#2d7a4f;font-weight:600">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear
+            producto</label>
+          <div style="display:flex;gap:6px">
+            <input type="text" id="mo_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
+              style="border-color:#2d7a4f;font-weight:600;flex:1">
+            <button type="button" onclick="escanearConCamara('mo_scan')" title="Usar la cámara del móvil"
+              style="background:#2d7a4f;border:none;color:#fff;border-radius:6px;width:38px;flex-shrink:0;cursor:pointer">
+              <i class="fa-solid fa-camera"></i>
+            </button>
+          </div>
         </div>
         <div id="lineasMaterial"></div>
         <button type="button" class="btn-add-linea" onclick="addLineaMaterial()">

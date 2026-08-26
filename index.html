@@ -2956,6 +2956,16 @@
         <input type="text" id="ci_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
           style="border-color:#2d7a4f;font-weight:600">
       </div>
+      <div class="form-group" style="margin:0">
+  <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
+  <div style="display:flex;gap:6px">
+    <input type="text" id="ci_scan" placeholder="Escanea aquí con el lector..." autocomplete="off" style="border-color:#2d7a4f;font-weight:600;flex:1">
+    <button type="button" onclick="escanearConCamara('ci_scan')" title="Usar la cámara del móvil"
+      style="background:#2d7a4f;border:none;color:#fff;border-radius:6px;width:38px;flex-shrink:0;cursor:pointer">
+      <i class="fa-solid fa-camera"></i>
+    </button>
+  </div>
+</div>
       <div id="lineasConsumoInterno"></div>
       <button type="button" class="btn-add-linea" onclick="addLineaConsumoInterno()">
         <i class="fa-solid fa-plus me-1"></i>Añadir producto
@@ -11813,6 +11823,16 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   <input type="text" id="lav_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
     style="border-color:#2d7a4f;font-weight:600">
 </div>
+<div class="form-group" style="margin:0 0 10px">
+  <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
+  <div style="display:flex;gap:6px">
+    <input type="text" id="lav_scan" placeholder="Escanea aquí con el lector..." autocomplete="off" style="border-color:#2d7a4f;font-weight:600;flex:1">
+    <button type="button" onclick="escanearConCamara('lav_scan')" title="Usar la cámara del móvil"
+      style="background:#2d7a4f;border:none;color:#fff;border-radius:6px;width:38px;flex-shrink:0;cursor:pointer">
+      <i class="fa-solid fa-camera"></i>
+    </button>
+  </div>
+</div>
       <div id="lineasAlbaranVenta"></div>
       <button type="button" class="btn-add-linea" onclick="addLineaAlbaranVenta()"><i class="fa-solid fa-plus me-1"></i>Añadir producto</button>
       <div class="form-grid" style="margin-top:14px;padding-top:12px;border-top:1.5px solid #ede5f5">
@@ -11968,6 +11988,16 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
   <input type="text" id="lfa_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
     style="border-color:#2d7a4f;font-weight:600">
+    <div class="form-group" style="margin:0 0 10px">
+  <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
+  <div style="display:flex;gap:6px">
+    <input type="text" id="lfa_scan" placeholder="Escanea aquí con el lector..." autocomplete="off" style="border-color:#2d7a4f;font-weight:600;flex:1">
+    <button type="button" onclick="escanearConCamara('lfa_scan')" title="Usar la cámara del móvil"
+      style="background:#2d7a4f;border:none;color:#fff;border-radius:6px;width:38px;flex-shrink:0;cursor:pointer">
+      <i class="fa-solid fa-camera"></i>
+    </button>
+  </div>
+</div>
 </div>
       <div id="lineasFactAlm"></div>
       <button type="button" class="btn-add-linea" onclick="addLineaFactAlm()"><i class="fa-solid fa-plus me-1"></i>Añadir producto recibido</button>`;
@@ -12048,6 +12078,16 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
   <input type="text" id="lfa_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
     style="border-color:#2d7a4f;font-weight:600">
+    <div class="form-group" style="margin:0 0 10px">
+  <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
+  <div style="display:flex;gap:6px">
+    <input type="text" id="lfa_scan" placeholder="Escanea aquí con el lector..." autocomplete="off" style="border-color:#2d7a4f;font-weight:600;flex:1">
+    <button type="button" onclick="escanearConCamara('lfa_scan')" title="Usar la cámara del móvil"
+      style="background:#2d7a4f;border:none;color:#fff;border-radius:6px;width:38px;flex-shrink:0;cursor:pointer">
+      <i class="fa-solid fa-camera"></i>
+    </button>
+  </div>
+</div>
 </div>
       <div id="lineasFactAlm"></div>
       <button type="button" class="btn-add-linea" onclick="addLineaFactAlm()"><i class="fa-solid fa-plus me-1"></i>Añadir producto recibido</button>`;
@@ -12133,6 +12173,16 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
   <input type="text" id="lfa_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
     style="border-color:#2d7a4f;font-weight:600">
+    <div class="form-group" style="margin:0 0 10px">
+  <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
+  <div style="display:flex;gap:6px">
+    <input type="text" id="lfa_scan" placeholder="Escanea aquí con el lector..." autocomplete="off" style="border-color:#2d7a4f;font-weight:600;flex:1">
+    <button type="button" onclick="escanearConCamara('lfa_scan')" title="Usar la cámara del móvil"
+      style="background:#2d7a4f;border:none;color:#fff;border-radius:6px;width:38px;flex-shrink:0;cursor:pointer">
+      <i class="fa-solid fa-camera"></i>
+    </button>
+  </div>
+</div>
 </div>
       <div id="lineasFactAlm"></div>
       <button type="button" class="btn-add-linea" onclick="addLineaFactAlm()"><i class="fa-solid fa-plus me-1"></i>Añadir producto recibido</button>`;

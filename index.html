@@ -2668,6 +2668,12 @@
         <p style="font-size:.78rem;color:#888;margin-top:-8px" id="moHintStock"><i
             class="fa-solid fa-info-circle me-1"></i>Cada producto
           descuenta stock automáticamente.</p>
+        <div class="form-group" style="margin:0">
+          <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear
+            producto</label>
+          <input type="text" id="mo_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
+            style="border-color:#2d7a4f;font-weight:600">
+        </div>
         <div id="lineasMaterial"></div>
         <button type="button" class="btn-add-linea" onclick="addLineaMaterial()">
           <i class="fa-solid fa-plus me-1"></i>Añadir material
@@ -5048,6 +5054,37 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     function buscarProductoPorNombre(nombre) {
       const norm = s => (s || '').toLowerCase().trim();
       return inventarioDB.find(p => norm(p.nombre) === norm(nombre)) || null;
+    }
+
+    function buscarProductoPorCodigoBarras(codigo) {
+      const norm = s => (s || '').trim();
+      const c = norm(codigo);
+      if (!c) return null;
+      return inventarioDB.find(p => norm(p.codigo_barras) === c) || null;
+    }
+
+    // Convierte un <input> normal en un "campo de escaneo": detecta el Enter
+    // que manda el lector al terminar de leer, busca el producto, y llama a
+    // onEncontrado(producto) o onNoEncontrado(codigo).
+    function activarInputEscaner(inputId, onEncontrado, onNoEncontrado) {
+      const inp = document.getElementById(inputId);
+      if (!inp) return;
+      inp.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        const codigo = inp.value.trim();
+        inp.value = '';
+        if (!codigo) return;
+        const prod = buscarProductoPorCodigoBarras(codigo);
+        if (prod) {
+          onEncontrado(prod);
+        } else if (onNoEncontrado) {
+          onNoEncontrado(codigo);
+        } else {
+          toast(`Código "${codigo}" no reconocido — añádelo a mano o edítalo en Inventario`, 'err');
+        }
+        inp.focus(); // listo para el siguiente escaneo
+      });
     }
 
     // AUTOCOMPLETADO PROVEEDORES
@@ -7797,7 +7834,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             puntos_por_unidad: parseInt(document.getElementById('f_pts').value || 0),
             costo: parseFloat(document.getElementById('f_costo')?.value || 0),
             precio: parseFloat(document.getElementById('f_precio')?.value || 0),
-            descuento: parseFloat(document.getElementById('f_descuento')?.value || 0)
+            descuento: parseFloat(document.getElementById('f_descuento')?.value || 0),
+            codigo_barras: document.getElementById('f_codigo_barras')?.value.trim() || null
           };
 
           if (modalEditId) {
@@ -11266,6 +11304,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           document.getElementById("f_costo").value = f.costo != null ? f.costo : 0;
           document.getElementById("f_precio").value = f.precio != null ? f.precio : 0;
           document.getElementById("f_descuento").value = f.descuento != null ? f.descuento : 0;
+          document.getElementById("f_codigo_barras").value = f.codigo_barras || "";
 
         }, 100);
 
@@ -11311,6 +11350,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         poblarSelectObras('mo_nombre_obra', 'Selecciona una obra...');
         setSelectObraValue('mo_nombre_obra', f.nombre_obra || '');
         setTimeout(() => setupObraAC('mo_nombre_obra'), 50);
+        setTimeout(() => {
+          activarInputEscaner('mo_scan', escanearLineaMaterial);
+          document.getElementById('mo_scan')?.focus();
+        }, 60);
         document.getElementById("mo_nombre_empleado").value = f.nombre_empleado || "";
         document.getElementById("mo_fecha").value = f.fecha || "";
         document.getElementById("mo_es_devolucion").checked = !!f.es_devolucion;
@@ -11548,6 +11591,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         lineasMaquinariaObraCount = 0;
         document.getElementById('modalMaterialObra').classList.add('visible');
         setTimeout(() => setupObraAC('mo_nombre_obra'), 50);
+        setTimeout(() => {
+          activarInputEscaner('mo_scan', escanearLineaMaterial);
+          document.getElementById('mo_scan')?.focus();
+        }, 60);
         addLineaMaterial();
         addLineaMaterialExclusivo();
         toggleDevolucionMaterialObra();
@@ -12028,6 +12075,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   <div class="form-group"><label>Costo (€)</label><input type="number" id="f_costo" value="0" step="0.01" min="0"></div>
     <div class="form-group"><label>Precio de venta (€)</label><input type="number" id="f_precio" value="0" step="0.01" min="0"></div>
   <div class="form-group"><label>Descuento (%)</label><input type="number" id="f_descuento" value="0" step="0.01" min="0" max="100"></div>
+</div>
+<div class="form-group span2">
+  <label>Código de barras <span style="font-size:.72rem;color:#888">(opcional — escanéalo con el lector o escríbelo a mano)</span></label>
+  <input type="text" id="f_codigo_barras" placeholder="Escanea o escribe el código...">
 </div>
 <p style="font-size:.78rem;color:#888;margin-top:10px"><i class="fa-solid fa-info-circle me-1"></i>Si el producto se mide por metros, podrás usar decimales al restar/sumar stock (ej. 2,5 m).</p>`;
         document.getElementById('modalNueva').classList.add('visible');
@@ -13444,6 +13495,27 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           })
         });
       } catch (e) { console.error('Error notificando revisores:', e); }
+    }
+
+    function escanearLineaMaterial(prod) {
+      // ¿ya hay una línea con este producto? → le suma 1 a la cantidad
+      const inputsExistentes = document.querySelectorAll('[id^="lm_prod_"]');
+      for (const inp of inputsExistentes) {
+        if (inp.value.trim().toLowerCase() === prod.nombre.toLowerCase()) {
+          const idx = inp.id.split('_')[2];
+          const cantInp = document.getElementById(`lm_cant_${idx}`);
+          cantInp.value = (parseFloat(cantInp.value || 0) + 1);
+          toast(`+1 "${prod.nombre}" (ahora: ${cantInp.value})`, 'ok');
+          return;
+        }
+      }
+      // si no existe, crea línea nueva y la rellena
+      addLineaMaterial();
+      const idx = lineasMaterialCount;
+      document.getElementById(`lm_prod_${idx}`).value = prod.nombre;
+      document.getElementById(`lm_cant_${idx}`).value = 1;
+      actualizarUnidadLinea('lm', idx);
+      toast(`"${prod.nombre}" añadido (código: ${prod.codigo_barras})`, 'ok');
     }
 
 

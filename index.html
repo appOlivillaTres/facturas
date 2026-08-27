@@ -2942,8 +2942,9 @@
       </div>
       <div class="modal-btns">
         <button class="btn-cancelar" onclick="cerrarModal('modalEnviarAlbaran')">Cancelar</button>
-        <button class="btn-guardar" id="btnEnviarAlbaranEmail" onclick="confirmarEnvioAlbaranEmail()"><i
-            class="fa-solid fa-paper-plane me-1"></i>Enviar</button>
+        <button class="btn-guardar" id="btnEnviarAlbaranEmail" onclick="confirmarEnvioSegunTipo()">
+          <i class="fa-solid fa-paper-plane me-1"></i>Enviar
+        </button>
       </div>
     </div>
   </div>
@@ -4479,6 +4480,15 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 
 
+
+
+    function confirmarEnvioSegunTipo() {
+      if (presupuestoEnvioActualId) {
+        confirmarEnvioPresupuestoEmail();
+      } else {
+        confirmarEnvioAlbaranEmail();
+      }
+    }
 
 
 
@@ -6720,7 +6730,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       } else if (tablaActual === 'presupuestos_venta') {
         hdr.innerHTML = `<tr><th>Nº Presupuesto</th><th>Fecha</th><th>Cliente</th><th>NIF</th><th class="num-cell">Total</th><th>Válido hasta</th><th></th><th></th></tr>`;
         const lista = registros.filter(f => [f.numero_presupuesto, f.cliente_nombre].some(v => (v || '').toLowerCase().includes(q)));
-        if (!lista.length) { bdy.innerHTML = emptyRow(8, 'No hay presupuestos registrados'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(9, 'No hay presupuestos registrados'); return; }
         bdy.innerHTML = lista.map(f => {
           const caduca = new Date(f.fecha);
           caduca.setDate(caduca.getDate() + (f.validez_dias || 8));
@@ -6734,6 +6744,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <td class="td-total">${fmt(f.total)}</td>
       <td><span class="badge-estado ${vencido ? 'badge-vencido' : 'badge-pagado'}">${caduca.toLocaleDateString('es-ES')}${vencido ? ' (caducado)' : ''}</span></td>
       <td><button class="btn-toggle-pago pendiente" onclick="imprimirPresupuestoVenta(${f.id})" title="Imprimir"><i class="fa-solid fa-print"></i></button></td>
+      <td><button class="btn-toggle-pago" style="background:#1565c0;color:#fff;border:1.5px solid #1565c0" onclick="abrirModalEnviarPresupuesto(${f.id})" title="Enviar por email"><i class="fa-solid fa-envelope"></i></button></td>
       <td><button class="btn-eliminar" onclick="eliminarPresupuestoVenta(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
     </tr>`;
         }).join('');
@@ -12600,6 +12611,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       if (id === 'modalConsumoInterno') {
         consumoInternoEditId = null; // 👈 añadir
       }
+      if (id === 'modalEnviarAlbaran') {
+        albaranEnvioActualId = null;
+        presupuestoEnvioActualId = null; // 👈 nuevo
+      }
     }
 
 
@@ -14142,6 +14157,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 
     let albaranEnvioActualId = null;
+    let presupuestoEnvioActualId = null;
 
     async function abrirModalEnviarAlbaran(id) {
       albaranEnvioActualId = id;
@@ -14155,31 +14171,278 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById('modalEnviarAlbaran').classList.add('visible');
     }
 
+    async function abrirModalEnviarPresupuesto(id) {
+      presupuestoEnvioActualId = id;
+      albaranEnvioActualId = null; // por si acaso, evita mezclar con el otro flujo
+
+      const f = registros.find(r => r.id === id) || await (async () => {
+        const items = await apiGet('presupuestos_venta', `id=eq.${id}`);
+        return items && items[0];
+      })();
+
+      document.getElementById('ea_email').value = f?.email_cliente || '';
+      document.getElementById('ea_mensaje').value = '';
+      document.querySelector('#modalEnviarAlbaran h3').innerHTML =
+        '<i class="fa-solid fa-envelope" style="color:#1565c0"></i>Enviar presupuesto por email';
+      document.getElementById('modalEnviarAlbaran').classList.add('visible');
+    }
+
     // Reconstruye el mismo HTML del albarán que usa imprimirAlbaranVenta,
     // pero lo devuelve como string en vez de abrirlo en una ventana.
     async function _generarHtmlAlbaranVenta(id) {
-      let f = registros.find(r => r.id === id);
-      if (!f) {
-        const items = await apiGet('albaranes_venta', `id=eq.${id}&select=*,albaranes_venta_items(*)`);
-        f = items && items[0];
+  let f = registros.find(r => r.id === id);
+  if (!f) {
+    const items = await apiGet('albaranes_venta', `id=eq.${id}&select=*,albaranes_venta_items(*)`);
+    f = items && items[0];
+  }
+  if (!f) throw new Error('Albarán no encontrado');
+  const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
+  const items = f.albaranes_venta_items || [];
+  const ocultarPrecios = !!f.ocultar_precios;
+
+  const filas = items.map(i => {
+    const precio = i.precio_unitario != null ? parseFloat(i.precio_unitario) : 0;
+    const subtotal = i.importe_total != null ? parseFloat(i.importe_total) : (precio * (parseFloat(i.cantidad) || 0));
+    const unidadTxt = i.unidad === 'metros' ? 'm' : 'uds.';
+    return ocultarPrecios
+      ? `<tr><td>${i.producto_id || ''}</td><td>${i.producto_nombre || ''}</td><td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td></tr>`
+      : `<tr><td>${i.producto_id || ''}</td><td>${i.producto_nombre || ''}</td><td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td><td style="text-align:right">${fmtN(precio)}</td><td style="text-align:right">${fmtN(subtotal)}</td><td style="text-align:right">—</td><td style="text-align:right">${fmtN(subtotal)}</td></tr>`;
+  }).join('');
+
+  const domicilioCliente = cliente.domicilio || '';
+  const poblacionCliente = [cliente.codigo_postal, cliente.poblacion].filter(Boolean).join('   ');
+  const provinciaCliente = cliente.provincia || '';
+
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Albarán ${f.numero_albaran || ''}</title>
+  <style>
+    body{font-family:Arial,sans-serif;color:#222;padding:36px;font-size:.65rem}
+    .cabecera{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
+    .cabecera img{height:130px}
+    .caja{border:1.5px solid #333;border-radius:10px;padding:12px 16px;margin-bottom:6px}
+    .datos-cliente h3{margin:0 0 6px;font-size:.9rem}
+    .doc-info{display:flex;gap:10px;margin-top:14px}
+    .doc-info div{border:1.5px solid #333;border-radius:8px;padding:8px 14px;text-align:center;font-size:.8rem}
+    .doc-info div b{display:block;font-size:.9rem;margin-top:2px}
+    table{width:100%;border-collapse:collapse;margin-top:20px}
+    th,td{border-bottom:1px solid #ccc;padding:8px 6px;text-align:left;font-size:.65rem}
+    th{background:#f7f0f5;font-weight:500}
+    .pie{display:flex;justify-content:space-between;gap:16px;margin-top:24px;align-items:flex-start}
+    .iva-tabla{border:1.5px solid #333;border-radius:10px;padding:10px 14px;font-size:.65rem}
+    .iva-tabla table{margin:0}
+    .iva-tabla th, .iva-tabla td{border:none;padding:4px 10px}
+    .total-box{border:1.5px solid #333;border-radius:10px;padding:14px 24px;font-size:.65rem;font-weight:700;display:flex;justify-content:space-between;gap:20px;align-items:center;min-width:220px}
+    .observaciones{border:1.5px solid #333;border-radius:10px;padding:12px 16px;min-height:60px;background:#fff;font-size:.82rem;margin-top:20px}
+  </style></head><body>
+  <div class="cabecera">
+    <img src="logo.png" alt="Olivilla Tres" onerror="this.style.display='none'">
+    <div class="datos-cliente" style="text-align:right">
+      <h3>DATOS DEL CLIENTE</h3>
+      <b>${f.cliente_nombre || cliente.nombre || '—'}</b><br>
+      ${domicilioCliente}<br>
+      ${poblacionCliente}<br>
+      ${provinciaCliente}<br>
+      <b>N.I.F.</b> ${f.nif || cliente.nif || '—'}
+    </div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px">
+    <div class="caja" style="max-width:340px">
+      <b>OLIVILLA TRES S.L.U</b><br>
+      Avenida de Madrid, 41<br>
+      45003 TOLEDO<br>
+      B45813284<br>
+      925233454<br>
+      almacen@olivillatres.com
+    </div>
+    <div class="doc-info">
+      <div>DOCUMENTO<br><b>Albarán</b></div>
+      <div>NÚMERO<br><b>${f.numero_albaran || '—'}</b></div>
+      <div>PÁGINA<br><b>1</b></div>
+      <div>FECHA<br><b>${fmtF(f.fecha)}</b></div>
+    </div>
+  </div>
+  <table>
+    <thead><tr><th>ARTÍCULO</th><th>DESCRIPCIÓN</th><th style="text-align:right">CANTIDAD</th>${ocultarPrecios ? '' : '<th style="text-align:right">PRECIO UD.</th><th style="text-align:right">SUBTOTAL</th><th style="text-align:right">DTO.</th><th style="text-align:right">TOTAL</th>'}</tr></thead>
+    <tbody>${filas || `<tr><td colspan="${ocultarPrecios ? 3 : 7}">Sin líneas</td></tr>`}</tbody>
+  </table>
+  ${ocultarPrecios ? '' : `
+  <div class="pie">
+    <div class="iva-tabla">
+      <table>
+        <thead><tr><th>TIPO</th><th>IMPORTE</th><th>DESCUENTO</th><th>BASE</th><th>I.V.A.</th></tr></thead>
+        <tbody><tr>
+          <td>${f.pct_iva != null ? fmtN(f.pct_iva) : '21,00'}</td>
+          <td>${fmtN(f.base_imponible)}</td>
+          <td>${f.descuento_pct ? f.descuento_pct + '% (' + fmtN(f.importe_descuento) + '€)' : '—'}</td>
+          <td>${fmtN(f.base_imponible)}</td>
+          <td>${fmtN(f.importe_iva)}</td>
+        </tr></tbody>
+      </table>
+    </div>
+    <div class="total-box"><span>TOTAL:</span><span>${fmt(f.total)}</span></div>
+  </div>`}
+  <div class="observaciones">
+  ${f.nombre_obra ? `<b>OBRA:</b> ${f.nombre_obra}<br>` : ''}<b>OBSERVACIONES:</b><br>${f.notas || ''}
+  </div>
+  </body></html>`;
+}
+
+async function _generarHtmlPresupuestoVenta(id) {
+  let f = registros.find(r => r.id === id);
+  if (!f) {
+    const items = await apiGet('presupuestos_venta', `id=eq.${id}&select=*,presupuestos_venta_items(*)`);
+    f = items && items[0];
+  }
+  if (!f) throw new Error('Presupuesto no encontrado');
+
+  const items = f.presupuestos_venta_items || [];
+  const validezDias = f.validez_dias || 8;
+  const fechaEmision = new Date(f.fecha);
+  const fechaCaduca = new Date(fechaEmision);
+  fechaCaduca.setDate(fechaCaduca.getDate() + validezDias);
+  const fechaCaducaTxt = fechaCaduca.toLocaleDateString('es-ES');
+
+  const filas = items.map(i => {
+    const precio = parseFloat(i.precio_unitario || 0);
+    const subtotal = i.importe_total != null ? parseFloat(i.importe_total) : (precio * (parseFloat(i.cantidad) || 0));
+    return `<tr>
+      <td>${i.producto_nombre || ''}</td>
+      <td style="text-align:right">${fmtStock(i.cantidad)}</td>
+      <td style="text-align:right">${fmtN(precio)}</td>
+      <td style="text-align:right">${i.dto_pct ? i.dto_pct + '%' : '—'}</td>
+      <td style="text-align:right">${fmtN(subtotal)}</td>
+    </tr>`;
+  }).join('');
+
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Presupuesto ${f.numero_presupuesto || ''}</title>
+  <style>
+    body{font-family:Arial,sans-serif;color:#222;padding:36px;font-size:.75rem}
+    .cabecera{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
+    .cabecera img{height:80px}
+    .caja{border:1.5px solid #333;border-radius:10px;padding:12px 16px;margin-bottom:6px}
+    .datos-cliente h3{margin:0 0 6px;font-size:.85rem}
+    .doc-info{display:flex;gap:10px;margin-top:14px}
+    .doc-info div{border:1.5px solid #333;border-radius:8px;padding:8px 14px;text-align:center;font-size:.78rem}
+    .doc-info div b{display:block;font-size:.85rem;margin-top:2px}
+    h1{font-size:1.6rem;margin:18px 0 6px;color:#b53987;text-transform:uppercase;letter-spacing:.05em}
+    .aviso-caducidad{background:#fff3e0;border:1.5px solid #f0c060;border-radius:10px;padding:12px 16px;margin:14px 0;font-size:.85rem;color:#7a4a00}
+    .aviso-caducidad b{color:#c47a00}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{border-bottom:1px solid #ccc;padding:7px;text-align:left;font-size:.75rem}
+    th{background:#f7f0f5;font-weight:500}
+    .pie{display:flex;justify-content:space-between;gap:16px;margin-top:20px;align-items:flex-start}
+    .iva-tabla{border:1.5px solid #333;border-radius:10px;padding:10px 14px;font-size:.75rem}
+    .iva-tabla table{margin:0}
+    .iva-tabla th,.iva-tabla td{border:none;padding:4px 10px}
+    .total-box{border:1.5px solid #333;border-radius:10px;padding:14px 24px;font-weight:700;display:flex;justify-content:space-between;gap:20px;align-items:center;min-width:220px}
+  </style></head><body>
+  <div class="cabecera">
+    <img src="logo.png" alt="Olivilla Tres" onerror="this.style.display='none'">
+    <div class="datos-cliente" style="text-align:right">
+      <h3>DATOS DEL CLIENTE</h3>
+      <b>${f.cliente_nombre || '—'}</b><br>
+      <b>N.I.F.</b> ${f.nif || '—'}
+    </div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px">
+    <div class="caja" style="max-width:320px">
+      <b>OLIVILLA TRES S.L.U</b><br>
+      Avenida de Madrid, 41<br>
+      45003 TOLEDO<br>
+      B45813284<br>
+      925233454<br>
+      almacen@olivillatres.com
+    </div>
+    <div class="doc-info">
+      <div>DOCUMENTO<br><b>Presupuesto</b></div>
+      <div>NÚMERO<br><b>${f.numero_presupuesto || '—'}</b></div>
+      <div>FECHA<br><b>${fmtF(f.fecha)}</b></div>
+    </div>
+  </div>
+  <h1>PRESUPUESTO</h1>
+  <div class="aviso-caducidad">
+    <i class="fa-solid fa-clock"></i>
+    Este presupuesto tiene una validez de <b>${validezDias} días</b> desde la fecha de emisión.
+    Queda <b>caducado a partir del ${fechaCaducaTxt}</b>. Pasado ese plazo deberá solicitarse un presupuesto nuevo, ya que los precios pueden variar.
+  </div>
+  <table>
+    <thead><tr><th>PRODUCTO</th><th style="text-align:right">CANTIDAD</th><th style="text-align:right">PRECIO UD.</th><th style="text-align:right">DTO.</th><th style="text-align:right">TOTAL</th></tr></thead>
+    <tbody>${filas || '<tr><td colspan="5">Sin líneas</td></tr>'}</tbody>
+  </table>
+  <div class="pie">
+    <div class="iva-tabla">
+      <table>
+        <thead><tr><th>BASE</th><th>%IVA</th><th>IMPORTE IVA</th></tr></thead>
+        <tbody><tr>
+          <td>${fmtN(f.base_imponible)}</td>
+          <td>${fmtN(f.pct_iva)}</td>
+          <td>${fmtN(f.importe_iva)}</td>
+        </tr></tbody>
+      </table>
+    </div>
+    <div class="total-box"><span>TOTAL:</span><span>${fmt(f.total)}</span></div>
+  </div>
+  ${f.notas ? `<p style="margin-top:16px"><b>Notas:</b> ${f.notas}</p>` : ''}
+  </body></html>`;
+}
+
+    async function confirmarEnvioPresupuestoEmail() {
+      const email = document.getElementById('ea_email').value.trim();
+      const mensaje = document.getElementById('ea_mensaje').value.trim();
+      if (!email) { toast('Indica un email válido', 'err'); return; }
+
+      const btn = document.getElementById('btnEnviarAlbaranEmail');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Generando PDF...';
+
+      try {
+        const f = registros.find(r => r.id === presupuestoEnvioActualId);
+        const htmlPresupuesto = await _generarHtmlPresupuestoVenta(presupuestoEnvioActualId);
+
+        const contenedor = document.createElement('div');
+        contenedor.style.cssText = 'position:fixed;left:-9999px;top:0;width:800px;background:#fff';
+        contenedor.innerHTML = htmlPresupuesto.replace(/<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi, '');
+        document.body.appendChild(contenedor);
+
+        const pdfBlob = await html2pdf().set({
+          margin: 10,
+          filename: `presupuesto_${f?.numero_presupuesto || presupuestoEnvioActualId}.pdf`,
+          jsPDF: { unit: 'mm', format: 'a4' }
+        }).from(contenedor).outputPdf('blob');
+
+        document.body.removeChild(contenedor);
+
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Enviando...';
+
+        const pdfBase64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(pdfBlob);
+        });
+
+        const res = await fetch('https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+          body: JSON.stringify({
+            tipo: 'enviar_presupuesto_venta',
+            email,
+            mensaje: mensaje || null,
+            numero_presupuesto: f?.numero_presupuesto || '',
+            cliente_nombre: f?.cliente_nombre || '',
+            pdf_base64: pdfBase64,
+            pdf_nombre: `presupuesto_${f?.numero_presupuesto || presupuestoEnvioActualId}.pdf`
+          })
+        });
+        if (!res.ok) throw new Error(await res.text());
+
+        toast(`<i class="fa-solid fa-check me-1"></i>Presupuesto enviado a ${email}`, 'ok');
+        cerrarModal('modalEnviarAlbaran');
+      } catch (e) {
+        toast('Error al enviar el presupuesto: ' + e.message, 'err');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane me-1"></i>Enviar';
       }
-      if (!f) throw new Error('Albarán no encontrado');
-      const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
-      const items = f.albaranes_venta_items || [];
-      const ocultarPrecios = !!f.ocultar_precios;
-
-      const filas = items.map(i => {
-        const precio = i.precio_unitario != null ? parseFloat(i.precio_unitario) : 0;
-        const subtotal = i.importe_total != null ? parseFloat(i.importe_total) : (precio * (parseFloat(i.cantidad) || 0));
-        const unidadTxt = i.unidad === 'metros' ? 'm' : 'uds.';
-        return ocultarPrecios
-          ? `<tr><td>${i.producto_id || ''}</td><td>${i.producto_nombre || ''}</td><td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td></tr>`
-          : `<tr><td>${i.producto_id || ''}</td><td>${i.producto_nombre || ''}</td><td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td><td style="text-align:right">${fmtN(precio)}</td><td style="text-align:right">${fmtN(subtotal)}</td><td style="text-align:right">—</td><td style="text-align:right">${fmtN(subtotal)}</td></tr>`;
-      }).join('');
-
-      // Usa el mismo bloque de HTML/CSS que ya tienes en imprimirAlbaranVenta
-      // (cabecera, tabla, totales, observaciones) — cópialo tal cual aquí.
-      return `<!DOCTYPE html><html>...</html>`; // 👈 pega aquí el mismo "html" de imprimirAlbaranVenta
     }
 
     async function confirmarEnvioAlbaranEmail() {

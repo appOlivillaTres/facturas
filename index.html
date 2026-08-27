@@ -3034,7 +3034,7 @@
       jose: 'jose@olivillatres.com',
       juandavid: 'juandavid@olivillatres.com',
       natalia: 'natalia.gm@olivillatres.com',
-      paula: 'paulafge@olivillatres.com' 
+      paula: 'paulafge@olivillatres.com'
     };
 
 
@@ -3226,21 +3226,21 @@
     // (Se comprueba contra 'currentPersona', la identidad real obtenida
     // tras iniciar sesión con Supabase Auth — ver cargarPerfilActual.)
     const ACCESO_SECCIONES = {
-  facturas_almacen: ['cynthia', 'emilio'],
-  facturas_obra: ['cynthia', 'angel', 'emilio', 'paula'],       // 👈
-  facturas_csg: ['angel', 'emilio', 'cynthia', 'paula'],         // 👈
-  revisadas_facturadas: ['cynthia', 'angel', 'emilio', 'paula'], // 👈
-  clientes: ['cynthia', 'jose', 'emilio'],
-  inventario: ['cynthia', 'jose', 'emilio'],
-  materiales_obra: ['cynthia', 'juandavid', 'jose', 'emilio', 'paula'], // 👈
-  calendario_pagos: ['cynthia', 'angel', 'emilio', 'paula'],     // 👈
-  ingresos: ['natalia', 'angel', 'emilio', 'paula'],             // 👈
-  varios: ['cynthia', 'emilio', 'paula'],                        // 👈
-  albaranes_venta: ['cynthia', 'emilio', 'jose'],
-  presupuestos_venta: ['cynthia', 'emilio', 'jose'],
-  maquinaria: ['cynthia', 'emilio', 'jose'],
-  consumo_interno: ['cynthia', 'emilio', 'jose']
-};
+      facturas_almacen: ['cynthia', 'emilio'],
+      facturas_obra: ['cynthia', 'angel', 'emilio', 'paula'],       // 👈
+      facturas_csg: ['angel', 'emilio', 'cynthia', 'paula'],         // 👈
+      revisadas_facturadas: ['cynthia', 'angel', 'emilio', 'paula'], // 👈
+      clientes: ['cynthia', 'jose', 'emilio'],
+      inventario: ['cynthia', 'jose', 'emilio'],
+      materiales_obra: ['cynthia', 'juandavid', 'jose', 'emilio', 'paula'], // 👈
+      calendario_pagos: ['cynthia', 'angel', 'emilio', 'paula'],     // 👈
+      ingresos: ['natalia', 'angel', 'emilio', 'paula'],             // 👈
+      varios: ['cynthia', 'emilio', 'paula'],                        // 👈
+      albaranes_venta: ['cynthia', 'emilio', 'jose'],
+      presupuestos_venta: ['cynthia', 'emilio', 'jose'],
+      maquinaria: ['cynthia', 'emilio', 'jose'],
+      consumo_interno: ['cynthia', 'emilio', 'jose']
+    };
 
     // Personas con acceso EXCLUSIVO a una lista concreta de secciones
     // (en vez de "todo menos lo restringido", ven solo esto).
@@ -4954,12 +4954,68 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     function marcarMaquinaDevuelta(id) {
       const m = registros.find(r => r.id === id) || maquinariaDB.find(r => r.id === id);
       if (!m) return;
+
+      // Si está alquilada a un CLIENTE (no es salida a obra propia), abrimos
+      // directamente el formulario de Baja de Alquiler para generar el albarán.
+      if (m.estado === 'alquilada' && m.tipo_salida !== 'obra_propia') {
+        abrirModalBajaDesdeMaquina(m);
+        return;
+      }
+
+      // Si es una salida interna (obra propia), seguimos con el modal simple de siempre.
       maquinaDevolverActualId = id;
       document.getElementById('dm_obra').value = m.obra_actual || '';
       document.getElementById('dm_persona').value = '';
       document.getElementById('modalDevolverMaquina').classList.add('visible');
     }
 
+
+    function abrirModalBajaDesdeMaquina(m) {
+      clienteBajaSelId = null;
+      bajaAlquilerEditId = null;
+      document.getElementById('bajaAlquilerTitulo').textContent = 'Nueva Baja de Alquiler';
+      document.getElementById('ba_fecha').value = hoy();
+      document.getElementById('ba_hora').value = '';
+      document.getElementById('ba_cliente').value = m.cliente_actual_nombre || '';
+      document.getElementById('ba_cliente_id').value = '';
+      document.getElementById('ba_nif').value = '';
+      document.getElementById('ba_direccion').value = '';
+      document.getElementById('ba_poblacion').value = '';
+      document.getElementById('ba_cp').value = '';
+      document.getElementById('ba_provincia').value = '';
+      document.getElementById('ba_obra').value = m.obra_actual || '';
+      document.getElementById('ba_operario').value = '';
+      document.getElementById('ba_dni_operario').value = '';
+      document.getElementById('ba_pct_iva').value = 21;
+      document.getElementById('lineasBaja').innerHTML = '';
+      lineasBajaCount = 0;
+      document.getElementById('ba_num').value = '';
+
+      // Buscamos el cliente en la base para autocompletar NIF y dirección
+      const cliente = clientesDB.find(c =>
+        (c.nombre || '').toLowerCase().trim() === (m.cliente_actual_nombre || '').toLowerCase().trim()
+      );
+      if (cliente) {
+        clienteBajaSelId = cliente.id;
+        document.getElementById('ba_cliente_id').value = cliente.id;
+        document.getElementById('ba_nif').value = cliente.nif || '';
+        document.getElementById('ba_direccion').value = cliente.domicilio || '';
+        document.getElementById('ba_poblacion').value = cliente.poblacion || '';
+        document.getElementById('ba_cp').value = cliente.codigo_postal || '';
+        document.getElementById('ba_provincia').value = cliente.provincia || '';
+      }
+
+      // Añadimos ya la línea con esta máquina rellenada
+      addLineaBaja();
+      const idx = lineasBajaCount;
+      document.getElementById(`bal_cod_${idx}`).value = m.codigo || '';
+      document.getElementById(`bal_desc_${idx}`).value = m.nombre || '';
+      document.getElementById(`bal_precio_${idx}`).value = m.precio_dia != null ? m.precio_dia : 0;
+      recalcTotalBaja();
+
+      document.getElementById('modalBajaAlquiler').classList.add('visible');
+      setTimeout(() => setupClienteBajaAC('ba_cliente', 'ba_nif', 'ba_cliente_id'), 50);
+    }
     async function confirmarDevolucionMaquina() {
       const id = maquinaDevolverActualId;
       const m = registros.find(r => r.id === id) || maquinariaDB.find(r => r.id === id);

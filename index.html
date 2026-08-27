@@ -12,6 +12,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -2924,6 +2925,29 @@
       </div>
     </div>
   </div>
+
+
+
+  <div class="modal-overlay" id="modalEnviarAlbaran">
+    <div class="modal-box-sm">
+      <h3><i class="fa-solid fa-envelope" style="color:#1565c0"></i>Enviar albarán por email</h3>
+      <div class="form-group">
+        <label>Email del destinatario *</label>
+        <input type="email" id="ea_email" placeholder="cliente@ejemplo.com">
+      </div>
+      <div class="form-group">
+        <label>Mensaje (opcional)</label>
+        <input type="text" id="ea_mensaje" placeholder="Ej: Adjuntamos el albarán solicitado">
+      </div>
+      <div class="modal-btns">
+        <button class="btn-cancelar" onclick="cerrarModal('modalEnviarAlbaran')">Cancelar</button>
+        <button class="btn-guardar" id="btnEnviarAlbaranEmail" onclick="confirmarEnvioAlbaranEmail()"><i
+            class="fa-solid fa-paper-plane me-1"></i>Enviar</button>
+      </div>
+    </div>
+  </div>
+
+
   <div class="modal-overlay" id="modalConsumoInterno">
     <div class="modal-box-sm">
       <h3><i class="fa-solid fa-user-check" style="color:#b53987"></i>Consumo Interno</h3>
@@ -2951,15 +2975,16 @@
           style="border-color:#2d7a4f;font-weight:600">
       </div>
       <div class="form-group" style="margin:0">
-  <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
-  <div style="display:flex;gap:6px">
-    <input type="text" id="ci_scan" placeholder="Escanea aquí con el lector..." autocomplete="off" style="border-color:#2d7a4f;font-weight:600;flex:1">
-    <button type="button" onclick="escanearConCamara('ci_scan')" title="Usar la cámara del móvil"
-      style="background:#2d7a4f;border:none;color:#fff;border-radius:6px;width:38px;flex-shrink:0;cursor:pointer">
-      <i class="fa-solid fa-camera"></i>
-    </button>
-  </div>
-</div>
+        <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
+        <div style="display:flex;gap:6px">
+          <input type="text" id="ci_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
+            style="border-color:#2d7a4f;font-weight:600;flex:1">
+          <button type="button" onclick="escanearConCamara('ci_scan')" title="Usar la cámara del móvil"
+            style="background:#2d7a4f;border:none;color:#fff;border-radius:6px;width:38px;flex-shrink:0;cursor:pointer">
+            <i class="fa-solid fa-camera"></i>
+          </button>
+        </div>
+      </div>
       <div id="lineasConsumoInterno"></div>
       <button type="button" class="btn-add-linea" onclick="addLineaConsumoInterno()">
         <i class="fa-solid fa-plus me-1"></i>Añadir producto
@@ -6625,8 +6650,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     </td>
     <td>
       <button class="btn-toggle-pago pendiente" onclick="imprimirAlbaranVenta(${f.id})" title="Imprimir / descargar PDF">
-        <i class="fa-solid fa-print"></i>
-      </button>
+  <i class="fa-solid fa-print"></i>
+</button>
+<button class="btn-toggle-pago" style="background:#1565c0;color:#fff;border:1.5px solid #1565c0" onclick="abrirModalEnviarAlbaran(${f.id})" title="Enviar por email">
+  <i class="fa-solid fa-envelope"></i>
+</button>
     </td>
   </tr>`;
         }).join('');
@@ -8706,6 +8734,20 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         toast('Obra, empleado y fecha son obligatorios', 'err'); return;
       }
 
+      // Efecto sobre stock: en salida normal se resta, en devolución se suma.
+      const efectoStock = (cant, devol) => devol ? Math.abs(cant) : -Math.abs(cant);
+
+      // Si es una edición, calculamos qué efecto tenían YA aplicado las líneas
+      // antiguas por producto, para comparar solo lo que realmente cambia.
+      const anterior = modalEditId ? registros.find(r => r.id === modalEditId) : null;
+      const anteriorEraDevolucion = !!(anterior && anterior.es_devolucion);
+      const itemsAntiguos = (anterior && anterior.materiales_obra_items) || [];
+      const efectoAntiguoPorProducto = {};
+      itemsAntiguos.forEach(it => {
+        const e = efectoStock(parseFloat(it.cantidad) || 0, anteriorEraDevolucion);
+        efectoAntiguoPorProducto[it.producto_id] = (efectoAntiguoPorProducto[it.producto_id] || 0) + e;
+      });
+
       const lineas = [];
       let ok = true;
       for (const inp of document.querySelectorAll('[id^="lm_prod_"]')) {
@@ -8738,14 +8780,17 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           }
         }
 
-        const stock = parseFloat(prod.stock || 0);
-        // Si es una salida normal, tiene que haber stock suficiente. Si es
-        // una devolución, el material vuelve al almacén: no hace falta
-        // comprobar stock, siempre se puede sumar.
-        if (!esDevolucion && cant > stock) { toast(`Stock insuficiente para "${nombre}": hay ${fmtStock(stock)} ${unidadCorta(prod)}`, 'err'); ok = false; continue; }
-        lineas.push({ producto_id: prod.id, producto_nombre: nombre, cantidad: cant, stock });
-
+        // Stock disponible real: el actual, deshaciendo primero lo que esta
+        // misma edición ya tenía reservado para este producto (si no, al editar
+        // parecería que no hay stock aunque no estés pidiendo nada nuevo).
+        const stockDisponible = parseFloat(prod.stock || 0) - (efectoAntiguoPorProducto[prod.id] || 0);
+        if (!esDevolucion && cant > stockDisponible) {
+          toast(`Stock insuficiente para "${nombre}": hay ${fmtStock(stockDisponible)} ${unidadCorta(prod)}`, 'err');
+          ok = false; continue;
+        }
+        lineas.push({ producto_id: prod.id, producto_nombre: nombre, cantidad: cant });
       }
+
       const lineasExclusivas = [];
       for (const inp of document.querySelectorAll('[id^="lme_prod_"]')) {
         const nombre = inp.value.trim();
@@ -8787,91 +8832,76 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
       try {
         let headerId;
-        // Averigua qué efecto tenían las líneas ANTIGUAS sobre el stock,
-        // para revertirlo en el sentido correcto (si era una salida se
-        // había restado, si era una devolución se había sumado).
-        const anterior = modalEditId ? registros.find(r => r.id === modalEditId) : null;
-        const anteriorEraDevolucion = !!(anterior && anterior.es_devolucion);
 
         if (modalEditId) {
-
-          // Actualizar cabecera
           await apiPatch('materiales_obra', modalEditId, {
             nombre_obra,
             nombre_empleado,
             fecha,
             es_devolucion: esDevolucion
           });
-
           headerId = modalEditId;
 
-          // Borrar líneas anteriores
-          const antiguas = await apiGet(
-            'materiales_obra_items',
-            `materiales_obra_id=eq.${headerId}`
-          );
+          // Efecto que deberían dejar las líneas nuevas, por producto
+          const efectoNuevoPorProducto = {};
+          lineas.forEach(l => {
+            const e = efectoStock(l.cantidad, esDevolucion);
+            efectoNuevoPorProducto[l.producto_id] = (efectoNuevoPorProducto[l.producto_id] || 0) + e;
+          });
 
-          // Revertir el efecto que tenían sobre el stock
-          for (const a of antiguas) {
-
-            const prod = inventarioDB.find(p => p.id == a.producto_id);
-
+          // Solo tocamos el stock de los productos cuyo efecto neto cambió de
+          // verdad. Si solo editas el nombre de la obra, el empleado o la fecha
+          // y dejas los mismos materiales, aquí no se mueve ni una unidad.
+          const idsProductos = new Set([...Object.keys(efectoAntiguoPorProducto), ...Object.keys(efectoNuevoPorProducto)]);
+          for (const pid of idsProductos) {
+            const antes = efectoAntiguoPorProducto[pid] || 0;
+            const despues = efectoNuevoPorProducto[pid] || 0;
+            const delta = despues - antes;
+            if (delta === 0) continue;
+            const prod = inventarioDB.find(p => p.id == pid);
             if (prod) {
-              const stockRevertido = anteriorEraDevolucion
-                ? Number(prod.stock) - Number(a.cantidad)  // se había sumado al devolver: se resta al revertir
-                : Number(prod.stock) + Number(a.cantidad); // se había restado al sacar: se suma al revertir
-              await apiPatch('inventario', a.producto_id, { stock: stockRevertido });
-              prod.stock = stockRevertido;
+              const nuevoStockProd = Number(prod.stock) + delta;
+              await apiPatch('inventario', pid, { stock: nuevoStockProd });
+              prod.stock = nuevoStockProd;
             }
-
-            await apiDelete('materiales_obra_items', a.id);
-
           }
 
-          const antiguasMaquina = await apiGet(
-            'materiales_obra_maquinaria_items',
-            `materiales_obra_id=eq.${headerId}`
-          );
-          for (const am of antiguasMaquina) {
-            await apiDelete('materiales_obra_maquinaria_items', am.id);
-          }
+          // Las líneas de detalle sí se reemplazan siempre (son solo el listado
+          // informativo; el stock ya se ha ajustado arriba por diferencia).
+          for (const a of itemsAntiguos) await apiDelete('materiales_obra_items', a.id);
+
+          const antiguasMaquina = await apiGet('materiales_obra_maquinaria_items', `materiales_obra_id=eq.${headerId}`);
+          for (const am of antiguasMaquina) await apiDelete('materiales_obra_maquinaria_items', am.id);
+
+          const antiguasExcl = await apiGet('materiales_exclusivos_obra_items', `materiales_obra_id=eq.${headerId}`);
+          for (const ae of antiguasExcl) await apiDelete('materiales_exclusivos_obra_items', ae.id);
 
         } else {
-
           const [header] = await apiPost('materiales_obra', {
             nombre_obra,
             nombre_empleado,
             fecha,
             es_devolucion: esDevolucion
           });
-
           headerId = header.id;
 
+          for (const l of lineas) {
+            const prod = inventarioDB.find(p => p.id == l.producto_id);
+            const nuevoStock = Number(prod.stock) + efectoStock(l.cantidad, esDevolucion);
+            await apiPatch('inventario', l.producto_id, { stock: nuevoStock });
+            prod.stock = nuevoStock;
+          }
         }
 
-        const items = lineas.map(l => ({
-          materiales_obra_id: headerId,
-          producto_id: l.producto_id,
-          producto_nombre: l.producto_nombre,
-          cantidad: l.cantidad
-        }));
-
-        await apiPost('materiales_obra_items', items);
-
-        // Aplicar el efecto de las líneas nuevas: si es una devolución, el
-        // material vuelve al stock (se suma); si es una salida normal, se
-        // descuenta, como siempre.
-        for (const l of lineas) {
-
-          const prod = inventarioDB.find(p => p.id == l.producto_id);
-          const nuevoStock = esDevolucion
-            ? Number(prod.stock) + Number(l.cantidad)
-            : Number(prod.stock) - Number(l.cantidad);
-
-          await apiPatch('inventario', l.producto_id, { stock: nuevoStock });
-          prod.stock = nuevoStock;
-
+        if (lineas.length) {
+          await apiPost('materiales_obra_items', lineas.map(l => ({
+            materiales_obra_id: headerId,
+            producto_id: l.producto_id,
+            producto_nombre: l.producto_nombre,
+            cantidad: l.cantidad
+          })));
         }
+
         if (lineasExclusivas.length) {
           await apiPost('materiales_exclusivos_obra_items', lineasExclusivas.map(l => ({
             materiales_obra_id: headerId,
@@ -8880,7 +8910,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             cantidad: l.cantidad,
             fecha
           })));
-          cargarMaterialesExclusivosCache(); // refresca el autocompletar, no bloqueante
+          cargarMaterialesExclusivosCache();
         }
         if (lineasMaquina.length) {
           await apiPost('materiales_obra_maquinaria_items', lineasMaquina.map(l => ({
@@ -8895,6 +8925,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             obra_devolucion: l.obra_devolucion
           })));
         }
+
         toast(modalEditId
           ? (esDevolucion ? 'Devolución de material actualizada correctamente' : 'Material de obra actualizado correctamente')
           : (esDevolucion ? 'Devolución de material registrada — stock repuesto' : 'Material de obra registrado correctamente'));
@@ -14043,6 +14074,114 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             console.error('No se pudo marcar aviso_puntos_enviado:', e);
           }
         }
+      }
+    }
+
+
+
+
+
+
+
+    let albaranEnvioActualId = null;
+
+    async function abrirModalEnviarAlbaran(id) {
+      albaranEnvioActualId = id;
+      const f = registros.find(r => r.id === id) || await (async () => {
+        const items = await apiGet('albaranes_venta', `id=eq.${id}`);
+        return items && items[0];
+      })();
+      const cliente = clientesDB.find(c => c.id === f?.cliente_id);
+      document.getElementById('ea_email').value = cliente?.email || '';
+      document.getElementById('ea_mensaje').value = '';
+      document.getElementById('modalEnviarAlbaran').classList.add('visible');
+    }
+
+    // Reconstruye el mismo HTML del albarán que usa imprimirAlbaranVenta,
+    // pero lo devuelve como string en vez de abrirlo en una ventana.
+    async function _generarHtmlAlbaranVenta(id) {
+      let f = registros.find(r => r.id === id);
+      if (!f) {
+        const items = await apiGet('albaranes_venta', `id=eq.${id}&select=*,albaranes_venta_items(*)`);
+        f = items && items[0];
+      }
+      if (!f) throw new Error('Albarán no encontrado');
+      const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
+      const items = f.albaranes_venta_items || [];
+      const ocultarPrecios = !!f.ocultar_precios;
+
+      const filas = items.map(i => {
+        const precio = i.precio_unitario != null ? parseFloat(i.precio_unitario) : 0;
+        const subtotal = i.importe_total != null ? parseFloat(i.importe_total) : (precio * (parseFloat(i.cantidad) || 0));
+        const unidadTxt = i.unidad === 'metros' ? 'm' : 'uds.';
+        return ocultarPrecios
+          ? `<tr><td>${i.producto_id || ''}</td><td>${i.producto_nombre || ''}</td><td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td></tr>`
+          : `<tr><td>${i.producto_id || ''}</td><td>${i.producto_nombre || ''}</td><td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td><td style="text-align:right">${fmtN(precio)}</td><td style="text-align:right">${fmtN(subtotal)}</td><td style="text-align:right">—</td><td style="text-align:right">${fmtN(subtotal)}</td></tr>`;
+      }).join('');
+
+      // Usa el mismo bloque de HTML/CSS que ya tienes en imprimirAlbaranVenta
+      // (cabecera, tabla, totales, observaciones) — cópialo tal cual aquí.
+      return `<!DOCTYPE html><html>...</html>`; // 👈 pega aquí el mismo "html" de imprimirAlbaranVenta
+    }
+
+    async function confirmarEnvioAlbaranEmail() {
+      const email = document.getElementById('ea_email').value.trim();
+      const mensaje = document.getElementById('ea_mensaje').value.trim();
+      if (!email) { toast('Indica un email válido', 'err'); return; }
+
+      const btn = document.getElementById('btnEnviarAlbaranEmail');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Generando PDF...';
+
+      try {
+        const f = registros.find(r => r.id === albaranEnvioActualId);
+        const htmlAlbaran = await _generarHtmlAlbaranVenta(albaranEnvioActualId);
+
+        // Renderiza el HTML en un contenedor oculto para poder convertirlo a PDF
+        const contenedor = document.createElement('div');
+        contenedor.style.cssText = 'position:fixed;left:-9999px;top:0;width:800px;background:#fff';
+        contenedor.innerHTML = htmlAlbaran.replace(/<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi, '');
+        document.body.appendChild(contenedor);
+
+        const pdfBlob = await html2pdf().set({
+          margin: 10,
+          filename: `albaran_${f?.numero_albaran || albaranEnvioActualId}.pdf`,
+          jsPDF: { unit: 'mm', format: 'a4' }
+        }).from(contenedor).outputPdf('blob');
+
+        document.body.removeChild(contenedor);
+
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Enviando...';
+
+        const pdfBase64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(pdfBlob);
+        });
+
+        const res = await fetch('https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+          body: JSON.stringify({
+            tipo: 'enviar_albaran_venta',
+            email,
+            mensaje: mensaje || null,
+            numero_albaran: f?.numero_albaran || '',
+            cliente_nombre: f?.cliente_nombre || '',
+            pdf_base64: pdfBase64,
+            pdf_nombre: `albaran_${f?.numero_albaran || albaranEnvioActualId}.pdf`
+          })
+        });
+        if (!res.ok) throw new Error(await res.text());
+
+        toast(`<i class="fa-solid fa-check me-1"></i>Albarán enviado a ${email}`, 'ok');
+        cerrarModal('modalEnviarAlbaran');
+      } catch (e) {
+        toast('Error al enviar el albarán: ' + e.message, 'err');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane me-1"></i>Enviar';
       }
     }
   </script>

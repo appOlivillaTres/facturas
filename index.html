@@ -3507,12 +3507,14 @@
       facturas_obra: [
         { campo: 'revisado_angel', nombre: 'Angel' },
         { campo: 'revisado_emilio', nombre: 'Emilio' },
-        { campo: 'revisado_cynthia', nombre: 'Cynthia' }
+        { campo: 'revisado_cynthia', nombre: 'Cynthia' },
+        { campo: 'revisado_paula', nombre: 'Paula' }
       ],
       facturas_csg: [
         { campo: 'revisado_angel', nombre: 'Angel' },
         { campo: 'revisado_emilio', nombre: 'Emilio' },
-        { campo: 'revisado_cynthia', nombre: 'Cynthia' }
+        { campo: 'revisado_cynthia', nombre: 'Cynthia' },
+        { campo: 'revisado_paula', nombre: 'Paula' }
       ],
       ingresos: [
         { campo: 'revisado_angel', nombre: 'Angel' },
@@ -6196,7 +6198,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <td><span class="badge-estado badge-${eR}">${eR.toUpperCase()}</span></td>
         <td>${celdaArchivoFactura(f)}</td>
         <td class="td-acciones" style="flex-wrap:nowrap;overflow-x:auto">${celdaRevision(f, 'revisado_angel', 'facturas_obra', 'Angel')}${chipRevisado(f, 'revisado_emilio', 'facturas_obra', 'Emilio')}</td>
-        <td class="td-acciones">${celdaRevision(f, 'revisado_cynthia', 'facturas_obra', 'Cynthia')}</td>
+        <td class="td-acciones">${celdaRevision(f, 'revisado_cynthia', 'facturas_obra', 'Cynthia')}${chipRevisado(f, 'revisado_paula', 'facturas_obra', 'Paula')}</td>
 <td>
   <button class="btn-toggle-pago ${eR}" onclick="toggleEstado(${f.id},'${est}','facturas_obra')">
     ${est === 'pagado'
@@ -6303,7 +6305,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <td><span class="badge-estado badge-${eR}">${eR.toUpperCase()}</span></td>
         <td>${celdaArchivoFactura(f)}</td>
         <td class="td-acciones">${celdaRevision(f, 'revisado_angel', 'facturas_csg', 'Angel')}${chipRevisado(f, 'revisado_emilio', 'facturas_csg', 'Emilio')}</td>
-        <td class="td-acciones">${celdaRevision(f, 'revisado_cynthia', 'facturas_csg', 'Cynthia')}</td>
+        <td class="td-acciones">${celdaRevision(f, 'revisado_cynthia', 'facturas_csg', 'Cynthia')}${chipRevisado(f, 'revisado_paula', 'facturas_csg', 'Paula')}</td>
 <td>
   <button class="btn-toggle-pago ${eR}" onclick="toggleEstado(${f.id},'${est}','facturas_csg')">
     ${est === 'pagado'
@@ -7163,10 +7165,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         // Si pasa de Obra a Almacén
         if (origen === 'facturas_obra' && destino === 'facturas_almacen') {
           delete nueva.nombre_obra;
-          // Estas columnas de revisión solo existen en facturas_obra
           delete nueva.revisado_angel;
           delete nueva.revisado_juandavid;
           delete nueva.no_corresponde_angel;
+          delete nueva.revisado_paula; // 👈 añadir
         }
 
         // Si pasa de Almacén a Obra
@@ -7200,10 +7202,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
         // Si pasa de CSG a Almacén
         if (origen === 'facturas_csg' && destino === 'facturas_almacen') {
-          // facturas_almacen no tiene columna de Angel
           delete nueva.revisado_angel;
           delete nueva.no_corresponde_angel;
           delete nueva.nombre_obra;
+          delete nueva.revisado_paula; // 👈 añadir
         }
 
         // Quitar metadatos que no deben copiarse (los genera la BD)
@@ -14190,30 +14192,30 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     // Reconstruye el mismo HTML del albarán que usa imprimirAlbaranVenta,
     // pero lo devuelve como string en vez de abrirlo en una ventana.
     async function _generarHtmlAlbaranVenta(id) {
-  let f = registros.find(r => r.id === id);
-  if (!f) {
-    const items = await apiGet('albaranes_venta', `id=eq.${id}&select=*,albaranes_venta_items(*)`);
-    f = items && items[0];
-  }
-  if (!f) throw new Error('Albarán no encontrado');
-  const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
-  const items = f.albaranes_venta_items || [];
-  const ocultarPrecios = !!f.ocultar_precios;
+      let f = registros.find(r => r.id === id);
+      if (!f) {
+        const items = await apiGet('albaranes_venta', `id=eq.${id}&select=*,albaranes_venta_items(*)`);
+        f = items && items[0];
+      }
+      if (!f) throw new Error('Albarán no encontrado');
+      const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
+      const items = f.albaranes_venta_items || [];
+      const ocultarPrecios = !!f.ocultar_precios;
 
-  const filas = items.map(i => {
-    const precio = i.precio_unitario != null ? parseFloat(i.precio_unitario) : 0;
-    const subtotal = i.importe_total != null ? parseFloat(i.importe_total) : (precio * (parseFloat(i.cantidad) || 0));
-    const unidadTxt = i.unidad === 'metros' ? 'm' : 'uds.';
-    return ocultarPrecios
-      ? `<tr><td>${i.producto_id || ''}</td><td>${i.producto_nombre || ''}</td><td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td></tr>`
-      : `<tr><td>${i.producto_id || ''}</td><td>${i.producto_nombre || ''}</td><td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td><td style="text-align:right">${fmtN(precio)}</td><td style="text-align:right">${fmtN(subtotal)}</td><td style="text-align:right">—</td><td style="text-align:right">${fmtN(subtotal)}</td></tr>`;
-  }).join('');
+      const filas = items.map(i => {
+        const precio = i.precio_unitario != null ? parseFloat(i.precio_unitario) : 0;
+        const subtotal = i.importe_total != null ? parseFloat(i.importe_total) : (precio * (parseFloat(i.cantidad) || 0));
+        const unidadTxt = i.unidad === 'metros' ? 'm' : 'uds.';
+        return ocultarPrecios
+          ? `<tr><td>${i.producto_id || ''}</td><td>${i.producto_nombre || ''}</td><td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td></tr>`
+          : `<tr><td>${i.producto_id || ''}</td><td>${i.producto_nombre || ''}</td><td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td><td style="text-align:right">${fmtN(precio)}</td><td style="text-align:right">${fmtN(subtotal)}</td><td style="text-align:right">—</td><td style="text-align:right">${fmtN(subtotal)}</td></tr>`;
+      }).join('');
 
-  const domicilioCliente = cliente.domicilio || '';
-  const poblacionCliente = [cliente.codigo_postal, cliente.poblacion].filter(Boolean).join('   ');
-  const provinciaCliente = cliente.provincia || '';
+      const domicilioCliente = cliente.domicilio || '';
+      const poblacionCliente = [cliente.codigo_postal, cliente.poblacion].filter(Boolean).join('   ');
+      const provinciaCliente = cliente.provincia || '';
 
-  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Albarán ${f.numero_albaran || ''}</title>
+      return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Albarán ${f.numero_albaran || ''}</title>
   <style>
     body{font-family:Arial,sans-serif;color:#222;padding:36px;font-size:.65rem}
     .cabecera{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
@@ -14284,36 +14286,36 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   ${f.nombre_obra ? `<b>OBRA:</b> ${f.nombre_obra}<br>` : ''}<b>OBSERVACIONES:</b><br>${f.notas || ''}
   </div>
   </body></html>`;
-}
+    }
 
-async function _generarHtmlPresupuestoVenta(id) {
-  let f = registros.find(r => r.id === id);
-  if (!f) {
-    const items = await apiGet('presupuestos_venta', `id=eq.${id}&select=*,presupuestos_venta_items(*)`);
-    f = items && items[0];
-  }
-  if (!f) throw new Error('Presupuesto no encontrado');
+    async function _generarHtmlPresupuestoVenta(id) {
+      let f = registros.find(r => r.id === id);
+      if (!f) {
+        const items = await apiGet('presupuestos_venta', `id=eq.${id}&select=*,presupuestos_venta_items(*)`);
+        f = items && items[0];
+      }
+      if (!f) throw new Error('Presupuesto no encontrado');
 
-  const items = f.presupuestos_venta_items || [];
-  const validezDias = f.validez_dias || 8;
-  const fechaEmision = new Date(f.fecha);
-  const fechaCaduca = new Date(fechaEmision);
-  fechaCaduca.setDate(fechaCaduca.getDate() + validezDias);
-  const fechaCaducaTxt = fechaCaduca.toLocaleDateString('es-ES');
+      const items = f.presupuestos_venta_items || [];
+      const validezDias = f.validez_dias || 8;
+      const fechaEmision = new Date(f.fecha);
+      const fechaCaduca = new Date(fechaEmision);
+      fechaCaduca.setDate(fechaCaduca.getDate() + validezDias);
+      const fechaCaducaTxt = fechaCaduca.toLocaleDateString('es-ES');
 
-  const filas = items.map(i => {
-    const precio = parseFloat(i.precio_unitario || 0);
-    const subtotal = i.importe_total != null ? parseFloat(i.importe_total) : (precio * (parseFloat(i.cantidad) || 0));
-    return `<tr>
+      const filas = items.map(i => {
+        const precio = parseFloat(i.precio_unitario || 0);
+        const subtotal = i.importe_total != null ? parseFloat(i.importe_total) : (precio * (parseFloat(i.cantidad) || 0));
+        return `<tr>
       <td>${i.producto_nombre || ''}</td>
       <td style="text-align:right">${fmtStock(i.cantidad)}</td>
       <td style="text-align:right">${fmtN(precio)}</td>
       <td style="text-align:right">${i.dto_pct ? i.dto_pct + '%' : '—'}</td>
       <td style="text-align:right">${fmtN(subtotal)}</td>
     </tr>`;
-  }).join('');
+      }).join('');
 
-  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Presupuesto ${f.numero_presupuesto || ''}</title>
+      return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Presupuesto ${f.numero_presupuesto || ''}</title>
   <style>
     body{font-family:Arial,sans-serif;color:#222;padding:36px;font-size:.75rem}
     .cabecera{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
@@ -14383,7 +14385,7 @@ async function _generarHtmlPresupuestoVenta(id) {
   </div>
   ${f.notas ? `<p style="margin-top:16px"><b>Notas:</b> ${f.notas}</p>` : ''}
   </body></html>`;
-}
+    }
 
     async function confirmarEnvioPresupuestoEmail() {
       const email = document.getElementById('ea_email').value.trim();

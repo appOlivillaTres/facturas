@@ -4485,7 +4485,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 
     function confirmarEnvioSegunTipo() {
-      if (presupuestoEnvioActualId) {
+      if (alquilerEnvioActualId) {
+        confirmarEnvioAlquilerEmail();
+      } else if (presupuestoEnvioActualId) {
         confirmarEnvioPresupuestoEmail();
       } else {
         confirmarEnvioAlbaranEmail();
@@ -6691,9 +6693,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <td><span class="badge-estado ${esAlta ? 'badge-pagado' : 'badge-vencido'}">${esAlta ? 'ALTA ALQUILER' : 'BAJA ALQUILER'}</span></td>
     <td>—</td>
     <td>
-      <button class="btn-toggle-pago pendiente" onclick="${fnImprimir}(${f.id})" title="Imprimir / descargar PDF">
-        <i class="fa-solid fa-print"></i>
-      </button>
+  <button class="btn-toggle-pago pendiente" onclick="${fnImprimir}(${f.id})" title="Imprimir / descargar PDF">
+    <i class="fa-solid fa-print"></i>
+  </button>
+  <button class="btn-toggle-pago" style="background:#1565c0;color:#fff;border:1.5px solid #1565c0" onclick="abrirModalEnviarAlquiler(${f.id},'${f._tipoAlquiler}')" title="Enviar por email">
+    <i class="fa-solid fa-envelope"></i>
+  </button>
+
+      
     </td>
   </tr>`;
           }
@@ -12615,7 +12622,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       }
       if (id === 'modalEnviarAlbaran') {
         albaranEnvioActualId = null;
-        presupuestoEnvioActualId = null; // 👈 nuevo
+        presupuestoEnvioActualId = null;
+        alquilerEnvioActualId = null; // 👈 añadir
+        alquilerEnvioTipo = null;     // 👈 añadir
       }
     }
 
@@ -12626,9 +12635,232 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 
 
+    async function _generarHtmlAltaAlquiler(id) {
+      const [reg] = await apiGet('alquileres', `id=eq.${id}`);
+      if (!reg) throw new Error('No se ha encontrado el alta');
+      const f = reg;
+      f._items = await apiGet('alquileres_items', `alquiler_id=eq.${id}`);
 
+      const filas = (f._items || []).map(i => `
+    <tr>
+      <td>${i.articulo_codigo || ''}</td>
+      <td>${i.descripcion || ''}</td>
+      <td style="text-align:right">${fmtStock(i.cantidad)}</td>
+      <td style="text-align:right">${fmtN(i.precio_unitario)}</td>
+      <td style="text-align:right">${fmtN(i.cantidad * i.precio_unitario)}</td>
+      <td style="text-align:right">${i.dto_pct ? i.dto_pct + '%' : '—'}</td>
+      <td style="text-align:right">${fmtN(i.total_linea)}</td>
+    </tr>`).join('');
 
+      return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Albarán de alta de alquiler ${f.numero_albaran || ''}</title>
+  <style>
+    body{font-family:Arial,sans-serif;color:#222;padding:36px;font-size:.72rem}
+    .cabecera{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
+    .cabecera img{height:80px}
+    .caja{border:1.5px solid #333;border-radius:10px;padding:12px 16px;margin-bottom:6px}
+    .datos-cliente h3{margin:0 0 6px;font-size:.85rem}
+    .doc-info{display:flex;gap:10px;margin-top:14px}
+    .doc-info div{border:1.5px solid #333;border-radius:8px;padding:8px 14px;text-align:center;font-size:.78rem}
+    .doc-info div b{display:block;font-size:.85rem;margin-top:2px}
+    h1{font-size:1.4rem;margin:18px 0 10px}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{border-bottom:1px solid #ccc;padding:6px;text-align:left;font-size:.7rem}
+    th{background:#f7f0f5;font-weight:500}
+    .condiciones{font-size:.62rem;line-height:1.5;margin-top:20px;color:#333}
+    .condiciones h4{font-size:.75rem;margin-bottom:6px}
+    .pie{display:flex;justify-content:space-between;gap:16px;margin-top:20px;align-items:flex-start}
+    .iva-tabla{border:1.5px solid #333;border-radius:10px;padding:10px 14px;font-size:.7rem}
+    .iva-tabla table{margin:0}
+    .iva-tabla th,.iva-tabla td{border:none;padding:4px 10px}
+    .total-box{border:1.5px solid #333;border-radius:10px;padding:14px 24px;font-weight:700;display:flex;justify-content:space-between;gap:20px;align-items:center;min-width:200px}
+    .firma-box{border:1.5px solid #333;border-radius:10px;padding:14px 16px;margin-top:20px}
+    .firma-linea{margin-top:40px;border-top:1px solid #999;width:220px}
+  </style></head><body>
+  <div class="cabecera">
+    <img src="logo.png" alt="Olivilla Tres" onerror="this.style.display='none'">
+    <div class="datos-cliente" style="text-align:right">
+      <h3>DATOS DEL CLIENTE</h3>
+      <b>${f.cliente_nombre || '—'}</b><br>
+      ${f.direccion || ''}<br>
+      ${[f.codigo_postal, f.poblacion].filter(Boolean).join(' ')}<br>
+      ${f.provincia || ''}<br>
+      <b>N.I.F.</b> ${f.nif || '—'}
+    </div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px">
+    <div class="caja" style="max-width:320px">
+      <b>OLIVILLA TRES S.L.U</b><br>
+      Avenida de Madrid, 41<br>
+      45003 TOLEDO<br>
+      B45813284<br>
+      925233454<br>
+      info@olivillatres.com
+    </div>
+    <div class="doc-info">
+      <div>DOCUMENTO<br><b>Albarán</b></div>
+      <div>NÚMERO<br><b>${f.numero_albaran || '—'}</b></div>
+      <div>PÁGINA<br><b>1</b></div>
+      <div>FECHA<br><b>${fmtF(f.fecha)}</b></div>
+    </div>
+  </div>
+  <p style="margin-top:14px"><b>HORA DE RETIRADA:</b> ${f.hora_retirada || '—'}</p>
+  <h1>Albarán de alta de alquiler</h1>
+  <table>
+    <thead><tr><th>ARTÍCULO</th><th>DESCRIPCIÓN</th><th style="text-align:right">CANTIDAD</th><th style="text-align:right">PRECIO UD.</th><th style="text-align:right">SUBTOTAL</th><th style="text-align:right">DTO.</th><th style="text-align:right">TOTAL</th></tr></thead>
+    <tbody>${filas || '<tr><td colspan="7">Sin líneas</td></tr>'}</tbody>
+  </table>
+  <div class="condiciones">
+    <h4>CONDICIONES GENERALES</h4>
+    1. OLIVILLA TRES, S.L.U. cede en arrendamiento, al arrendatario según datos adjuntos en el presente contrato, el bien detallado en el presente contrato, a partir de la fecha indicada, quedando finalizado el día de la devolución, con los pertinentes documentos de retirada y entrega.<br>
+    2. En el presente documento aparece reflejado el precio del arrendamiento de los bienes descritos, incluyendo en el mismo sus servicios de mantenimiento básicos.<br>
+    3. No están incluidos el transporte, reposición de llaves, gestión medioambiental, cobertura por siniestro, montaje y desmontaje y reparaciones por malos usos.<br>
+    4. El precio del arrendamiento será calculado por día natural en el caso de las máquinas.<br>
+    5. Se cobra el importe mínimo del milímetro en el alquiler de las brocas aunque se entregue con la misma medida.
+    6. La facturación se emitirá el último día del mes, aunque los bienes no hayan sido devueltos a OLIVILLA TRES, S.L.U.<br>
+    7. El impago la factura, faculta a OLIVILLA TRES, S.L.U., tras comunicar dicho impago al arrendatario, por burofax, retirar inmediatamente los bienes arrendados y la concurrencia de todos los gastos inherentes al impago al arrendatario.<br>
+    8. Los bienes arrendados se entregarán en las instalaciones de OLIVILLA TRES, S.L.U. en Calle Río Valdecelada 7 de Toledo, en perfecto estado.<br>
+    9. Los albaranes de entrega y retirada serán suscritos por el arrendatario o por la persona que recoja la maquinaria en su nombre, haciendo constar en el mismo nombre y DNI y obra para la cual se va a utilizar.<br>
+    10. La aceptación del albarán por parte del arrendatario supone la aceptación del correcto estado de los bienes arrendados.<br>
+    11. Toda avería ocasionada en el bien arrendado, por mal uso del arrendatario del mantenimiento preventivo, será a su cargo.<br>
+    12. El arrendador se hace cargo de la gestión medioambiental de componentes y recambios de la maquinaria arrendada.<br>
+    13. El arrendatario renuncia expresamente a realizar reclamación de daños, pérdidas o lucro cesante por causa de averías mecánicas de los bienes arrendados.<br>
+    14. El arrendatario devolverá los bienes arrendados en perfecto estado de uso y limpieza. En caso de no ser así los gastos ocasionados se facturarán por cuenta del arrendatario. Todo bien arrendado no devuelto será facturado al arrendatario según precio de reposición a nuevo.<br>
+    15. De producirse la sustracción o pérdida de una máquina, el arrendatario tiene la obligación de presentar inmediatamente denuncia e informar al arrendador dentro de las 24 horas siguientes a la ocurrencia del siniestro, haciendo constar las circunstancias, fecha, hora y lugar del incidente, así como la identificación completa del bien arrendado. El alquiler se cobrará hasta la fecha de entrega de la denuncia.<br>
+    16. En los casos de sustracción, pérdida o actos vandálicos sobre los bienes cedidos en régimen de arrendamiento, el arrendatario debe reponer el mismo bien a nuevo o el importe correspondiente.<br>
+    17. El arrendatario no podrá bajo ningún concepto subarrendar el bien arrendado.<br>
+    18. El arrendamiento podrá resolverse por alguna de las siguientes causas: A. Por finalización del periodo de arrendamiento señalado. B. Por mal uso a mala conservación de los bienes, a juicio del arrendador. C. Por impago de alguna de las cantidades estipuladas. D. Por mutuo acuerdo entre arrendador y arrendatario. E. Por avería irreparable de los bienes arrendados.<br>
+    19. Toda comunicación entre las partes relativas del contrato deberá hacerse por escrito, enviadas a las direcciones especificadas en el encabezamiento del presente contrato.<br>
+    20. Las partes se someten para cualquier cuestión derivada del presente contrato a los Juzgados y Tribunales de Toledo, con renuncia expresa a cualquier otro fuero que pudiera corresponderles.
+  </div>
+  <div class="pie">
+    <div class="iva-tabla">
+      <table>
+        <thead><tr><th>TIPO</th><th>IMPORTE</th><th>DESCUENTO</th><th>BASE</th><th>I.V.A.</th></tr></thead>
+        <tbody><tr>
+          <td>${fmtN(f.pct_iva)}</td>
+          <td>${fmtN(f.base_imponible)}</td>
+          <td>—</td>
+          <td>${fmtN(f.base_imponible)}</td>
+          <td>${fmtN(f.importe_iva)}</td>
+        </tr></tbody>
+      </table>
+    </div>
+    <div class="total-box"><span>TOTAL:</span><span>${fmt(f.total)}</span></div>
+  </div>
+  <div class="firma-box">
+    <b>NOMBRE:</b> ${f.nombre_operario || '—'}<br><br>
+    <b>D.N.I./N.I.E.:</b> ${f.dni_operario || '—'}<br><br>
+    <b>OBRA:</b> ${f.obra || '—'}<br><br>
+    <b>FIRMA:</b>
+    <div class="firma-linea"></div>
+  </div>
+  <div style="text-align:center;margin-top:16px">
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=https://qrco.de/aislamientosolivillatres" style="width:65px;height:65px">
+    <div style="font-size:.6rem;color:#666;margin-top:2px">Danos tu opinión</div>
+  </div>
+  </body></html>`;
+    }
 
+    async function _generarHtmlBajaAlquiler(id) {
+      const [reg] = await apiGet('alquileres', `id=eq.${id}`);
+      if (!reg) throw new Error('No se ha encontrado la baja');
+      const f = reg;
+      f._items = await apiGet('alquileres_items', `alquiler_id=eq.${id}`);
+
+      const filas = (f._items || []).map(i => `
+    <tr>
+      <td>${i.articulo_codigo || ''}</td>
+      <td>${i.descripcion || ''}</td>
+      <td style="text-align:right">${fmtStock(i.cantidad)}</td>
+      <td style="text-align:right">${fmtN(i.precio_unitario)}</td>
+      <td style="text-align:right">${fmtN(i.cantidad * i.precio_unitario)}</td>
+      <td style="text-align:right">${i.dto_pct ? i.dto_pct + '%' : '—'}</td>
+      <td style="text-align:right">${fmtN(i.total_linea)}</td>
+    </tr>`).join('');
+
+      return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Albarán de baja de alquiler ${f.numero_albaran || ''}</title>
+  <style>
+    body{font-family:Arial,sans-serif;color:#222;padding:36px;font-size:.72rem}
+    .cabecera{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
+    .cabecera img{height:80px}
+    .caja{border:1.5px solid #333;border-radius:10px;padding:12px 16px;margin-bottom:6px}
+    .datos-cliente h3{margin:0 0 6px;font-size:.85rem}
+    .doc-info{display:flex;gap:10px;margin-top:14px}
+    .doc-info div{border:1.5px solid #333;border-radius:8px;padding:8px 14px;text-align:center;font-size:.78rem}
+    .doc-info div b{display:block;font-size:.85rem;margin-top:2px}
+    h1{font-size:1.4rem;margin:18px 0 10px}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{border-bottom:1px solid #ccc;padding:6px;text-align:left;font-size:.7rem}
+    th{background:#f7f0f5;font-weight:500}
+    .pie{display:flex;justify-content:space-between;gap:16px;margin-top:20px;align-items:flex-start}
+    .iva-tabla{border:1.5px solid #333;border-radius:10px;padding:10px 14px;font-size:.7rem}
+    .iva-tabla table{margin:0}
+    .iva-tabla th,.iva-tabla td{border:none;padding:4px 10px}
+    .total-box{border:1.5px solid #333;border-radius:10px;padding:14px 24px;font-weight:700;display:flex;justify-content:space-between;gap:20px;align-items:center;min-width:200px}
+    .firma-box{border:1.5px solid #333;border-radius:10px;padding:14px 16px;margin-top:20px}
+    .firma-linea{margin-top:40px;border-top:1px solid #999;width:220px}
+  </style></head><body>
+  <div class="cabecera">
+    <img src="logo.png" alt="Olivilla Tres" onerror="this.style.display='none'">
+    <div class="datos-cliente" style="text-align:right">
+      <h3>DATOS DEL CLIENTE</h3>
+      <b>${f.cliente_nombre || '—'}</b><br>
+      ${f.direccion || ''}<br>
+      ${[f.codigo_postal, f.poblacion].filter(Boolean).join(' ')}<br>
+      ${f.provincia || ''}<br>
+      <b>N.I.F.</b> ${f.nif || '—'}
+    </div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px">
+    <div class="caja" style="max-width:320px">
+      <b>OLIVILLA TRES S.L.U</b><br>
+      Avenida de Madrid, 41<br>
+      45003 TOLEDO<br>
+      B45813284<br>
+      925233454<br>
+      info@olivillatres.com
+    </div>
+    <div class="doc-info">
+      <div>DOCUMENTO<br><b>Albarán</b></div>
+      <div>NÚMERO<br><b>${f.numero_albaran || '—'}</b></div>
+      <div>PÁGINA<br><b>1</b></div>
+      <div>FECHA<br><b>${fmtF(f.fecha)}</b></div>
+    </div>
+  </div>
+  <p style="margin-top:14px"><b>HORA DE DEVOLUCIÓN:</b> ${f.hora_retirada || '—'}</p>
+  <h1>Albarán de baja de alquiler</h1>
+  <table>
+    <thead><tr><th>ARTÍCULO</th><th>DESCRIPCIÓN</th><th style="text-align:right">CANTIDAD</th><th style="text-align:right">PRECIO UD.</th><th style="text-align:right">SUBTOTAL</th><th style="text-align:right">DTO.</th><th style="text-align:right">TOTAL</th></tr></thead>
+    <tbody>${filas || '<tr><td colspan="7">Sin líneas</td></tr>'}</tbody>
+  </table>
+  <div class="pie">
+    <div class="iva-tabla">
+      <table>
+        <thead><tr><th>TIPO</th><th>IMPORTE</th><th>DESCUENTO</th><th>BASE</th><th>I.V.A.</th></tr></thead>
+        <tbody><tr>
+          <td>${fmtN(f.pct_iva)}</td>
+          <td>${fmtN(f.base_imponible)}</td>
+          <td>—</td>
+          <td>${fmtN(f.base_imponible)}</td>
+          <td>${fmtN(f.importe_iva)}</td>
+        </tr></tbody>
+      </table>
+    </div>
+    <div class="total-box"><span>TOTAL:</span><span>${fmt(f.total)}</span></div>
+  </div>
+  <div class="firma-box">
+    <b>NOMBRE:</b> ${f.nombre_operario || '—'}<br><br>
+    <b>D.N.I./N.I.E.:</b> ${f.dni_operario || '—'}<br><br>
+    <b>OBRA:</b> ${f.obra || '—'}<br><br>
+    <b>FIRMA:</b>
+    <div class="firma-linea"></div>
+  </div>
+  <div style="text-align:center;margin-top:16px">
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=https://qrco.de/aislamientosolivillatres" style="width:65px;height:65px">
+    <div style="font-size:.6rem;color:#666;margin-top:2px">Danos tu opinión</div>
+  </div>
+  </body></html>`;
+    }
 
 
 
@@ -14160,6 +14392,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     let albaranEnvioActualId = null;
     let presupuestoEnvioActualId = null;
+    let alquilerEnvioActualId = null;
+    let alquilerEnvioTipo = null; // 'alta' | 'baja'
 
     async function abrirModalEnviarAlbaran(id) {
       albaranEnvioActualId = id;
@@ -14170,6 +14404,21 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const cliente = clientesDB.find(c => c.id === f?.cliente_id);
       document.getElementById('ea_email').value = cliente?.email || '';
       document.getElementById('ea_mensaje').value = '';
+      document.getElementById('modalEnviarAlbaran').classList.add('visible');
+    }
+
+    async function abrirModalEnviarAlquiler(id, tipo) {
+      alquilerEnvioActualId = id;
+      alquilerEnvioTipo = tipo;
+      albaranEnvioActualId = null;
+      presupuestoEnvioActualId = null;
+
+      const [reg] = await apiGet('alquileres', `id=eq.${id}`);
+      const cliente = clientesDB.find(c => c.id === reg?.cliente_id);
+      document.getElementById('ea_email').value = cliente?.email || reg?.email || '';
+      document.getElementById('ea_mensaje').value = '';
+      document.querySelector('#modalEnviarAlbaran h3').innerHTML =
+        `<i class="fa-solid fa-envelope" style="color:#1565c0"></i>Enviar ${tipo === 'alta' ? 'alta' : 'baja'} de alquiler por email`;
       document.getElementById('modalEnviarAlbaran').classList.add('visible');
     }
 
@@ -14502,6 +14751,69 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         cerrarModal('modalEnviarAlbaran');
       } catch (e) {
         toast('Error al enviar el albarán: ' + e.message, 'err');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane me-1"></i>Enviar';
+      }
+    }
+
+
+    async function confirmarEnvioAlquilerEmail() {
+      const email = document.getElementById('ea_email').value.trim();
+      const mensaje = document.getElementById('ea_mensaje').value.trim();
+      if (!email) { toast('Indica un email válido', 'err'); return; }
+
+      const btn = document.getElementById('btnEnviarAlbaranEmail');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Generando PDF...';
+
+      try {
+        const esAlta = alquilerEnvioTipo === 'alta';
+        const [reg] = await apiGet('alquileres', `id=eq.${alquilerEnvioActualId}`);
+        const htmlDoc = esAlta
+          ? await _generarHtmlAltaAlquiler(alquilerEnvioActualId)
+          : await _generarHtmlBajaAlquiler(alquilerEnvioActualId);
+
+        const contenedor = document.createElement('div');
+        contenedor.style.cssText = 'position:fixed;left:-9999px;top:0;width:800px;background:#fff';
+        contenedor.innerHTML = htmlDoc.replace(/<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi, '');
+        document.body.appendChild(contenedor);
+
+        const pdfBlob = await html2pdf().set({
+          margin: 10,
+          filename: `${esAlta ? 'alta' : 'baja'}_alquiler_${reg?.numero_albaran || alquilerEnvioActualId}.pdf`,
+          jsPDF: { unit: 'mm', format: 'a4' }
+        }).from(contenedor).outputPdf('blob');
+
+        document.body.removeChild(contenedor);
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Enviando...';
+
+        const pdfBase64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(pdfBlob);
+        });
+
+        const res = await fetch('https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+          body: JSON.stringify({
+            tipo: esAlta ? 'enviar_alta_alquiler' : 'enviar_baja_alquiler',
+            email,
+            mensaje: mensaje || null,
+            numero_albaran: reg?.numero_albaran || '',
+            cliente_nombre: reg?.cliente_nombre || '',
+            pdf_base64: pdfBase64,
+            pdf_nombre: `${esAlta ? 'alta' : 'baja'}_alquiler_${reg?.numero_albaran || alquilerEnvioActualId}.pdf`
+          })
+        });
+        if (!res.ok) throw new Error(await res.text());
+
+        toast(`<i class="fa-solid fa-check me-1"></i>Documento enviado a ${email}`, 'ok');
+        cerrarModal('modalEnviarAlbaran');
+      } catch (e) {
+        toast('Error al enviar: ' + e.message, 'err');
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-paper-plane me-1"></i>Enviar';

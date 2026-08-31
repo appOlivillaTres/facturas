@@ -10606,6 +10606,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       });
     }
     // Fila legible para el tercer Excel (resumen sin formato FactuSol)
+    // Fila legible para el tercer Excel (resumen sin formato FactuSol)
     function _filaResumenVenta(f) {
       const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
       const domicilio = [
@@ -10615,7 +10616,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         cliente.provincia
       ].filter(Boolean).join(', ');
 
+      const tipo = f._esAlquiler
+        ? (f._tipoAlquiler === 'baja' ? 'Alquiler (Baja)' : 'Alquiler (Alta)')
+        : 'Venta';
+
       return {
+        'Nº Albarán': f.numero_albaran || '',
+        'Tipo': tipo,
         'Cliente': f.cliente_nombre || cliente.nombre || '',
         'NIF/DNI': f.nif || cliente.nif || '',
         'Domicilio': domicilio,
@@ -10643,13 +10650,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       XLSX.writeFile(wbLal, 'LAL.xlsx');
 
       // Tercer Excel: resumen legible, sin formato FactuSol, ordenado alfabéticamente por cliente
-const cabecerasResumen = ['Cliente', 'NIF/DNI', 'Domicilio', 'Base', 'IVA', 'Total'];
-const filasResumen = filtrados
-  .map(_filaResumenVenta)
-  .sort((a, b) => (a['Cliente'] || '').localeCompare(b['Cliente'] || '', 'es', { sensitivity: 'base' }));
-const wbResumen = XLSX.utils.book_new();
+      // Tercer Excel: resumen legible, sin formato FactuSol, ordenado alfabéticamente por cliente
+      const cabecerasResumen = ['Nº Albarán', 'Tipo', 'Cliente', 'NIF/DNI', 'Domicilio', 'Base', 'IVA', 'Total'];
+      const filasResumen = filtrados
+        .map(_filaResumenVenta)
+        .sort((a, b) => (a['Cliente'] || '').localeCompare(b['Cliente'] || '', 'es', { sensitivity: 'base' }));
+      const wbResumen = XLSX.utils.book_new();
       const wsResumen = XLSX.utils.json_to_sheet(filasResumen, { header: cabecerasResumen });
-      wsResumen['!cols'] = [22, 14, 42, 10, 10, 10].map(w => ({ wch: w }));
+      wsResumen['!cols'] = [14, 16, 22, 14, 42, 10, 10, 10].map(w => ({ wch: w }));
       XLSX.utils.book_append_sheet(wbResumen, wsResumen, 'Resumen');
       const fechaHoy = new Date().toISOString().split('T')[0];
       XLSX.writeFile(wbResumen, `resumen_albaranes_venta_${fechaHoy}.xlsx`);

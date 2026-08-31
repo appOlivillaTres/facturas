@@ -13631,7 +13631,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       if (tablaActual === 'albaranes_venta') {
         const year = parseInt(document.getElementById('exportYear').value);
         const meses = Array.from(document.querySelectorAll('#exportMeses input:checked')).map(i => parseInt(i.value));
-        const filtrados = registros.filter(f => {
+        let filtrados = registros.filter(f => {
           const fechaRef = f.fecha_recibido || f.fecha;
           if (!fechaRef) return false;
           const [y, m] = fechaRef.split('-').map(Number);
@@ -13645,8 +13645,33 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           if (cmp !== 0) return cmp;
           return (a.id || 0) - (b.id || 0); // desempate fijo: mismo orden siempre
         });
-        if (!filtrados.length) { toast('No hay albaranes para ese filtro', 'err'); return; }
+
+        const totalDelFiltroAV = filtrados.length;
+        const incluirYaExportadasAV = document.getElementById('exportIncluirYaExportadas')?.checked;
+        if (!incluirYaExportadasAV) {
+          filtrados = filtrados.filter(f => !f.exportado_excel);
+        }
+
+        if (!filtrados.length) {
+          toast(totalDelFiltroAV
+            ? 'Todos los albaranes de ese filtro ya se habían exportado antes'
+            : 'No hay albaranes para ese filtro', 'err');
+          return;
+        }
+
         exportarAlbaranesVentaExcel(filtrados);
+
+        // Marcar como exportados — cada uno en su tabla real (albaranes_venta o alquileres)
+        const idsVenta = filtrados.filter(f => !f._esAlquiler).map(f => f.id);
+        const idsAlquiler = filtrados.filter(f => f._esAlquiler).map(f => f.id);
+        try {
+          if (idsVenta.length) await marcarExportadosExcel('albaranes_venta', idsVenta);
+          if (idsAlquiler.length) await marcarExportadosExcel('alquileres', idsAlquiler);
+          cargarDatos();
+        } catch (e) {
+          console.error('No se pudo marcar como exportado:', e);
+        }
+
         cerrarModal('modalExportar');
         return;
       }

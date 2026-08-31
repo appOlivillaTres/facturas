@@ -2532,7 +2532,8 @@
           Alquiler</span></h3>
 
       <div class="form-grid">
-        <div class="form-group"><label>Fecha *</label><input type="date" id="ba_fecha"></div>
+        <div class="form-group"><label>Fecha *</label><input type="date" id="ba_fecha"
+            onchange="recalcularDiasTodasLasLineasBaja()"></div>
         <div class="form-group"><label>Hora de devolución</label><input type="time" id="ba_hora"></div>
         <div class="form-group"><label>Nº Albarán</label><input type="text" id="ba_num" readonly
             style="background:#f7f0f5;font-weight:600" placeholder="Automático al guardar"></div>
@@ -3556,6 +3557,16 @@
     function fmtN(v) { if (v === null || v === undefined || v === '' || isNaN(parseFloat(v))) return '—'; return parseFloat(v).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
     function fmtF(f) { return f ? f.split('-').reverse().join('/') : '—'; }
     function hoy() { return new Date().toISOString().split('T')[0]; }
+
+    // Calcula los días transcurridos entre la fecha de alta y la fecha de baja
+    // (ambos días incluidos: si sale y vuelve el mismo día, cuenta como 1 día)
+    function diasAlquiler(fechaInicio, fechaFin) {
+      if (!fechaInicio || !fechaFin) return 1;
+      const ini = new Date(fechaInicio);
+      const fin = new Date(fechaFin);
+      const dias = Math.round((fin - ini) / 86400000) + 1;
+      return dias > 0 ? dias : 1;
+    }
     // Único criterio de orden para Excel y ZIP: por fecha y, si hay empate,
     // por id (fijo e inmutable). Usar SIEMPRE esta misma función en los dos
     // sitios garantiza que la fila del Excel y el archivo del ZIP coincidan.
@@ -5025,6 +5036,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById(`bal_cod_${idx}`).value = m.codigo || '';
       document.getElementById(`bal_desc_${idx}`).value = m.nombre || '';
       document.getElementById(`bal_precio_${idx}`).value = m.precio_dia != null ? m.precio_dia : 0;
+      document.getElementById(`bal_cant_${idx}`).value = diasAlquiler(m.fecha_alquiler_actual, document.getElementById('ba_fecha').value); // 👈 añadir esto
       recalcTotalBaja();
 
       document.getElementById('modalBajaAlquiler').classList.add('visible');
@@ -11136,17 +11148,18 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <input type="text" id="bal_desc_${idx}" placeholder="Ej: Hilti-Martillo rompedor (por día)" oninput="recalcTotalBaja()">
     </div>
     <div class="form-group" style="margin:0">
-      <label style="font-size:.75rem">Cantidad</label>
-      <input type="number" id="bal_cant_${idx}" value="1" min="0.01" step="0.01" oninput="recalcTotalBaja()">
-    </div>
-    <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Precio Ud. (€)</label>
       <input type="number" id="bal_precio_${idx}" step="0.01" min="0" value="0" oninput="recalcTotalBaja()">
     </div>
     <div class="form-group" style="margin:0">
+  <label style="font-size:.75rem">Días</label>
+  <input type="number" id="bal_cant_${idx}" value="1" min="0.01" step="0.01" oninput="recalcTotalBaja()">
+</div>
+    <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Dto. %</label>
       <input type="number" id="bal_dto_${idx}" step="0.01" min="0" max="100" value="0" oninput="recalcTotalBaja()">
     </div>
+    
     <button type="button" onclick="document.getElementById('ba_linea_${idx}').remove(); recalcTotalBaja();"
       style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
       <i class="fa-solid fa-xmark"></i>
@@ -11158,11 +11171,19 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const inpCod = document.getElementById(`bal_cod_${idx}`);
       const inpDesc = document.getElementById(`bal_desc_${idx}`);
       const inpPrecio = document.getElementById(`bal_precio_${idx}`);
+      const inpCant = document.getElementById(`bal_cant_${idx}`);
       if (!inpCod) return;
       const maquina = buscarMaquinaPorCodigo(inpCod.value);
       if (maquina) {
         if (inpDesc) inpDesc.value = maquina.nombre || '';
         if (inpPrecio && maquina.precio_dia != null) inpPrecio.value = maquina.precio_dia;
+
+        // Días alquilados = desde la fecha de alta de esta máquina hasta la fecha de esta baja
+        const fechaBaja = document.getElementById('ba_fecha')?.value;
+        if (inpCant && maquina.fecha_alquiler_actual && fechaBaja) {
+          inpCant.value = diasAlquiler(maquina.fecha_alquiler_actual, fechaBaja);
+        }
+
         recalcTotalBaja();
       }
       if (maquina.estado === 'alquilada') {
@@ -11171,6 +11192,19 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       if (maquina.estado === 'averiada') {
         toast(`Aviso: "${maquina.nombre}" está marcada como AVERIADA`, 'err');
       }
+    }
+    function recalcularDiasTodasLasLineasBaja() {
+      const fechaBaja = document.getElementById('ba_fecha')?.value;
+      if (!fechaBaja) return;
+      document.querySelectorAll('[id^="bal_cod_"]').forEach(inp => {
+        const idx = inp.id.split('_')[2];
+        const maquina = buscarMaquinaPorCodigo(inp.value);
+        const inpCant = document.getElementById(`bal_cant_${idx}`);
+        if (maquina && maquina.fecha_alquiler_actual && inpCant) {
+          inpCant.value = diasAlquiler(maquina.fecha_alquiler_actual, fechaBaja);
+        }
+      });
+      recalcTotalBaja();
     }
 
     function _leerLineasBaja() {

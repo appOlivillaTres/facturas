@@ -3781,6 +3781,18 @@
       return todos;  // devuelve todos los datos que hemos ido concatenando
     }
 
+    // Calcula el siguiente número correlativo de FactuSol mirando TANTO
+    // albaranes_venta como alquileres, para que alta/baja de alquiler y
+    // albaranes de venta compartan la misma numeración sin pisarse.
+    async function obtenerSiguienteNumeroFactusol() {
+      const [av, al] = await Promise.all([
+        apiGetAll('albaranes_venta', 'select=numero_factusol&numero_factusol=not.is.null'),
+        apiGetAll('alquileres', 'select=numero_factusol&numero_factusol=not.is.null')
+      ]);
+      const nums = [...av, ...al].map(r => r.numero_factusol).filter(n => n != null);
+      return nums.length ? Math.max(...nums) + 1 : 1;
+    }
+
 
     async function apiPost(tabla, body) {// esta es para enviar y guardar a la base de datos, la tabla a la que lo vamos a meter y todo lo que vamos a meter
       const r = await fetch(`${SUPABASE_URL}/rest/v1/${tabla}`, {  // en esta ocasión, no necesita los datos del login de primeras, porque lo va a hacer con un metodo post
@@ -9957,8 +9969,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
         } else {
           // ── ALTA NUEVA: se aplica todo, no había nada previo ──
-          const numsExistentes = registros.filter(r => r.numero_factusol).map(r => r.numero_factusol);
-          const siguienteNumFactusol = numsExistentes.length ? Math.max(...numsExistentes) + 1 : 1;
+          const siguienteNumFactusol = await obtenerSiguienteNumeroFactusol();
           const [header] = await apiPost('albaranes_venta', { ...headerPayload, numero_factusol: siguienteNumFactusol, creado_por: currentPersona });
           headerId = header.id;
           numeroAlbaranAsignado = header.numero_albaran;
@@ -10941,6 +10952,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           for (const a of antiguas) await apiDelete('alquileres_items', a.id);
         } else {
           payload.creado_por = currentPersona;
+          payload.numero_factusol = await obtenerSiguienteNumeroFactusol();
           const [header] = await apiPost('alquileres', payload);
           headerId = header.id;
           numeroAsignado = header.numero_albaran;
@@ -11362,6 +11374,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const antiguas = await apiGet('alquileres_items', `alquiler_id=eq.${headerId}`);
           for (const a of antiguas) await apiDelete('alquileres_items', a.id);
         } else {
+          payload.numero_factusol = await obtenerSiguienteNumeroFactusol();
           const [header] = await apiPost('alquileres', payload);
           headerId = header.id;
           numeroAsignado = header.numero_albaran;

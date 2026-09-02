@@ -14936,13 +14936,12 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const htmlPresupuesto = await _generarHtmlPresupuestoVenta(presupuestoEnvioActualId);
 
         contenedor.style.cssText = `
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 800px;
-  background: #fff;
-  pointer-events: none;
-`;
+    position: fixed;
+    left: -99999px;
+    top: 0;
+    width: 800px;
+    background: #fff;
+    `;
         contenedor.innerHTML = htmlPresupuesto.replace(/<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi, '');
         document.body.appendChild(contenedor);
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -15005,13 +15004,12 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const contenedor = document.createElement('div');
 
         contenedor.style.cssText = `
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 800px;
-  background: #fff;
-  pointer-events: none;
-`;
+    position: fixed;
+    left: -99999px;
+    top: 0;
+    width: 800px;
+    background: #fff;
+    `;
 
         contenedor.innerHTML = htmlAlbaran.replace(
           /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
@@ -15088,13 +15086,12 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
         const contenedor = document.createElement('div');
         contenedor.style.cssText = `
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 800px;
-  background: #fff;
-  pointer-events: none;
-`;
+    position: fixed;
+    left: -99999px;
+    top: 0;
+    width: 800px;
+    background: #fff;
+    `;
         contenedor.innerHTML = htmlDoc.replace(/<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi, '');
         document.body.appendChild(contenedor);
         await new Promise(resolve => setTimeout(resolve, 500));

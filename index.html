@@ -11321,18 +11321,19 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const inpCant = document.getElementById(`bal_cant_${idx}`);
       if (!inpCod) return;
       const maquina = buscarMaquinaPorCodigo(inpCod.value);
-      if (maquina) {
-        if (inpDesc) inpDesc.value = maquina.nombre || '';
-        if (inpPrecio && maquina.precio_dia != null) inpPrecio.value = maquina.precio_dia;
+      if (!maquina) return; // 👈 código todavía incompleto o no reconocido: no hacemos nada más
 
-        // Días alquilados = desde la fecha de alta de esta máquina hasta la fecha de esta baja
-        const fechaBaja = document.getElementById('ba_fecha')?.value;
-        if (inpCant && maquina.fecha_alquiler_actual && fechaBaja) {
-          inpCant.value = diasAlquiler(maquina.fecha_alquiler_actual, fechaBaja);
-        }
+      if (inpDesc) inpDesc.value = maquina.nombre || '';
+      if (inpPrecio && maquina.precio_dia != null) inpPrecio.value = maquina.precio_dia;
 
-        recalcTotalBaja();
+      // Días alquilados = desde la fecha de alta de esta máquina hasta la fecha de esta baja
+      const fechaBaja = document.getElementById('ba_fecha')?.value;
+      if (inpCant && maquina.fecha_alquiler_actual && fechaBaja) {
+        inpCant.value = diasAlquiler(maquina.fecha_alquiler_actual, fechaBaja);
       }
+
+      recalcTotalBaja();
+
       if (maquina.estado === 'alquilada') {
         toast(`Aviso: "${maquina.nombre}" ya figura como alquilada/en uso`, 'err');
       }

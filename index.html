@@ -10316,25 +10316,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     @media print{ .btn-imprimir{display:none} }
   @media print{ .btn-imprimir, .btn-enviar-email{display:none} }
   @media print{ .btn-imprimir, .btn-enviar-email{display:none} }
-  </style></head><script>
-  function enviarDesdeVentanaImpresion(btn, id, tipo) {
-    if (!window.opener) {
-      alert('Abre este documento desde el panel para poder enviarlo por email.');
-      return;
-    }
-    const email = prompt('Introduce el email del destinatario:');
-    if (!email) return;
-    const mensaje = prompt('Mensaje opcional (déjalo en blanco si no quieres añadir nada):') || '';
-
-    const textoOriginal = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = 'Enviando...';
-
-    window.opener.enviarDocumentoPorEmailDirecto(tipo, id, email, mensaje)
-      .then(() => { alert('Documento enviado a ' + email); btn.textContent = textoOriginal; btn.disabled = false; })
-      .catch(e => { alert('Error al enviar: ' + e.message); btn.textContent = textoOriginal; btn.disabled = false; });
-  }
-</script><body>
+  </style></head><body>
   <div class="cabecera">
     <img src="logo.png" alt="Olivilla Tres" onerror="this.style.display='none'">
     <div class="datos-cliente" style="text-align:right">
@@ -10390,7 +10372,25 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   </div>
 </div>
   <button class="btn-imprimir" onclick="window.print()" style="padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
-<button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'albaran_venta')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>  </body></html>`;
+<button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'albaran_venta')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>  <script>
+  function enviarDesdeVentanaImpresion(btn, id, tipo) {
+    if (!window.opener) {
+      alert('Abre este documento desde el panel para poder enviarlo por email.');
+      return;
+    }
+    const email = prompt('Introduce el email del destinatario:');
+    if (!email) return;
+    const mensaje = prompt('Mensaje opcional (déjalo en blanco si no quieres añadir nada):') || '';
+
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    window.opener.enviarDocumentoPorEmailDirecto(tipo, id, email, mensaje)
+      .then(() => { alert('Documento enviado a ' + email); btn.textContent = textoOriginal; btn.disabled = false; })
+      .catch(e => { alert('Error al enviar: ' + e.message); btn.textContent = textoOriginal; btn.disabled = false; });
+  }
+</script></body></html>`;
       const w = window.open('', '_blank');
       w.document.write(html);
       w.document.close();
@@ -10679,25 +10679,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     .btn-imprimir{position:fixed;top:16px;right:16px}
     @media print{.btn-imprimir{display:none}}
   @media print{ .btn-imprimir, .btn-enviar-email{display:none} }
-    </style></head><script>
-  function enviarDesdeVentanaImpresion(btn, id, tipo) {
-    if (!window.opener) {
-      alert('Abre este documento desde el panel para poder enviarlo por email.');
-      return;
-    }
-    const email = prompt('Introduce el email del destinatario:');
-    if (!email) return;
-    const mensaje = prompt('Mensaje opcional (déjalo en blanco si no quieres añadir nada):') || '';
-
-    const textoOriginal = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = 'Enviando...';
-
-    window.opener.enviarDocumentoPorEmailDirecto(tipo, id, email, mensaje)
-      .then(() => { alert('Documento enviado a ' + email); btn.textContent = textoOriginal; btn.disabled = false; })
-      .catch(e => { alert('Error al enviar: ' + e.message); btn.textContent = textoOriginal; btn.disabled = false; });
-  }
-</script><body>
+    </style></head><body>
   <div class="cabecera">
     <img src="logo.png" alt="Olivilla Tres" onerror="this.style.display='none'">
     <div class="datos-cliente" style="text-align:right">
@@ -10746,7 +10728,25 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   </div>
     ${f.notas ? `<p style="margin-top:16px"><b>Notas:</b> ${f.notas}</p>` : ''}
   <button class="btn-imprimir" onclick="window.print()" style="position:fixed;top:16px;right:16px;padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
-<button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'presupuesto_venta')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>  </body></html>`;
+<button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'presupuesto_venta')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>  <script>
+  function enviarDesdeVentanaImpresion(btn, id, tipo) {
+    if (!window.opener) {
+      alert('Abre este documento desde el panel para poder enviarlo por email.');
+      return;
+    }
+    const email = prompt('Introduce el email del destinatario:');
+    if (!email) return;
+    const mensaje = prompt('Mensaje opcional (déjalo en blanco si no quieres añadir nada):') || '';
+
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    window.opener.enviarDocumentoPorEmailDirecto(tipo, id, email, mensaje)
+      .then(() => { alert('Documento enviado a ' + email); btn.textContent = textoOriginal; btn.disabled = false; })
+      .catch(e => { alert('Error al enviar: ' + e.message); btn.textContent = textoOriginal; btn.disabled = false; });
+  }
+</script></body></html>`;
       const w = window.open('', '_blank');
       w.document.write(html);
       w.document.close();

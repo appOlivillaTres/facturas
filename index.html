@@ -2130,6 +2130,8 @@
             class="fa-solid fa-file-signature"></i>Albaranes</button>
         <button class="btn-nav" onclick="cambiarSeccion('albaranes_venta')"><i
             class="fa-solid fa-file-invoice"></i>Albaranes Venta</button>
+        <button class="btn-nav" onclick="cambiarSeccion('facturas_venta')"><i
+            class="fa-solid fa-file-invoice-dollar"></i>Facturas Venta</button>
         <button class="btn-nav" onclick="cambiarSeccion('presupuestos_venta')"><i
             class="fa-solid fa-file-lines"></i>Presupuestos</button>
         <button class="btn-nav" onclick="cambiarSeccion('clientes')"><i class="fa-solid fa-users"></i>Clientes</button>
@@ -2493,6 +2495,96 @@
       </div>
     </div>
   </div>
+
+
+  <!-- MODAL NUEVA/EDITAR FACTURA DE VENTA -->
+  <div class="modal-overlay" id="modalFacturaVenta">
+    <div class="modal-box" style="max-width:820px">
+      <h3><i class="fa-solid fa-file-invoice-dollar" style="color:#b53987"></i><span id="facturaVentaTitulo">Nueva
+          Factura de Venta</span></h3>
+
+      <div class="form-grid">
+        <div class="form-group"><label>Nº Factura</label><input type="text" id="fv_num" readonly
+            style="background:#f7f0f5;font-weight:600" placeholder="Se asigna al guardar"></div>
+        <div class="form-group"><label>Fecha *</label><input type="date" id="fv_fecha"></div>
+        <div class="form-group"><label>Vencimiento</label><input type="date" id="fv_venc"></div>
+
+        <div class="form-group span2 ac-wrap">
+          <label>Cliente *</label>
+          <input type="text" id="fv_cliente" placeholder="Escribe el nombre para buscar...">
+          <input type="hidden" id="fv_cliente_id">
+        </div>
+        <div class="form-group"><label>NIF</label><input type="text" id="fv_nif" readonly style="background:#f7f0f5">
+        </div>
+
+        <div class="form-group span3"><label>Obra <span
+              style="font-size:.72rem;color:#888">(opcional)</span></label><input type="text" id="fv_obra"
+            placeholder="Ej: Reforma calle Mayor 12"></div>
+      </div>
+
+      <div class="form-seccion">Albaranes sin facturar de este cliente</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <select id="fv_filtro_mes" onchange="cargarAlbaranesSinFacturarCliente(fvClienteSelId)"
+          style="padding:6px 10px;border:1.5px solid #ddd;border-radius:7px;font-size:.82rem">
+          <option value="">Todos los meses</option>
+          <option value="1">Enero</option>
+          <option value="2">Febrero</option>
+          <option value="3">Marzo</option>
+          <option value="4">Abril</option>
+          <option value="5">Mayo</option>
+          <option value="6">Junio</option>
+          <option value="7">Julio</option>
+          <option value="8">Agosto</option>
+          <option value="9">Septiembre</option>
+          <option value="10">Octubre</option>
+          <option value="11">Noviembre</option>
+          <option value="12">Diciembre</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;cursor:pointer;margin-left:auto">
+          <input type="checkbox" id="fv_marcar_todos" onchange="toggleMarcarTodosAlbaranesFV(this.checked)">
+          Marcar todos los mostrados
+        </label>
+      </div>
+      <div id="fvAlbaranesLista"
+        style="max-height:220px;overflow-y:auto;border:1.5px solid #ede5f5;border-radius:8px;padding:8px 10px">
+        <p style="color:#aaa;font-size:.82rem;text-align:center;margin:10px 0">Selecciona primero un cliente</p>
+      </div>
+
+      <div class="form-grid" style="margin-top:14px;padding-top:12px;border-top:1.5px solid #ede5f5">
+        <div class="form-group"><label>Base imponible (€)</label><input type="number" id="fv_base" step="0.01" readonly
+            style="background:#f7f0f5;font-weight:700"></div>
+        <div class="form-group"><label>% IVA</label><input type="number" id="fv_pct_iva" step="0.01" value="21"
+            oninput="recalcTotalFacturaVenta()"></div>
+        <div class="form-group"><label>Total (€)</label><input type="number" id="fv_total" step="0.01" readonly
+            style="background:#f7f0f5;font-weight:700"></div>
+      </div>
+
+      <div class="form-grid-2" style="margin-top:10px">
+        <div class="form-group">
+          <label>Forma de pago</label>
+          <select id="fv_forma_pago">
+            <option value="">—</option>
+            <option>Transferencia</option>
+            <option>Domiciliación</option>
+            <option>Contado</option>
+            <option>Tarjeta</option>
+            <option>Pagaré</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Notas</label><input type="text" id="fv_notas"
+            placeholder="Observaciones opcionales"></div>
+      </div>
+
+      <div class="modal-btns">
+        <button class="btn-cancelar" onclick="cerrarModal('modalFacturaVenta')">Cancelar</button>
+        <button class="btn-guardar" onclick="guardarFacturaVenta()"><i class="fa-solid fa-floppy-disk me-1"></i>Guardar
+          factura</button>
+      </div>
+    </div>
+  </div>
+
+
+
   <!-- MODAL SALIDA DE MAQUINARIA A OBRA PROPIA (sin cliente, sin albarán) -->
   <div class="modal-overlay" id="modalSalidaMaquina">
     <div class="modal-box-sm">
@@ -3142,7 +3234,7 @@
     const TABLAS_REALTIME = [
       'facturas_pendientes', 'facturas_almacen', 'facturas_obra', 'facturas_csg',
       'albaranes', 'clientes', 'inventario', 'proveedores', 'materiales_obra', 'citas',
-      'ingresos', 'varios', 'albaranes_venta', 'maquinaria', 'consumo_interno', 'notificaciones_presupuestos', 'facturas_reparto_obras', 'presupuestos_venta'
+      'ingresos', 'varios', 'albaranes_venta', 'facturas_venta', 'maquinaria', 'consumo_interno', 'notificaciones_presupuestos', 'facturas_reparto_obras', 'presupuestos_venta'
     ];
 
     let canalRealtime = null;
@@ -3239,6 +3331,7 @@
       ingresos: ['natalia', 'angel', 'emilio', 'paula'],             // 👈
       varios: ['cynthia', 'emilio', 'paula'],                        // 👈
       albaranes_venta: ['cynthia', 'emilio', 'jose'],
+      facturas_venta: ['cynthia', 'emilio', 'jose'],
       presupuestos_venta: ['cynthia', 'emilio', 'jose'],
       maquinaria: ['cynthia', 'emilio', 'jose'],
       consumo_interno: ['cynthia', 'emilio', 'jose']
@@ -3612,7 +3705,7 @@
     const GRUPOS_SECCIONES = {
       almacen: [
         'clasificacion', 'facturas_almacen', 'revisadas_facturadas', 'calendario_pagos',
-        'notificaciones_presupuestos', 'albaranes', 'albaranes_venta', 'clientes',
+        'notificaciones_presupuestos', 'albaranes', 'albaranes_venta', 'facturas_venta', 'clientes',
         'inventario', 'materiales_obra', 'varios', 'maquinaria', 'consumo_interno'
       ],
       obra: [
@@ -3642,6 +3735,7 @@
       ingresos: ['Ingresos', 'fa-sack-dollar', true],
       varios: ['Varios', 'fa-ellipsis', false],
       albaranes_venta: ['Albaranes de Venta', 'fa-file-invoice', false],
+      facturas_venta: ['Facturas de Venta', 'fa-file-invoice-dollar', false],
       presupuestos_venta: ['Presupuestos', 'fa-file-lines', false],
       maquinaria: ['Maquinaria', 'fa-truck-monster', false],
       consumo_interno: ['Consumo Interno', 'fa-user-check', false],
@@ -3881,7 +3975,8 @@
       const esRevisadas = sec === 'revisadas_facturadas';
       const esObras = sec === 'obras';
       // si estamos en facturas, revisadas o materiales, le ponemos el botón de exportar, si no, ese boton se queda oculto
-      document.getElementById('btnExportar').style.display = (esFacturas || esRevisadas || sec === 'materiales_obra' || sec === 'ingresos' || sec === 'albaranes_venta') ? 'flex' : 'none';
+      document.getElementById('btnExportar').style.display =
+        (esFacturas || esRevisadas || sec === 'materiales_obra' || sec === 'ingresos' || sec === 'albaranes_venta' || sec === 'facturas_venta') ? 'flex' : 'none';
       document.getElementById('btnDescargarArchivos').style.display = SECCIONES_CON_ARCHIVOS.includes(sec) ? 'flex' : 'none';
       // si estamos en facturas o albaranes, saldrá el boton de duplicados
       document.getElementById('btnDuplicados').style.display = (esFacturas || sec === 'albaranes') ? 'flex' : 'none';
@@ -3909,7 +4004,8 @@
             : sec === 'albaranes_venta' ? 'Nuevo albarán'
               : sec === 'presupuestos_venta' ? 'Nuevo presupuesto'
                 : sec === 'consumo_interno' ? 'Nuevo consumo'
-                  : 'Añadir Nuevo';
+                  : sec === 'facturas_venta' ? 'Nueva factura'
+                    : 'Añadir Nuevo';
 
       const sel = document.getElementById('filtroEstado');  // barra de busqueda
       const sp = document.getElementById('searchInput');
@@ -3948,6 +4044,13 @@
 <option value="facturar">A facturar</option>
 <option value="efectivo">Factura al momento</option>`;
         sp.placeholder = 'Buscar por nº albarán o cliente...';
+      }
+      else if (sec === 'facturas_venta') {
+        sel.innerHTML = `<option value="">Todos los estados</option>
+    <option value="pendiente">Pendiente</option>
+    <option value="cobrada">Cobrada</option>
+    <option value="anulada">Anulada</option>`;
+        sp.placeholder = 'Buscar por nº, cliente o NIF...';
       }
       else if (sec === 'notificaciones_presupuestos') {
         sel.innerHTML = `<option value="">Todos los estados</option>
@@ -4366,6 +4469,9 @@
       }
       if (tablaActual === 'consumo_interno') {
         abrirModalConsumoInterno();
+        return;
+      } if (tablaActual === 'facturas_venta') {          // 👈 nuevo
+        abrirModalFacturaVenta();
         return;
       }
       abrirModalNuevo();
@@ -5502,6 +5608,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           albaranes: 'order=fecha.desc', clientes: 'order=nombre', inventario: 'order=nombre',
           materiales_obra: 'select=*,materiales_obra_items(*),materiales_exclusivos_obra_items(*),materiales_obra_maquinaria_items(*)&order=fecha.desc',
           albaranes_venta: 'select=*,albaranes_venta_items(*)&order=fecha.desc',
+          facturas_venta: 'select=*,facturas_venta_albaranes(*)&order=fecha.desc',
           presupuestos_venta: 'select=*,presupuestos_venta_items(*)&order=fecha.desc',
           obras: 'order=nombre', notificaciones_presupuestos: 'order=fecha_recordatorio.asc',
           ingresos: 'order=fecha.desc',
@@ -6702,6 +6809,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           return cmp * signo;
         });
         bdy.innerHTML = lista.map(f => {
+          const forma = f.forma_cobro || 'facturar';   // 👈 mover aquí arriba, antes del if
+          const fact = !!f.facturado;
+
           if (f._esAlquiler) {
             const esAlta = f._tipoAlquiler === 'alta';
             const fnImprimir = esAlta ? 'imprimirAltaAlquiler' : 'imprimirBajaAlquiler';
@@ -6717,20 +6827,18 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <td><span class="badge-estado ${esAlta ? 'badge-pagado' : 'badge-vencido'}">${esAlta ? 'ALTA ALQUILER' : 'BAJA ALQUILER'}</span></td>
     <td>—</td>
     <td>
-  <button class="btn-toggle-pago pendiente" onclick="${fnImprimir}(${f.id})" title="Imprimir / descargar PDF">
-    <i class="fa-solid fa-print"></i>
-  </button>
-  <button class="btn-toggle-pago" style="background:#1565c0;color:#fff;border:1.5px solid #1565c0" onclick="abrirModalEnviarAlquiler(${f.id},'${f._tipoAlquiler}')" title="Enviar por email">
-    <i class="fa-solid fa-envelope"></i>
-  </button>
-
-      
+      <button class="btn-toggle-pago pendiente" onclick="${fnImprimir}(${f.id})" title="Imprimir / descargar PDF">
+        <i class="fa-solid fa-print"></i>
+      </button>
+      <button class="btn-toggle-pago" style="background:#1565c0;color:#fff;border:1.5px solid #1565c0" onclick="abrirModalEnviarAlquiler(${f.id},'${f._tipoAlquiler}')" title="Enviar por email">
+        <i class="fa-solid fa-envelope"></i>
+      </button>
     </td>
-  </tr>`;
+  </tr>`;                                       // 👈 sin el botón "Facturar" aquí — los alquileres no van a Facturas de Venta
           }
-          const forma = f.forma_cobro || 'facturar';
-          const fact = !!f.facturado;
-          return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarAlbaranVenta(${f.id}))">    <td><strong>${f.numero_albaran || '—'}</strong></td>
+
+          return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarAlbaranVenta(${f.id}))">
+    <td><strong>${f.numero_albaran || '—'}</strong></td>
     <td>${fmtF(f.fecha)}</td>
     <td class="td-nombre">${f.cliente_nombre || '—'}</td>
     <td style="font-size:.8rem;color:#888">${f.nif || '—'}</td>
@@ -6738,11 +6846,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <td>${NOMBRES_PERSONAS[f.creado_por] || f.creado_por || '—'}</td>
     <td><span class="badge-puntos"><i class="fa-solid fa-star" style="color:#c47a00;margin-right:3px"></i>${f.puntos_generados || 0} pts</span></td>
     <td>
-  <span class="badge-estado badge-${forma}">${forma === 'efectivo' ? 'PAGADO AL MOMENTO' : 'A FACTURAR'}</span><br>
-  <button class="btn-toggle-pago ${forma === 'efectivo' ? 'pagado' : 'pendiente'}" style="margin-top:4px" onclick="toggleFormaCobroAlbaranVenta(${f.id},'${forma}')">
-    <i class="fa-solid fa-rotate me-1"></i>Cambiar
-  </button>
-</td>
+      <span class="badge-estado badge-${forma}">${forma === 'efectivo' ? 'PAGADO AL MOMENTO' : 'A FACTURAR'}</span><br>
+      <button class="btn-toggle-pago ${forma === 'efectivo' ? 'pagado' : 'pendiente'}" style="margin-top:4px" onclick="toggleFormaCobroAlbaranVenta(${f.id},'${forma}')">
+        <i class="fa-solid fa-rotate me-1"></i>Cambiar
+      </button>
+    </td>
     <td>
       <span class="badge-estado ${fact ? 'badge-pagado' : 'badge-vencido'}">${fact ? 'SÍ' : 'NO'}</span><br>
       <button class="btn-toggle-facturado ${fact ? 'si' : 'no'}" style="margin-top:4px" onclick="toggleFacturadoVenta(${f.id},${fact})">
@@ -6751,15 +6859,40 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     </td>
     <td>
       <button class="btn-toggle-pago pendiente" onclick="imprimirAlbaranVenta(${f.id})" title="Imprimir / descargar PDF">
-  <i class="fa-solid fa-print"></i>
-</button>
-<button class="btn-toggle-pago" style="background:#1565c0;color:#fff;border:1.5px solid #1565c0" onclick="abrirModalEnviarAlbaran(${f.id})" title="Enviar por email">
-  <i class="fa-solid fa-envelope"></i>
-</button>
+        <i class="fa-solid fa-print"></i>
+      </button>
+      <button class="btn-toggle-pago" style="background:#1565c0;color:#fff;border:1.5px solid #1565c0" onclick="abrirModalEnviarAlbaran(${f.id})" title="Enviar por email">
+        <i class="fa-solid fa-envelope"></i>
+      </button>
+      ${!fact && forma !== 'efectivo' ? `<button class="btn-toggle-pago" style="background:#b53987;color:#fff;border:1.5px solid #b53987" onclick="abrirModalFacturaVenta(${f.id})" title="Generar factura"><i class="fa-solid fa-file-invoice-dollar"></i></button>` : ''}
     </td>
   </tr>`;
         }).join('');
 
+      } else if (tablaActual === 'facturas_venta') {
+        hdr.innerHTML = `<tr><th>Nº Factura</th><th>Fecha</th><th>Cliente</th><th>NIF</th><th>Obra</th><th class="num-cell">Total</th><th>Albaranes</th><th>Estado</th><th></th><th></th></tr>`;
+        const lista = registros.filter(f => {
+          const mQ = [f.numero_factura, f.cliente_nombre, f.nif].some(v => (v || '').toLowerCase().includes(q));
+          return mQ && (!fEst || fEst === (f.estado || 'pendiente'));
+        });
+        if (!lista.length) { bdy.innerHTML = emptyRow(9, 'No hay facturas de venta registradas'); return; }
+        bdy.innerHTML = lista.map(f => {
+          const est = f.estado || 'pendiente';
+          const albs = f.facturas_venta_albaranes || [];
+          return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarFacturaVenta(${f.id}))">
+      <td><strong>${f.numero_factura || '—'}</strong></td>
+      <td>${fmtF(f.fecha)}</td>
+      <td class="td-nombre">${f.cliente_nombre || '—'}</td>
+      <td style="font-size:.8rem;color:#888">${f.nif || '—'}</td>
+      <td>${f.nombre_obra || '—'}</td>
+      <td class="td-total">${fmt(f.total)}</td>
+      <td style="font-size:.78rem;color:#666">${albs.length ? albs.map(a => a.numero_albaran).filter(Boolean).join(', ') : '—'}</td>
+      <td><span class="badge-estado badge-${est === 'cobrada' ? 'pagado' : est === 'anulada' ? 'vencido' : 'pendiente'}">${est.toUpperCase()}</span>
+        <button class="btn-toggle-pago pendiente" style="margin-top:4px" onclick="toggleEstadoFacturaVenta(${f.id},'${est}')"><i class="fa-solid fa-rotate me-1"></i>Cambiar</button></td>
+      <td><button class="btn-toggle-pago pendiente" onclick="imprimirFacturaVenta(${f.id})" title="Imprimir"><i class="fa-solid fa-print"></i></button></td>
+      <td><button class="btn-eliminar" onclick="eliminarFacturaVenta(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
+    </tr>`;
+        }).join('');
       } else if (tablaActual === 'presupuestos_venta') {
         hdr.innerHTML = `<tr><th>Nº Presupuesto</th><th>Fecha</th><th>Cliente</th><th>NIF</th><th class="num-cell">Total</th><th>Válido hasta</th><th></th><th></th></tr>`;
         const lista = registros.filter(f => [f.numero_presupuesto, f.cliente_nombre].some(v => (v || '').toLowerCase().includes(q)));
@@ -13642,7 +13775,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         abrirModalExportarMateriales();
         return;
       }
-      if (tablaActual !== 'facturas_almacen' && tablaActual !== 'facturas_obra' && tablaActual !== 'facturas_csg' && tablaActual !== 'revisadas_facturadas' && tablaActual !== 'ingresos' && tablaActual !== 'albaranes_venta') {
+      if (tablaActual !== 'facturas_almacen' && tablaActual !== 'facturas_obra' && tablaActual !== 'facturas_csg' && tablaActual !== 'revisadas_facturadas' && tablaActual !== 'ingresos' && tablaActual !== 'albaranes_venta' && tablaActual !== 'facturas_venta') {
         toast('La exportación solo está disponible en Facturas Almacén, Facturas Obra, Facturas CSG, Revisadas y Facturadas, Ingresos y Material de Obra', 'err');
         return;
       }
@@ -13671,8 +13804,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     async function exportarExcel() {
-      if (tablaActual !== 'facturas_almacen' && tablaActual !== 'facturas_obra' && tablaActual !== 'facturas_csg' && tablaActual !== 'revisadas_facturadas' && tablaActual !== 'ingresos' && tablaActual !== 'albaranes_venta') {
+      if (tablaActual !== 'facturas_almacen' && tablaActual !== 'facturas_obra' && tablaActual !== 'facturas_csg' && tablaActual !== 'revisadas_facturadas' && tablaActual !== 'ingresos' && tablaActual !== 'albaranes_venta' && tablaActual !== 'facturas_venta') {
         toast('La exportación solo está disponible en Facturas Almacén, Facturas Obra, Facturas CSG, Revisadas y Facturadas e Ingresos', 'err');
+        return;
+      }
+      if (tablaActual === 'facturas_venta') {          // 👈 NUEVO
+        await exportarFacturasVentaExcel();
+        cerrarModal('modalExportar');
         return;
       }
       if (tablaActual === 'albaranes_venta') {
@@ -14900,6 +15038,431 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-paper-plane me-1"></i>Enviar';
       }
+    }
+
+
+
+
+
+
+
+
+
+
+
+    // FACTURAS DE VENTA
+    // ====================== FACTURAS DE VENTA ======================
+    let fvClienteSelId = null;
+    let fvAlbaranesCliente = [];   // albaranes sin facturar del cliente seleccionado
+    let fvEditId = null;
+
+    function setupClienteFacturaAC(inputNombreId, inputNifId, inputIdId) {
+      const inpN = document.getElementById(inputNombreId);
+      const inpF = document.getElementById(inputNifId);
+      const inpId = document.getElementById(inputIdId);
+      if (!inpN || !inpF || !inpId) return;
+      inpN.parentElement.style.position = 'relative';
+      const lista = _crearLista('ac_fv_' + inputNombreId, inpN.parentElement);
+
+      function filtrar(q) {
+        return clientesDB.filter(c => (c.nombre || '').toLowerCase().includes(q) || (c.nif || '').toLowerCase().includes(q)).slice(0, 10);
+      }
+      async function seleccionar(c) {
+        inpN.value = c.nombre || ''; inpF.value = c.nif || ''; inpId.value = c.id;
+        fvClienteSelId = c.id;
+        lista.style.display = 'none';
+        await cargarAlbaranesSinFacturarCliente(c.id);
+      }
+      function render(items) {
+        if (!items.length) { lista.style.display = 'none'; return; }
+        lista.innerHTML = items.map(c => `<div class="ac-item" data-id="${c.id}"><span class="ac-nombre">${c.nombre || '—'}</span><span class="ac-nif">${c.nif || 'Sin NIF'}</span></div>`).join('');
+        lista.style.display = 'block';
+        lista.querySelectorAll('.ac-item').forEach(el => {
+          el.addEventListener('mousedown', e => {
+            e.preventDefault();
+            const c = clientesDB.find(x => x.id == el.dataset.id);
+            if (c) seleccionar(c);
+          });
+        });
+      }
+      inpN.addEventListener('input', () => { inpId.value = ''; fvClienteSelId = null; render(filtrar(inpN.value.toLowerCase().trim())); });
+      inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim())); });
+      inpN.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
+    }
+
+    async function cargarAlbaranesSinFacturarCliente(clienteId, marcarIds) {
+      const cont = document.getElementById('fvAlbaranesLista');
+      cont.innerHTML = `<p style="text-align:center;color:#aaa;font-size:.82rem"><i class="fa-solid fa-spinner fa-spin"></i> Cargando...</p>`;
+      try {
+        // Solo recargamos de la BD si es la primera vez (cambio de cliente);
+        // si solo cambia el filtro de mes, reusamos lo ya traído.
+        if (!fvAlbaranesCliente.length || fvAlbaranesCliente[0]?.cliente_id !== clienteId) {
+          fvAlbaranesCliente = await apiGetAll('albaranes_venta',
+            `cliente_id=eq.${clienteId}&facturado=eq.false&select=*,albaranes_venta_items(*)&order=fecha.asc`);
+          if (fvEditId) {
+            const yaVinculados = await apiGet('facturas_venta_albaranes', `factura_venta_id=eq.${fvEditId}`);
+            const idsYaVinculados = yaVinculados.map(v => v.albaran_venta_id);
+            if (idsYaVinculados.length) {
+              const extra = await apiGetAll('albaranes_venta', `id=in.(${idsYaVinculados.join(',')})&select=*,albaranes_venta_items(*)`);
+              extra.forEach(a => { if (!fvAlbaranesCliente.some(x => x.id === a.id)) fvAlbaranesCliente.push(a); });
+            }
+          }
+        }
+
+        if (!fvAlbaranesCliente.length) {
+          cont.innerHTML = `<p style="text-align:center;color:#aaa;font-size:.82rem;margin:10px 0">Este cliente no tiene albaranes pendientes de facturar</p>`;
+          recalcTotalFacturaVenta(); return;
+        }
+
+        const mesFiltro = parseInt(document.getElementById('fv_filtro_mes')?.value || '');
+        const listaFiltrada = mesFiltro
+          ? fvAlbaranesCliente.filter(a => a.fecha && (new Date(a.fecha).getMonth() + 1) === mesFiltro)
+          : fvAlbaranesCliente;
+
+        if (!listaFiltrada.length) {
+          cont.innerHTML = `<p style="text-align:center;color:#aaa;font-size:.82rem;margin:10px 0">Sin albaranes de este cliente en ese mes</p>`;
+          document.getElementById('fv_marcar_todos').checked = false;
+          recalcTotalFacturaVenta(); return;
+        }
+
+        cont.innerHTML = listaFiltrada.map(a => `
+      <label style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid #f0eaf8;font-size:.85rem">
+        <input type="checkbox" class="fv-chk-alb" value="${a.id}" data-base="${a.base_imponible || 0}" ${marcarIds && marcarIds.includes(a.id) ? 'checked' : ''} onchange="recalcTotalFacturaVenta()">
+        <span style="flex:1"><strong>${a.numero_albaran || 's/n'}</strong> — ${fmtF(a.fecha)}${a.nombre_obra ? ' — ' + a.nombre_obra : ''}</span>
+        <span>${fmt(a.total)}</span>
+      </label>`).join('');
+        document.getElementById('fv_marcar_todos').checked = false;
+        recalcTotalFacturaVenta();
+      } catch (e) {
+        cont.innerHTML = `<p style="color:#e53e3e;font-size:.82rem">Error: ${e.message}</p>`;
+      }
+    }
+
+    function toggleMarcarTodosAlbaranesFV(marcado) {
+      document.querySelectorAll('.fv-chk-alb').forEach(chk => chk.checked = marcado);
+      recalcTotalFacturaVenta();
+    }
+
+    function recalcTotalFacturaVenta() {
+      let base = 0;
+      document.querySelectorAll('.fv-chk-alb:checked').forEach(chk => base += parseFloat(chk.dataset.base || 0));
+      document.getElementById('fv_base').value = base.toFixed(2);
+      const pct = parseFloat(document.getElementById('fv_pct_iva').value || 0);
+      document.getElementById('fv_total').value = (base + base * pct / 100).toFixed(2);
+    }
+
+    function abrirModalFacturaVenta(albaranPreseleccionadoId) {
+      fvEditId = null;
+      fvClienteSelId = null;
+      document.getElementById('facturaVentaTitulo').textContent = 'Nueva Factura de Venta';
+      document.getElementById('fv_num').value = '';
+      document.getElementById('fv_fecha').value = hoy();
+      document.getElementById('fv_venc').value = '';
+      document.getElementById('fv_cliente').value = '';
+      document.getElementById('fv_cliente_id').value = '';
+      document.getElementById('fv_nif').value = '';
+      document.getElementById('fv_obra').value = '';
+      document.getElementById('fv_pct_iva').value = 21;
+      document.getElementById('fv_forma_pago').value = '';
+      document.getElementById('fv_notas').value = '';
+      document.getElementById('fv_filtro_mes').value = '';
+      document.getElementById('fv_marcar_todos').checked = false;
+      document.getElementById('fvAlbaranesLista').innerHTML = `<p style="text-align:center;color:#aaa;font-size:.82rem">Selecciona primero un cliente</p>`;
+
+      document.getElementById('modalFacturaVenta').classList.add('visible');
+      setTimeout(async () => {
+        setupClienteFacturaAC('fv_cliente', 'fv_nif', 'fv_cliente_id');
+        // Si venimos de "Facturar" desde un albarán concreto, preseleccionamos su cliente
+        if (albaranPreseleccionadoId) {
+          const alb = registros.find(r => r.id === albaranPreseleccionadoId)
+            || (await apiGet('albaranes_venta', `id=eq.${albaranPreseleccionadoId}`))[0];
+          if (alb) {
+            document.getElementById('fv_cliente').value = alb.cliente_nombre || '';
+            document.getElementById('fv_nif').value = alb.nif || '';
+            document.getElementById('fv_cliente_id').value = alb.cliente_id;
+            fvClienteSelId = alb.cliente_id;
+            await cargarAlbaranesSinFacturarCliente(alb.cliente_id, [albaranPreseleccionadoId]);
+          }
+        }
+      }, 50);
+    }
+
+    function abrirModalEditarFacturaVenta(id) {
+      const f = registros.find(r => r.id === id);
+      if (!f) { toast('No se ha encontrado la factura', 'err'); return; }
+      fvEditId = id;
+      fvClienteSelId = f.cliente_id;
+      document.getElementById('facturaVentaTitulo').textContent = 'Editar Factura de Venta';
+      document.getElementById('fv_num').value = f.numero_factura || '';
+      document.getElementById('fv_fecha').value = f.fecha || '';
+      document.getElementById('fv_venc').value = f.fecha_vencimiento || '';
+      document.getElementById('fv_cliente').value = f.cliente_nombre || '';
+      document.getElementById('fv_nif').value = f.nif || '';
+      document.getElementById('fv_cliente_id').value = f.cliente_id || '';
+      document.getElementById('fv_obra').value = f.nombre_obra || '';
+      document.getElementById('fv_pct_iva').value = f.pct_iva != null ? f.pct_iva : 21;
+      document.getElementById('fv_forma_pago').value = f.forma_pago || '';
+      document.getElementById('fv_notas').value = f.notas || '';
+
+      document.getElementById('modalFacturaVenta').classList.add('visible');
+      setTimeout(async () => {
+        setupClienteFacturaAC('fv_cliente', 'fv_nif', 'fv_cliente_id');
+        const vinculados = (f.facturas_venta_albaranes || []).map(v => v.albaran_venta_id);
+        await cargarAlbaranesSinFacturarCliente(f.cliente_id, vinculados);
+      }, 50);
+    }
+
+    async function obtenerSiguienteNumeroSecuencialFactura(anio) {
+      const existentes = await apiGetAll('facturas_venta', `anio=eq.${anio}&select=numero_secuencial`);
+      const nums = existentes.map(r => r.numero_secuencial).filter(n => n != null);
+      return nums.length ? Math.max(...nums) + 1 : 1;
+    }
+
+    async function guardarFacturaVenta() {
+      const fecha = document.getElementById('fv_fecha').value;
+      if (!fecha) { toast('La fecha es obligatoria', 'err'); return; }
+      if (!fvClienteSelId) { toast('Selecciona un cliente de la lista', 'err'); return; }
+
+      const idsSeleccionados = [...document.querySelectorAll('.fv-chk-alb:checked')].map(chk => parseInt(chk.value));
+      if (!idsSeleccionados.length) { toast('Selecciona al menos un albarán a facturar', 'err'); return; }
+
+      const cliente_nombre = document.getElementById('fv_cliente').value.trim();
+      const nif = document.getElementById('fv_nif').value.trim() || null;
+      const nombre_obra = document.getElementById('fv_obra').value.trim() || null;
+      const base_imponible = parseFloat(document.getElementById('fv_base').value || 0);
+      const pct_iva = parseFloat(document.getElementById('fv_pct_iva').value || 0);
+      const importe_iva = +(base_imponible * pct_iva / 100).toFixed(2);
+      const total = +(base_imponible + importe_iva).toFixed(2);
+
+      const payload = {
+        fecha,
+        fecha_vencimiento: document.getElementById('fv_venc').value || null,
+        cliente_id: fvClienteSelId,
+        cliente_nombre, nif, nombre_obra,
+        base_imponible, pct_iva, importe_iva, total,
+        forma_pago: document.getElementById('fv_forma_pago').value || null,
+        notas: document.getElementById('fv_notas').value.trim() || null
+      };
+
+      const btn = document.querySelector('#modalFacturaVenta .btn-guardar');
+      btn.disabled = true;
+      try {
+        let facturaId;
+
+        if (fvEditId) {
+          await apiPatch('facturas_venta', fvEditId, payload);
+          facturaId = fvEditId;
+
+          // Reconstruir los enlaces con albaranes: primero liberamos los antiguos
+          const antiguos = await apiGet('facturas_venta_albaranes', `factura_venta_id=eq.${facturaId}`);
+          const idsAntiguos = antiguos.map(a => a.albaran_venta_id);
+          for (const a of antiguos) await apiDelete('facturas_venta_albaranes', a.id);
+          // Los que ya no están seleccionados, vuelven a "sin facturar"
+          const liberar = idsAntiguos.filter(id => !idsSeleccionados.includes(id));
+          for (const id of liberar) await apiPatch('albaranes_venta', id, { facturado: false });
+
+        } else {
+          const anio = new Date(fecha).getFullYear();
+          const numSec = await obtenerSiguienteNumeroSecuencialFactura(anio);
+          payload.anio = anio;
+          payload.numero_secuencial = numSec;
+          payload.numero_factura = `FAC-${anio}-${String(numSec).padStart(4, '0')}`;
+          payload.estado = 'pendiente';
+          payload.creado_por = currentPersona;
+          const [nueva] = await apiPost('facturas_venta', payload);
+          facturaId = nueva.id;
+        }
+
+        // Vincular albaranes seleccionados + marcarlos como facturados + copiar sus líneas
+        for (const albId of idsSeleccionados) {
+          const alb = fvAlbaranesCliente.find(a => a.id === albId);
+          await apiPost('facturas_venta_albaranes', [{
+            factura_venta_id: facturaId, albaran_venta_id: albId, numero_albaran: alb?.numero_albaran || null
+          }]);
+          await apiPatch('albaranes_venta', albId, { facturado: true });
+          if (alb?.albaranes_venta_items?.length) {
+            await apiPost('facturas_venta_items', alb.albaranes_venta_items.map(it => ({
+              factura_venta_id: facturaId,
+              producto_nombre: it.producto_nombre,
+              cantidad: it.cantidad,
+              precio_unitario: it.precio_unitario,
+              dto_pct: it.dto_pct || 0,
+              importe_total: it.importe_total
+            })));
+          }
+        }
+
+        toast(fvEditId ? 'Factura actualizada correctamente' : `Factura ${payload.numero_factura || ''} guardada correctamente`);
+        const idParaImprimir = facturaId;
+        fvEditId = null;
+        cerrarModal('modalFacturaVenta');
+        cargarDatos();
+        if (!payload.numero_factura || true) imprimirFacturaVenta(idParaImprimir);
+      } catch (e) {
+        toast('Error al guardar la factura: ' + e.message, 'err');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function toggleEstadoFacturaVenta(id, estadoActual) {
+      const ciclo = { pendiente: 'cobrada', cobrada: 'anulada', anulada: 'pendiente' };
+      const nuevo = ciclo[estadoActual] || 'pendiente';
+      try {
+        await apiPatch('facturas_venta', id, { estado: nuevo });
+        const reg = registros.find(r => r.id === id);
+        if (reg) reg.estado = nuevo;
+        renderTablaConScroll();
+      } catch (e) { toast('Error: ' + e.message, 'err'); }
+    }
+
+    async function eliminarFacturaVenta(id) {
+      if (!confirm('¿Eliminar esta factura? Los albaranes vinculados volverán a quedar "sin facturar". No se puede deshacer.')) return;
+      try {
+        const vinculados = await apiGet('facturas_venta_albaranes', `factura_venta_id=eq.${id}`);
+        for (const v of vinculados) {
+          await apiPatch('albaranes_venta', v.albaran_venta_id, { facturado: false });
+          await apiDelete('facturas_venta_albaranes', v.id);
+        }
+        const items = await apiGet('facturas_venta_items', `factura_venta_id=eq.${id}`);
+        for (const it of items) await apiDelete('facturas_venta_items', it.id);
+        await apiDelete('facturas_venta', id);
+        toast('Factura eliminada, albaranes liberados');
+        cargarDatos();
+      } catch (e) { toast('Error al eliminar: ' + e.message, 'err'); }
+    }
+
+    async function imprimirFacturaVenta(id) {
+      let f = registros.find(r => r.id === id);
+      if (!f) {
+        const items = await apiGet('facturas_venta', `id=eq.${id}&select=*,facturas_venta_albaranes(*)`);
+        f = items && items[0];
+      }
+      if (!f) { toast('No se ha encontrado la factura', 'err'); return; }
+
+      const items = await apiGet('facturas_venta_items', `factura_venta_id=eq.${id}`);
+      const filas = items.map(i => `
+    <tr>
+      <td>${i.producto_nombre || ''}</td>
+      <td style="text-align:right">${fmtStock(i.cantidad)}</td>
+      <td style="text-align:right">${fmtN(i.precio_unitario)}</td>
+      <td style="text-align:right">${i.dto_pct ? i.dto_pct + '%' : '—'}</td>
+      <td style="text-align:right">${fmtN(i.importe_total)}</td>
+    </tr>`).join('');
+
+      const albaranes = f.facturas_venta_albaranes || [];
+      const filaAlbaranes = albaranes.length
+        ? `<p style="font-size:.75rem;color:#888;margin-top:10px"><b>Albaranes incluidos:</b> ${albaranes.map(a => a.numero_albaran).filter(Boolean).join(', ')}</p>`
+        : '';
+
+      const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Factura ${f.numero_factura || ''}</title>
+  <style>
+    body{font-family:Arial,sans-serif;color:#222;padding:36px;font-size:.72rem}
+    .cabecera{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
+    .cabecera img{height:100px}
+    .caja{border:1.5px solid #333;border-radius:10px;padding:12px 16px;margin-bottom:6px}
+    .datos-cliente h3{margin:0 0 6px;font-size:.85rem}
+    .doc-info{display:flex;gap:10px;margin-top:14px}
+    .doc-info div{border:1.5px solid #333;border-radius:8px;padding:8px 14px;text-align:center;font-size:.78rem}
+    .doc-info div b{display:block;font-size:.85rem;margin-top:2px}
+    h1{font-size:1.4rem;margin:18px 0 10px;color:#b53987;text-transform:uppercase}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{border-bottom:1px solid #ccc;padding:7px;text-align:left;font-size:.75rem}
+    th{background:#f7f0f5;font-weight:500}
+    .pie{display:flex;justify-content:space-between;gap:16px;margin-top:20px;align-items:flex-start}
+    .iva-tabla{border:1.5px solid #333;border-radius:10px;padding:10px 14px;font-size:.75rem}
+    .iva-tabla table{margin:0}
+    .iva-tabla th,.iva-tabla td{border:none;padding:4px 10px}
+    .total-box{border:1.5px solid #333;border-radius:10px;padding:14px 24px;font-weight:700;display:flex;justify-content:space-between;gap:20px;align-items:center;min-width:220px}
+    .btn-imprimir{position:fixed;top:16px;right:16px}
+    @media print{.btn-imprimir{display:none}}
+  </style></head><body>
+  <div class="cabecera">
+    <img src="logo.png" alt="Olivilla Tres" onerror="this.style.display='none'">
+    <div class="datos-cliente" style="text-align:right">
+      <h3>DATOS DEL CLIENTE</h3>
+      <b>${f.cliente_nombre || '—'}</b><br>
+      <b>N.I.F.</b> ${f.nif || '—'}
+    </div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px">
+    <div class="caja" style="max-width:320px">
+      <b>OLIVILLA TRES S.L.U</b><br>Avenida de Madrid, 41<br>45003 TOLEDO<br>B45813284<br>925233454<br>almacen@olivillatres.com
+    </div>
+    <div class="doc-info">
+      <div>DOCUMENTO<br><b>Factura</b></div>
+      <div>NÚMERO<br><b>${f.numero_factura || '—'}</b></div>
+      <div>FECHA<br><b>${fmtF(f.fecha)}</b></div>
+    </div>
+  </div>
+  <h1>FACTURA</h1>
+  <table>
+    <thead><tr><th>PRODUCTO</th><th style="text-align:right">CANTIDAD</th><th style="text-align:right">PRECIO UD.</th><th style="text-align:right">DTO.</th><th style="text-align:right">TOTAL</th></tr></thead>
+    <tbody>${filas || '<tr><td colspan="5">Sin líneas de detalle</td></tr>'}</tbody>
+  </table>
+  ${filaAlbaranes}
+  <div class="pie">
+    <div class="iva-tabla">
+      <table><thead><tr><th>BASE</th><th>%IVA</th><th>IMPORTE IVA</th></tr></thead>
+        <tbody><tr><td>${fmtN(f.base_imponible)}</td><td>${fmtN(f.pct_iva)}</td><td>${fmtN(f.importe_iva)}</td></tr></tbody></table>
+    </div>
+    <div class="total-box"><span>TOTAL:</span><span>${fmt(f.total)}</span></div>
+  </div>
+  ${f.notas ? `<p style="margin-top:16px"><b>Notas:</b> ${f.notas}</p>` : ''}
+  <button class="btn-imprimir" onclick="window.print()" style="padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
+  </body></html>`;
+      const w = window.open('', '_blank');
+      w.document.write(html);
+      w.document.close();
+    }
+
+    const FACTUSOL_TIPO_DOC_FACTURA = 5; // TODO: verificar contra FactuSol
+
+    function _filaFAC(f) {
+      const fila = new Array(ALB_HEADERS.length).fill(null); // misma plantilla de columnas que ALB
+      fila[0] = FACTUSOL_TIPO_DOC_FACTURA;
+      fila[1] = f.numero_secuencial || '';
+      fila[3] = f.fecha ? f.fecha.split('-').reverse().join('/') : '';
+      fila[4] = f.estado === 'cobrada' ? 1 : 0;
+      fila[9] = (f.cliente_nombre || '').substring(0, 50);
+      fila[14] = (f.nif || '').substring(0, 18);
+      fila[18] = f.base_imponible || 0;
+      fila[45] = f.base_imponible || 0;
+      fila[48] = f.pct_iva != null ? f.pct_iva : 21;
+      fila[51] = f.importe_iva || 0;
+      fila[62] = f.total || 0;
+      fila[71] = (f.notas || '').substring(0, 100);
+      return fila;
+    }
+
+    async function exportarFacturasVentaExcel() {
+      const year = parseInt(document.getElementById('exportYear').value);
+      const meses = Array.from(document.querySelectorAll('#exportMeses input:checked')).map(i => parseInt(i.value));
+      const incluirYaExportadas = document.getElementById('exportIncluirYaExportadas')?.checked;
+
+      let filtrados = registros.filter(f => {
+        const [y, m] = (f.fecha || '').split('-').map(Number);
+        if (y !== year) return false;
+        if (meses.length && !meses.includes(m)) return false;
+        return true;
+      });
+      const totalFiltro = filtrados.length;
+      if (!incluirYaExportadas) filtrados = filtrados.filter(f => !f.exportado_excel);
+      if (!filtrados.length) {
+        toast(totalFiltro ? 'Todas las facturas de ese filtro ya se habían exportado antes' : 'No hay facturas para ese filtro', 'err');
+        return;
+      }
+
+      const wbFac = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wbFac, XLSX.utils.aoa_to_sheet(filtrados.map(_filaFAC)), 'FAC');
+      XLSX.writeFile(wbFac, 'FAC.xlsx');
+
+      try {
+        await marcarExportadosExcel('facturas_venta', filtrados.map(f => f.id));
+        cargarDatos();
+      } catch (e) { console.error(e); }
+
+      toast('<i class="fa-solid fa-file-excel me-1"></i>Descargado <strong>FAC.xlsx</strong> — cópialo a la carpeta de importación de FactuSol', 'ok');
     }
   </script>
 </body>

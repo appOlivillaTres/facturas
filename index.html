@@ -15211,10 +15211,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       }, 50);
     }
 
+    const FACTUSOL_BASE_NUMERO_FACTURA = 391; // último número ya emitido en FactuSol
+
     async function obtenerSiguienteNumeroSecuencialFactura(anio) {
       const existentes = await apiGetAll('facturas_venta', `anio=eq.${anio}&select=numero_secuencial`);
       const nums = existentes.map(r => r.numero_secuencial).filter(n => n != null);
-      return nums.length ? Math.max(...nums) + 1 : 1;
+      const maxActual = nums.length ? Math.max(...nums) : 0;
+      return Math.max(maxActual, FACTUSOL_BASE_NUMERO_FACTURA) + 1;
     }
 
     async function guardarFacturaVenta() {

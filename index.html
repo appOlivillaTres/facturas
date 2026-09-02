@@ -10705,8 +10705,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     </div>
     <div class="total-box"><span>TOTAL:</span><span>${fmt(f.total)}</span></div>
   </div>
-  ${f.notas ? `<p style="margin-top:16px"><b>Notas:</b> ${f.notas}</p>` : ''}
-  <button class="btn-imprimir" onclick="window.print()" style="padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
+    ${f.notas ? `<p style="margin-top:16px"><b>Notas:</b> ${f.notas}</p>` : ''}
+  <button class="btn-imprimir" onclick="window.print()" style="position:fixed;top:16px;right:16px;padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
   </body></html>`;
       const w = window.open('', '_blank');
       w.document.write(html);
@@ -12813,11 +12813,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         consumoInternoEditId = null; // 👈 añadir
       }
       if (id === 'modalEnviarAlbaran') {
-  albaranEnvioActualId = null;
-  presupuestoEnvioActualId = null;
-  alquilerEnvioActualId = null;
-  alquilerEnvioTipo = null;
-  facturaVentaEnvioActualId = null; // 👈 añadir
+        albaranEnvioActualId = null;
+        presupuestoEnvioActualId = null;
+        alquilerEnvioActualId = null;
+        alquilerEnvioTipo = null;
+        facturaVentaEnvioActualId = null; // 👈 añadir
 
       }
     }
@@ -15422,141 +15422,137 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       try {
         const html = await _generarHtmlFacturaVenta(id);
         const w = window.open('', '_blank');
-        w.document.write(html.replace(
-          '<button class="btn-imprimir"',
-          '<button class="btn-imprimir"'
-        ) + `<script>document.body.insertAdjacentHTML('beforeend','<button class="btn-imprimir" onclick="window.print()" style="position:fixed;top:16px;right:16px;padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>');</script>
-  `);
-  w.document.close();
-  } catch (e) {
-  toast('No se ha encontrado la factura', 'err');
-  }
-  }
+        w.document.write(html);
+        w.document.close();
+      } catch (e) {
+        toast('No se ha encontrado la factura', 'err');
+      }
+    }
 
-  const FACTUSOL_TIPO_DOC_FACTURA = 5; // TODO: verificar contra FactuSol
+    const FACTUSOL_TIPO_DOC_FACTURA = 5; // TODO: verificar contra FactuSol
 
-  function _filaFAC(f) {
-  const fila = new Array(ALB_HEADERS.length).fill(null); // misma plantilla de columnas que ALB
-  fila[0] = FACTUSOL_TIPO_DOC_FACTURA;
-  fila[1] = f.numero_secuencial || '';
-  fila[3] = f.fecha ? f.fecha.split('-').reverse().join('/') : '';
-  fila[4] = f.estado === 'cobrada' ? 1 : 0;
-  fila[9] = (f.cliente_nombre || '').substring(0, 50);
-  fila[14] = (f.nif || '').substring(0, 18);
-  fila[18] = f.base_imponible || 0;
-  fila[45] = f.base_imponible || 0;
-  fila[48] = f.pct_iva != null ? f.pct_iva : 21;
-  fila[51] = f.importe_iva || 0;
-  fila[62] = f.total || 0;
-  fila[71] = (f.notas || '').substring(0, 100);
-  return fila;
-  }
+    function _filaFAC(f) {
+      const fila = new Array(ALB_HEADERS.length).fill(null); // misma plantilla de columnas que ALB
+      fila[0] = FACTUSOL_TIPO_DOC_FACTURA;
+      fila[1] = f.numero_secuencial || '';
+      fila[3] = f.fecha ? f.fecha.split('-').reverse().join('/') : '';
+      fila[4] = f.estado === 'cobrada' ? 1 : 0;
+      fila[9] = (f.cliente_nombre || '').substring(0, 50);
+      fila[14] = (f.nif || '').substring(0, 18);
+      fila[18] = f.base_imponible || 0;
+      fila[45] = f.base_imponible || 0;
+      fila[48] = f.pct_iva != null ? f.pct_iva : 21;
+      fila[51] = f.importe_iva || 0;
+      fila[62] = f.total || 0;
+      fila[71] = (f.notas || '').substring(0, 100);
+      return fila;
+    }
 
-  async function exportarFacturasVentaExcel() {
-  const year = parseInt(document.getElementById('exportYear').value);
-  const meses = Array.from(document.querySelectorAll('#exportMeses input:checked')).map(i => parseInt(i.value));
-  const incluirYaExportadas = document.getElementById('exportIncluirYaExportadas')?.checked;
+    async function exportarFacturasVentaExcel() {
+      const year = parseInt(document.getElementById('exportYear').value);
+      const meses = Array.from(document.querySelectorAll('#exportMeses input:checked')).map(i => parseInt(i.value));
+      const incluirYaExportadas = document.getElementById('exportIncluirYaExportadas')?.checked;
 
-  let filtrados = registros.filter(f => {
-  const [y, m] = (f.fecha || '').split('-').map(Number);
-  if (y !== year) return false;
-  if (meses.length && !meses.includes(m)) return false;
-  return true;
-  });
-  const totalFiltro = filtrados.length;
-  if (!incluirYaExportadas) filtrados = filtrados.filter(f => !f.exportado_excel);
-  if (!filtrados.length) {
-  toast(totalFiltro ? 'Todas las facturas de ese filtro ya se habían exportado antes' : 'No hay facturas para ese
+      let filtrados = registros.filter(f => {
+        const [y, m] = (f.fecha || '').split('-').map(Number);
+        if (y !== year) return false;
+        if (meses.length && !meses.includes(m)) return false;
+        return true;
+      });
+      const totalFiltro = filtrados.length;
+      if (!incluirYaExportadas) filtrados = filtrados.filter(f => !f.exportado_excel);
+      if (!filtrados.length) {
+        toast(totalFiltro ? 'Todas las facturas de ese filtro ya se habían exportado antes' : 'No hay facturas para ese
   filtro', 'err');
   return;
-  }
+      }
 
-  const wbFac = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wbFac, XLSX.utils.aoa_to_sheet(filtrados.map(_filaFAC)), 'FAC');
-  XLSX.writeFile(wbFac, 'FAC.xlsx');
+      const wbFac = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wbFac, XLSX.utils.aoa_to_sheet(filtrados.map(_filaFAC)), 'FAC');
+      XLSX.writeFile(wbFac, 'FAC.xlsx');
 
-  try {
-  await marcarExportadosExcel('facturas_venta', filtrados.map(f => f.id));
-  cargarDatos();
-  } catch (e) { console.error(e); }
+      try {
+        await marcarExportadosExcel('facturas_venta', filtrados.map(f => f.id));
+        cargarDatos();
+      } catch (e) { console.error(e); }
 
-  toast('<i class="fa-solid fa-file-excel me-1"></i>Descargado <strong>FAC.xlsx</strong> — cópialo a la carpeta de
+      toast('<i class="fa-solid fa-file-excel me-1"></i>Descargado <strong>FAC.xlsx</strong> — cópialo a la carpeta de
   importación de FactuSol', 'ok');
   }
-  async function abrirModalEnviarFacturaVenta(id) {
-  facturaVentaEnvioActualId = id;
-  albaranEnvioActualId = null;
-  presupuestoEnvioActualId = null;
-  alquilerEnvioActualId = null;
+    async function abrirModalEnviarFacturaVenta(id) {
+      facturaVentaEnvioActualId = id;
+      albaranEnvioActualId = null;
+      presupuestoEnvioActualId = null;
+      alquilerEnvioActualId = null;
 
-  const f = registros.find(r => r.id === id) || (await apiGet('facturas_venta', `id=eq.${id}`))[0];
-  document.getElementById('ea_email').value = ''; // facturas_venta no guarda email de cliente directo; se rellena a
-  mano
-  const cliente = clientesDB.find(c => c.id === f?.cliente_id);
-  if (cliente?.email) document.getElementById('ea_email').value = cliente.email;
-  document.getElementById('ea_mensaje').value = '';
-  document.querySelector('#modalEnviarAlbaran h3').innerHTML =
-  '<i class="fa-solid fa-envelope" style="color:#1565c0"></i>Enviar factura por email';
-  document.getElementById('modalEnviarAlbaran').classList.add('visible');
-  }
-  async function confirmarEnvioFacturaVentaEmail() {
-  const email = document.getElementById('ea_email').value.trim();
-  const mensaje = document.getElementById('ea_mensaje').value.trim();
-  if (!email) { toast('Indica un email válido', 'err'); return; }
+      const f = registros.find(r => r.id === id) || (await apiGet('facturas_venta', `id=eq.${id}`))[0];
+      document.getElementById('ea_email').value = ''; // facturas_venta no guarda email de cliente directo; se rellena a
+      mano
+      const cliente = clientesDB.find(c => c.id === f?.cliente_id);
+      if (cliente?.email) document.getElementById('ea_email').value = cliente.email;
+      document.getElementById('ea_mensaje').value = '';
+      document.querySelector('#modalEnviarAlbaran h3').innerHTML =
+        '<i class="fa-solid fa-envelope" style="color:#1565c0"></i>Enviar factura por email';
+      document.getElementById('modalEnviarAlbaran').classList.add('visible');
+    }
+    async function confirmarEnvioFacturaVentaEmail() {
+      const email = document.getElementById('ea_email').value.trim();
+      const mensaje = document.getElementById('ea_mensaje').value.trim();
+      if (!email) { toast('Indica un email válido', 'err'); return; }
 
-  const btn = document.getElementById('btnEnviarAlbaranEmail');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Generando PDF...';
+      const btn = document.getElementById('btnEnviarAlbaranEmail');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Generando PDF...';
 
-  try {
-    const f = registros.find(r => r.id === facturaVentaEnvioActualId);
-    const htmlFactura = await _generarHtmlFacturaVenta(facturaVentaEnvioActualId);
+      try {
+        const f = registros.find(r => r.id === facturaVentaEnvioActualId);
+        const htmlFactura = await _generarHtmlFacturaVenta(facturaVentaEnvioActualId);
 
-    const contenedor = document.createElement('div');
-    contenedor.style.cssText = 'position:fixed;left:-9999px;top:0;width:800px;background:#fff';
-    contenedor.innerHTML = htmlFactura.replace(/<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi, '');
-    document.body.appendChild(contenedor);
+        const contenedor = document.createElement('div');
+        contenedor.style.cssText = 'position:fixed;left:-9999px;top:0;width:800px;background:#fff';
+        contenedor.innerHTML = htmlFactura.replace(/<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi, '');
+        document.body.appendChild(contenedor);
 
-    const pdfBlob = await html2pdf().set({
-      margin: 10,
-      filename: `factura_${f?.numero_factura || facturaVentaEnvioActualId}.pdf`,
-      jsPDF: { unit: 'mm', format: 'a4' }
-    }).from(contenedor).outputPdf('blob');
+        const pdfBlob = await html2pdf().set({
+          margin: 10,
+          filename: `factura_${f?.numero_factura || facturaVentaEnvioActualId}.pdf`,
+          jsPDF: { unit: 'mm', format: 'a4' }
+        }).from(contenedor).outputPdf('blob');
 
-    document.body.removeChild(contenedor);
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Enviando...';
+        document.body.removeChild(contenedor);
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Enviando...';
 
-    const pdfBase64 = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(',')[1]);
-      reader.onerror = reject;
-      reader.readAsDataURL(pdfBlob);
-    });
+        const pdfBase64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(pdfBlob);
+        });
 
-    const res = await fetch('https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
-      body: JSON.stringify({
-        tipo: 'enviar_factura_venta',
-        email,
-        mensaje: mensaje || null,
-        numero_factura: f?.numero_factura || '',
-        cliente_nombre: f?.cliente_nombre || '',
-        pdf_base64: pdfBase64,
-        pdf_nombre: `factura_${f?.numero_factura || facturaVentaEnvioActualId}.pdf`
-      })
-    });
-    if (!res.ok) throw new Error(await res.text());
+        const res = await fetch('https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+          body: JSON.stringify({
+            tipo: 'enviar_factura_venta',
+            email,
+            mensaje: mensaje || null,
+            numero_factura: f?.numero_factura || '',
+            cliente_nombre: f?.cliente_nombre || '',
+            pdf_base64: pdfBase64,
+            pdf_nombre: `factura_${f?.numero_factura || facturaVentaEnvioActualId}.pdf`
+          })
+        });
+        if (!res.ok) throw new Error(await res.text());
 
-    toast(`<i class="fa-solid fa-check me-1"></i>Factura enviada a ${email}`, 'ok');
-    cerrarModal('modalEnviarAlbaran');
-  } catch (e) {
-    toast('Error al enviar la factura: ' + e.message, 'err');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-paper-plane me-1"></i>Enviar';
-  }
-}
+        toast(`<i class="fa-solid fa-check me-1"></i>Factura enviada a ${email}`, 'ok');
+        cerrarModal('modalEnviarAlbaran');
+      } catch (e) {
+        toast('Error al enviar la factura: ' + e.message, 'err');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane me-1"></i>Enviar';
+      }
+    }
   </script>
 </body>
 

@@ -10314,7 +10314,27 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
     .btn-imprimir{position:fixed; top:16px; right:16px}
     @media print{ .btn-imprimir{display:none} }
-  </style></head><body>
+  @media print{ .btn-imprimir, .btn-enviar-email{display:none} }
+  @media print{ .btn-imprimir, .btn-enviar-email{display:none} }
+  </style></head><script>
+  function enviarDesdeVentanaImpresion(btn, id, tipo) {
+    if (!window.opener) {
+      alert('Abre este documento desde el panel para poder enviarlo por email.');
+      return;
+    }
+    const email = prompt('Introduce el email del destinatario:');
+    if (!email) return;
+    const mensaje = prompt('Mensaje opcional (déjalo en blanco si no quieres añadir nada):') || '';
+
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    window.opener.enviarDocumentoPorEmailDirecto(tipo, id, email, mensaje)
+      .then(() => { alert('Documento enviado a ' + email); btn.textContent = textoOriginal; btn.disabled = false; })
+      .catch(e => { alert('Error al enviar: ' + e.message); btn.textContent = textoOriginal; btn.disabled = false; });
+  }
+</script><body>
   <div class="cabecera">
     <img src="logo.png" alt="Olivilla Tres" onerror="this.style.display='none'">
     <div class="datos-cliente" style="text-align:right">
@@ -10370,8 +10390,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   </div>
 </div>
   <button class="btn-imprimir" onclick="window.print()" style="padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
-  <button onclick="if(window.opener){window.opener.focus();window.opener.abrirModalEnviarAlbaran(${f.id});}else{alert('Abre este documento desde el panel para poder enviarlo por email.');}" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
-  </body></html>`;
+<button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'albaran_venta')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>  </body></html>`;
       const w = window.open('', '_blank');
       w.document.write(html);
       w.document.close();
@@ -10660,7 +10679,25 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     .btn-imprimir{position:fixed;top:16px;right:16px}
     @media print{.btn-imprimir{display:none}}
   @media print{ .btn-imprimir, .btn-enviar-email{display:none} }
-    </style></head><body>
+    </style></head><script>
+  function enviarDesdeVentanaImpresion(btn, id, tipo) {
+    if (!window.opener) {
+      alert('Abre este documento desde el panel para poder enviarlo por email.');
+      return;
+    }
+    const email = prompt('Introduce el email del destinatario:');
+    if (!email) return;
+    const mensaje = prompt('Mensaje opcional (déjalo en blanco si no quieres añadir nada):') || '';
+
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    window.opener.enviarDocumentoPorEmailDirecto(tipo, id, email, mensaje)
+      .then(() => { alert('Documento enviado a ' + email); btn.textContent = textoOriginal; btn.disabled = false; })
+      .catch(e => { alert('Error al enviar: ' + e.message); btn.textContent = textoOriginal; btn.disabled = false; });
+  }
+</script><body>
   <div class="cabecera">
     <img src="logo.png" alt="Olivilla Tres" onerror="this.style.display='none'">
     <div class="datos-cliente" style="text-align:right">
@@ -10709,8 +10746,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   </div>
     ${f.notas ? `<p style="margin-top:16px"><b>Notas:</b> ${f.notas}</p>` : ''}
   <button class="btn-imprimir" onclick="window.print()" style="position:fixed;top:16px;right:16px;padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
-  <button onclick="if(window.opener){window.opener.focus();window.opener.abrirModalEnviarPresupuesto(${f.id});}else{alert('Abre este documento desde el panel para poder enviarlo por email.');}" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
-  </body></html>`;
+<button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'presupuesto_venta')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>  </body></html>`;
       const w = window.open('', '_blank');
       w.document.write(html);
       w.document.close();
@@ -14866,8 +14902,24 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   </div>
     ${f.notas ? `<p style="margin-top:16px"><b>Notas:</b> ${f.notas}</p>` : ''}
   <button class="btn-imprimir" onclick="window.print()" style="position:fixed;top:16px;right:16px;padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
-  <button onclick="if(window.opener){window.opener.focus();window.opener.abrirModalEnviarFacturaVenta(${f.id});}else{alert('Abre este documento desde el panel para poder enviarlo por email.');}" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
-  </body></html>`;
+  <button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'presupuesto_venta')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
+  <script>
+  function enviarDesdeVentanaImpresion(btn, id, tipo) {
+    if (!window.opener) {
+      alert('Abre este documento desde el panel para poder enviarlo por email.');
+      return;
+    }
+    const email = prompt('Introduce el email del destinatario:');
+    if (!email) return;
+    const mensaje = prompt('Mensaje opcional (déjalo en blanco si no quieres añadir nada):') || '';
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+    window.opener.enviarDocumentoPorEmailDirecto(tipo, id, email, mensaje)
+      .then(() => { alert('Documento enviado a ' + email); btn.textContent = textoOriginal; btn.disabled = false; })
+      .catch(e => { alert('Error al enviar: ' + e.message); btn.textContent = textoOriginal; btn.disabled = false; });
+  }
+</script></body></html>`;
     }
 
     async function confirmarEnvioPresupuestoEmail() {
@@ -15429,6 +15481,24 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   ${f.notas ? `<p style="margin-top:16px"><b>Notas:</b> ${f.notas}</p>` : ''}
     ${f.notas ? `<p style="margin-top:16px"><b>Notas:</b> ${f.notas}</p>` : ''}
   <button class="btn-imprimir" onclick="window.print()" style="position:fixed;top:16px;right:16px;padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
+<button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'factura_venta')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
+<script>
+  function enviarDesdeVentanaImpresion(btn, id, tipo) {
+    if (!window.opener) {
+      alert('Abre este documento desde el panel para poder enviarlo por email.');
+      return;
+    }
+    const email = prompt('Introduce el email del destinatario:');
+    if (!email) return;
+    const mensaje = prompt('Mensaje opcional (déjalo en blanco si no quieres añadir nada):') || '';
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+    window.opener.enviarDocumentoPorEmailDirecto(tipo, id, email, mensaje)
+      .then(() => { alert('Documento enviado a ' + email); btn.textContent = textoOriginal; btn.disabled = false; })
+      .catch(e => { alert('Error al enviar: ' + e.message); btn.textContent = textoOriginal; btn.disabled = false; });
+  }
+</script>
   </body></html>`;
     }
 
@@ -15564,6 +15634,56 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         btn.innerHTML = '<i class="fa-solid fa-paper-plane me-1"></i>Enviar';
       }
     }
+
+    // Envío directo de PDF por email, sin pasar por el modal — pensado para
+// llamarse desde las ventanas de impresión (albarán, presupuesto, factura de venta)
+async function enviarDocumentoPorEmailDirecto(tipo, id, email, mensaje) {
+  let html, nombreArchivo, payloadExtra;
+
+  if (tipo === 'albaran_venta') {
+    const f = registros.find(r => r.id === id) || (await apiGet('albaranes_venta', `id=eq.${id}`))[0];
+    html = await _generarHtmlAlbaranVenta(id);
+    nombreArchivo = `albaran_${f?.numero_albaran || id}.pdf`;
+    payloadExtra = { tipo: 'enviar_albaran_venta', numero_albaran: f?.numero_albaran || '', cliente_nombre: f?.cliente_nombre || '' };
+  } else if (tipo === 'presupuesto_venta') {
+    const f = registros.find(r => r.id === id) || (await apiGet('presupuestos_venta', `id=eq.${id}`))[0];
+    html = await _generarHtmlPresupuestoVenta(id);
+    nombreArchivo = `presupuesto_${f?.numero_presupuesto || id}.pdf`;
+    payloadExtra = { tipo: 'enviar_presupuesto_venta', numero_presupuesto: f?.numero_presupuesto || '', cliente_nombre: f?.cliente_nombre || '' };
+  } else if (tipo === 'factura_venta') {
+    const f = registros.find(r => r.id === id) || (await apiGet('facturas_venta', `id=eq.${id}`))[0];
+    html = await _generarHtmlFacturaVenta(id);
+    nombreArchivo = `factura_${f?.numero_factura || id}.pdf`;
+    payloadExtra = { tipo: 'enviar_factura_venta', numero_factura: f?.numero_factura || '', cliente_nombre: f?.cliente_nombre || '' };
+  } else {
+    throw new Error('Tipo de documento no soportado');
+  }
+
+  const contenedor = document.createElement('div');
+  contenedor.style.cssText = 'position:fixed;left:-9999px;top:0;width:800px;background:#fff';
+  contenedor.innerHTML = html.replace(/<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi, '');
+  document.body.appendChild(contenedor);
+
+  const pdfBlob = await html2pdf().set({
+    margin: 10, filename: nombreArchivo, jsPDF: { unit: 'mm', format: 'a4' }
+  }).from(contenedor).outputPdf('blob');
+  document.body.removeChild(contenedor);
+
+  const pdfBase64 = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(pdfBlob);
+  });
+
+  const res = await fetch('https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+    body: JSON.stringify({ ...payloadExtra, email, mensaje: mensaje || null, pdf_base64: pdfBase64, pdf_nombre: nombreArchivo })
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return true;
+}
   </script>
 </body>
 

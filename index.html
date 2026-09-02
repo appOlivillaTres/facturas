@@ -15462,9 +15462,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const totalFiltro = filtrados.length;
       if (!incluirYaExportadas) filtrados = filtrados.filter(f => !f.exportado_excel);
       if (!filtrados.length) {
-        toast(totalFiltro ? 'Todas las facturas de ese filtro ya se habían exportado antes' : 'No hay facturas para ese
-  filtro', 'err');
-  return;
+        toast(totalFiltro ? 'Todas las facturas de ese filtro ya se habían exportado antes' : 'No hay facturas para ese filtro', 'err');
+        return;
       }
 
       const wbFac = XLSX.utils.book_new();
@@ -15476,9 +15475,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         cargarDatos();
       } catch (e) { console.error(e); }
 
-      toast('<i class="fa-solid fa-file-excel me-1"></i>Descargado <strong>FAC.xlsx</strong> — cópialo a la carpeta de
-  importación de FactuSol', 'ok');
-  }
+      toast('<i class="fa-solid fa-file-excel me-1"></i>Descargado <strong>FAC.xlsx</strong> — cópialo a la carpeta de importación de FactuSol', 'ok');
+    }
     async function abrirModalEnviarFacturaVenta(id) {
       facturaVentaEnvioActualId = id;
       albaranEnvioActualId = null;
@@ -15486,8 +15484,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       alquilerEnvioActualId = null;
 
       const f = registros.find(r => r.id === id) || (await apiGet('facturas_venta', `id=eq.${id}`))[0];
-      document.getElementById('ea_email').value = ''; // facturas_venta no guarda email de cliente directo; se rellena a
-      mano
+      document.getElementById('ea_email').value = ''; // facturas_venta no guarda email de cliente directo; se rellena a mano
       const cliente = clientesDB.find(c => c.id === f?.cliente_id);
       if (cliente?.email) document.getElementById('ea_email').value = cliente.email;
       document.getElementById('ea_mensaje').value = '';

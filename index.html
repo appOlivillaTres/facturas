@@ -10390,7 +10390,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       .then(() => { alert('Documento enviado a ' + email); btn.textContent = textoOriginal; btn.disabled = false; })
       .catch(e => { alert('Error al enviar: ' + e.message); btn.textContent = textoOriginal; btn.disabled = false; });
   }
-</script></body></html>`;
+<\/script></body></html>`;
       const w = window.open('', '_blank');
       w.document.write(html);
       w.document.close();
@@ -10746,7 +10746,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       .then(() => { alert('Documento enviado a ' + email); btn.textContent = textoOriginal; btn.disabled = false; })
       .catch(e => { alert('Error al enviar: ' + e.message); btn.textContent = textoOriginal; btn.disabled = false; });
   }
-</script></body></html>`;
+<\/script></body></html>`;
       const w = window.open('', '_blank');
       w.document.write(html);
       w.document.close();
@@ -14919,7 +14919,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       .then(() => { alert('Documento enviado a ' + email); btn.textContent = textoOriginal; btn.disabled = false; })
       .catch(e => { alert('Error al enviar: ' + e.message); btn.textContent = textoOriginal; btn.disabled = false; });
   }
-</script></body></html>`;
+<\/script></body></html>`;
     }
 
     async function confirmarEnvioPresupuestoEmail() {
@@ -15498,8 +15498,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       .then(() => { alert('Documento enviado a ' + email); btn.textContent = textoOriginal; btn.disabled = false; })
       .catch(e => { alert('Error al enviar: ' + e.message); btn.textContent = textoOriginal; btn.disabled = false; });
   }
-</script>
-  </body></html>`;
+  <\/script></body></html>`;
     }
 
     async function imprimirFacturaVenta(id) {
@@ -15546,7 +15545,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const totalFiltro = filtrados.length;
       if (!incluirYaExportadas) filtrados = filtrados.filter(f => !f.exportado_excel);
       if (!filtrados.length) {
-        toast(totalFiltro ? 'Todas las facturas de ese filtro ya se habían exportado antes' : 'No hay facturas para ese filtro', 'err');
+        toast(totalFiltro ? 'Todas las facturas de ese filtro ya se habían exportado antes' : 'No hay facturas para ese filtro',
+          'err');
         return;
       }
 
@@ -15559,8 +15559,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         cargarDatos();
       } catch (e) { console.error(e); }
 
-      toast('<i class="fa-solid fa-file-excel me-1"></i>Descargado <strong>FAC.xlsx</strong> — cópialo a la carpeta de importación de FactuSol', 'ok');
-    }
+      toast('<i class="fa-solid fa-file-excel me-1"></i>Descargado <strong>FAC.xlsx</strong> — cópialo a la carpeta de
+importación de FactuSol', 'ok');
+}
     async function abrirModalEnviarFacturaVenta(id) {
       facturaVentaEnvioActualId = id;
       albaranEnvioActualId = null;
@@ -15591,7 +15592,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
         const contenedor = document.createElement('div');
         contenedor.style.cssText = 'position:fixed;left:-9999px;top:0;width:800px;background:#fff';
-        contenedor.innerHTML = htmlFactura.replace(/<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi, '');
+        contenedor.innerHTML = htmlFactura.replace(/<!DOCTYPE[^>]*>|<\ / ? html[^>] *>|<\ /?head[^>]*>|<\ / ? body[^>] *>/gi, '');
         document.body.appendChild(contenedor);
 
         const pdfBlob = await html2pdf().set({
@@ -15636,54 +15637,66 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     // Envío directo de PDF por email, sin pasar por el modal — pensado para
-// llamarse desde las ventanas de impresión (albarán, presupuesto, factura de venta)
-async function enviarDocumentoPorEmailDirecto(tipo, id, email, mensaje) {
-  let html, nombreArchivo, payloadExtra;
+    // llamarse desde las ventanas de impresión (albarán, presupuesto, factura de venta)
+    async function enviarDocumentoPorEmailDirecto(tipo, id, email, mensaje) {
+      let html, nombreArchivo, payloadExtra;
 
-  if (tipo === 'albaran_venta') {
-    const f = registros.find(r => r.id === id) || (await apiGet('albaranes_venta', `id=eq.${id}`))[0];
-    html = await _generarHtmlAlbaranVenta(id);
-    nombreArchivo = `albaran_${f?.numero_albaran || id}.pdf`;
-    payloadExtra = { tipo: 'enviar_albaran_venta', numero_albaran: f?.numero_albaran || '', cliente_nombre: f?.cliente_nombre || '' };
-  } else if (tipo === 'presupuesto_venta') {
-    const f = registros.find(r => r.id === id) || (await apiGet('presupuestos_venta', `id=eq.${id}`))[0];
-    html = await _generarHtmlPresupuestoVenta(id);
-    nombreArchivo = `presupuesto_${f?.numero_presupuesto || id}.pdf`;
-    payloadExtra = { tipo: 'enviar_presupuesto_venta', numero_presupuesto: f?.numero_presupuesto || '', cliente_nombre: f?.cliente_nombre || '' };
-  } else if (tipo === 'factura_venta') {
-    const f = registros.find(r => r.id === id) || (await apiGet('facturas_venta', `id=eq.${id}`))[0];
-    html = await _generarHtmlFacturaVenta(id);
-    nombreArchivo = `factura_${f?.numero_factura || id}.pdf`;
-    payloadExtra = { tipo: 'enviar_factura_venta', numero_factura: f?.numero_factura || '', cliente_nombre: f?.cliente_nombre || '' };
-  } else {
-    throw new Error('Tipo de documento no soportado');
-  }
+      if (tipo === 'albaran_venta') {
+        const f = registros.find(r => r.id === id) || (await apiGet('albaranes_venta', `id=eq.${id}`))[0];
+        html = await _generarHtmlAlbaranVenta(id);
+        nombreArchivo = `albaran_${f?.numero_albaran || id}.pdf`;
+        payloadExtra = {
+          tipo: 'enviar_albaran_venta', numero_albaran: f?.numero_albaran || '', cliente_nombre:
+            f?.cliente_nombre || ''
+        };
+      } else if (tipo === 'presupuesto_venta') {
+        const f = registros.find(r => r.id === id) || (await apiGet('presupuestos_venta', `id=eq.${id}`))[0];
+        html = await _generarHtmlPresupuestoVenta(id);
+        nombreArchivo = `presupuesto_${f?.numero_presupuesto || id}.pdf`;
+        payloadExtra = {
+          tipo: 'enviar_presupuesto_venta', numero_presupuesto: f?.numero_presupuesto || '',
+          cliente_nombre: f?.cliente_nombre || ''
+        };
+      } else if (tipo === 'factura_venta') {
+        const f = registros.find(r => r.id === id) || (await apiGet('facturas_venta', `id=eq.${id}`))[0];
+        html = await _generarHtmlFacturaVenta(id);
+        nombreArchivo = `factura_${f?.numero_factura || id}.pdf`;
+        payloadExtra = {
+          tipo: 'enviar_factura_venta', numero_factura: f?.numero_factura || '', cliente_nombre:
+            f?.cliente_nombre || ''
+        };
+      } else {
+        throw new Error('Tipo de documento no soportado');
+      }
 
-  const contenedor = document.createElement('div');
-  contenedor.style.cssText = 'position:fixed;left:-9999px;top:0;width:800px;background:#fff';
-  contenedor.innerHTML = html.replace(/<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi, '');
-  document.body.appendChild(contenedor);
+      const contenedor = document.createElement('div');
+      contenedor.style.cssText = 'position:fixed;left:-9999px;top:0;width:800px;background:#fff';
+      contenedor.innerHTML = html.replace(/<!DOCTYPE[^>]*>|<\ / ? html[^>] *>|<\ /?head[^>]*>|<\ / ? body[^>] *>/gi, '');
+      document.body.appendChild(contenedor);
 
-  const pdfBlob = await html2pdf().set({
-    margin: 10, filename: nombreArchivo, jsPDF: { unit: 'mm', format: 'a4' }
-  }).from(contenedor).outputPdf('blob');
-  document.body.removeChild(contenedor);
+      const pdfBlob = await html2pdf().set({
+        margin: 10, filename: nombreArchivo, jsPDF: { unit: 'mm', format: 'a4' }
+      }).from(contenedor).outputPdf('blob');
+      document.body.removeChild(contenedor);
 
-  const pdfBase64 = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(',')[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(pdfBlob);
-  });
+      const pdfBase64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(pdfBlob);
+      });
 
-  const res = await fetch('https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
-    body: JSON.stringify({ ...payloadExtra, email, mensaje: mensaje || null, pdf_base64: pdfBase64, pdf_nombre: nombreArchivo })
-  });
-  if (!res.ok) throw new Error(await res.text());
-  return true;
-}
+      const res = await fetch('https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+        body: JSON.stringify({
+          ...payloadExtra, email, mensaje: mensaje || null, pdf_base64: pdfBase64,
+          pdf_nombre: nombreArchivo
+        })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return true;
+    }
   </script>
 </body>
 

@@ -10370,6 +10370,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   </div>
 </div>
   <button class="btn-imprimir" onclick="window.print()" style="padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
+  <button onclick="if(window.opener){window.opener.focus();window.opener.abrirModalEnviarAlbaran(${f.id});}else{alert('Abre este documento desde el panel para poder enviarlo por email.');}" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
   </body></html>`;
       const w = window.open('', '_blank');
       w.document.write(html);
@@ -10658,7 +10659,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     .total-box{border:1.5px solid #333;border-radius:10px;padding:14px 24px;font-weight:700;display:flex;justify-content:space-between;gap:20px;align-items:center;min-width:220px}
     .btn-imprimir{position:fixed;top:16px;right:16px}
     @media print{.btn-imprimir{display:none}}
-  </style></head><body>
+  @media print{ .btn-imprimir, .btn-enviar-email{display:none} }
+    </style></head><body>
   <div class="cabecera">
     <img src="logo.png" alt="Olivilla Tres" onerror="this.style.display='none'">
     <div class="datos-cliente" style="text-align:right">
@@ -10707,6 +10709,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   </div>
     ${f.notas ? `<p style="margin-top:16px"><b>Notas:</b> ${f.notas}</p>` : ''}
   <button class="btn-imprimir" onclick="window.print()" style="position:fixed;top:16px;right:16px;padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
+  <button onclick="if(window.opener){window.opener.focus();window.opener.abrirModalEnviarPresupuesto(${f.id});}else{alert('Abre este documento desde el panel para poder enviarlo por email.');}" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
   </body></html>`;
       const w = window.open('', '_blank');
       w.document.write(html);
@@ -14813,7 +14816,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     .total-box{border:1.5px solid #333;border-radius:10px;padding:14px 24px;font-weight:700;display:flex;justify-content:space-between;gap:20px;align-items:center;min-width:220px}
   .btn-imprimir{position:fixed;top:16px;right:16px}
 @media print{.btn-imprimir{display:none}}
-    </style></head><body>
+@media print{ .btn-imprimir, .btn-enviar-email{display:none} }    
+</style></head><body>
   <div class="cabecera">
     <img src="logo.png" alt="Olivilla Tres" onerror="this.style.display='none'">
     <div class="datos-cliente" style="text-align:right">
@@ -14862,6 +14866,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   </div>
     ${f.notas ? `<p style="margin-top:16px"><b>Notas:</b> ${f.notas}</p>` : ''}
   <button class="btn-imprimir" onclick="window.print()" style="position:fixed;top:16px;right:16px;padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
+  <button onclick="if(window.opener){window.opener.focus();window.opener.abrirModalEnviarFacturaVenta(${f.id});}else{alert('Abre este documento desde el panel para poder enviarlo por email.');}" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
   </body></html>`;
     }
 
@@ -15388,7 +15393,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     .total-box{border:1.5px solid #333;border-radius:10px;padding:14px 24px;font-weight:700;display:flex;justify-content:space-between;gap:20px;align-items:center;min-width:220px}
   .btn-imprimir{position:fixed;top:16px;right:16px}
 @media print{.btn-imprimir{display:none}}
-    </style></head><body>
+@media print{ .btn-imprimir, .btn-enviar-email{display:none} }    
+</style></head><body>
   <div class="cabecera">
     <img src="logo.png" alt="Olivilla Tres" onerror="this.style.display='none'">
     <div class="datos-cliente" style="text-align:right">

@@ -15591,7 +15591,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
         const contenedor = document.createElement('div');
         contenedor.style.cssText = 'position:fixed;left:-9999px;top:0;width:800px;background:#fff';
-        contenedor.innerHTML = htmlFactura.replace(/<!DOCTYPE[^>]*>|<\ / ? html[^>] *>|<\ /?head[^>]*>|<\ / ? body[^>] *>/gi, '');
+        contenedor.innerHTML = htmlFactura.replace(/<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi, '');
         document.body.appendChild(contenedor);
 
         const pdfBlob = await html2pdf().set({
@@ -15670,7 +15670,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
       const contenedor = document.createElement('div');
       contenedor.style.cssText = 'position:fixed;left:-9999px;top:0;width:800px;background:#fff';
-      contenedor.innerHTML = html.replace(/<!DOCTYPE[^>]*>|<\ / ? html[^>] *>|<\ /?head[^>]*>|<\ / ? body[^>] *>/gi, '');
+      contenedor.innerHTML = html.replace(/<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi, '');
       document.body.appendChild(contenedor);
 
       const pdfBlob = await html2pdf().set({

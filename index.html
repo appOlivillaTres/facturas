@@ -15552,62 +15552,402 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       }
     }
 
-    const FACTUSOL_TIPO_DOC_FACTURA = 5; // TODO: verificar contra FactuSol
+    const FACTUSOL_TIPO_DOC_FACTURA = 5;
+
+    // ============================================================
+    // FACTUSOL - FACTURAS DE VENTA
+    // FAC = cabecera de factura
+    // LFA = líneas de factura
+    // ============================================================
 
     function _filaFAC(f) {
-      const fila = new Array(ALB_HEADERS.length).fill(null); // misma plantilla de columnas que ALB
-      fila[0] = FACTUSOL_TIPO_DOC_FACTURA;
-      fila[1] = f.numero_secuencial || '';
-      fila[3] = f.fecha ? f.fecha.split('-').reverse().join('/') : '';
-      fila[4] = f.estado === 'cobrada' ? 1 : 0;
-      fila[9] = (f.cliente_nombre || '').substring(0, 50);
-      fila[14] = (f.nif || '').substring(0, 18);
-      fila[18] = f.base_imponible || 0;
-      fila[45] = f.base_imponible || 0;
-      fila[48] = f.pct_iva != null ? f.pct_iva : 21;
-      fila[51] = f.importe_iva || 0;
-      fila[62] = f.total || 0;
+      const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
+
+      // FAC utiliza la misma estructura de columnas que ALB
+      const fila = new Array(ALB_HEADERS.length).fill(null);
+
+      fila[0] = FACTUSOL_TIPO_DOC_FACTURA;                         // A  Tipo documento
+      fila[1] = f.numero_secuencial || '';                         // B  Nº documento
+      fila[3] = f.fecha ? f.fecha.split('-').reverse().join('/') : ''; // D Fecha
+      fila[4] = f.estado === 'cobrada' ? 1 : 0;                    // E Estado
+
+      // Datos del cliente
+      fila[8] = cliente.codigo || cliente.codigo_cliente || '';  // I Código cliente
+      fila[9] = (f.cliente_nombre || cliente.nombre || '').substring(0, 50);
+      fila[10] = (cliente.domicilio || '').substring(0, 100);
+      fila[11] = (cliente.poblacion || '').substring(0, 30);
+      fila[12] = (cliente.codigo_postal || '').substring(0, 10);
+      fila[13] = (cliente.provincia || '').substring(0, 40);
+      fila[14] = (f.nif || cliente.nif || '').substring(0, 18);
+      fila[15] = 0;                                                 // P Tipo IVA
+      fila[17] = (cliente.telefono || '').substring(0, 20);
+
+      // Importes
+      fila[18] = f.base_imponible || 0;                             // S  Importe neto 1
+      fila[45] = f.base_imponible || 0;                             // AT Base imponible 1
+      fila[48] = f.pct_iva != null ? f.pct_iva : 21;                // AW % IVA 1
+      fila[51] = f.importe_iva || 0;                                // AZ Importe IVA 1
+      fila[62] = f.total || 0;                                     // BK Total
+
+      // Forma de pago
+      fila[63] = f.forma_pago || '';
+
+      // Observaciones
       fila[71] = (f.notas || '').substring(0, 100);
+
+      // Obra
+      fila[73] = (f.nombre_obra || '').substring(0, 50);
+
       return fila;
     }
 
+
+    // ============================================================
+    // LFA - LÍNEAS DE FACTURAS
+    // ============================================================
+
+    const LFA_HEADERS = [
+      'Tipo de documento',
+      'Número de documento',
+      'Posición de la línea',
+      'Artículo',
+      'Descripción',
+      'Cantidad',
+      'Porcentaje descuento 1',
+      'Porcentaje descuento 2',
+      'Porcentaje descuento 3',
+      'Precio del artículo',
+      'Total',
+      'Tipo de IVA',
+      'Documento que creó el pedido',
+      'Tipo de documento (origen)',
+      'Código del documento',
+      'Precio de costo',
+      'Bultos',
+      'Comisión del agente',
+      'Campo de uso interno',
+      'Ejercicio de que proviene la validación',
+      'Alto',
+      'Ancho',
+      'Fondo',
+      'Campo de uso interno',
+      'Campo de uso interno',
+      'IVA incluido en la línea',
+      'Precio IVA incluido en la línea',
+      'Total IVA incluido en la línea',
+      'Talla',
+      'Color',
+      'Imagen asociada'
+    ];
+
+
+    // Obtiene el código de artículo de la línea.
+    // Intentamos varias propiedades para que funcione tanto si
+    // el código viene directamente en el item como si está
+    // disponible en inventarioDB.
+    function obtenerCodigoArticuloFacturaVenta(it) {
+      if (it.codigo_articulo) return it.codigo_articulo;
+      if (it.codigo) return it.codigo;
+      if (it.codigo_producto) return it.codigo_producto;
+
+      if (it.producto_id) {
+        const producto = inventarioDB.find(p => p.id == it.producto_id);
+        if (producto) {
+          return producto.codigo_articulo
+            || producto.codigo
+            || producto.codigo_barras
+            || '';
+        }
+      }
+
+      // Último intento: buscar por nombre
+      if (it.producto_nombre) {
+        const nombre = String(it.producto_nombre).trim().toLowerCase();
+
+        const producto = inventarioDB.find(p =>
+          String(p.nombre || '').trim().toLowerCase() === nombre
+        );
+
+        if (producto) {
+          return producto.codigo_articulo
+            || producto.codigo
+            || producto.codigo_barras
+            || '';
+        }
+      }
+
+      return '';
+    }
+
+
+    function _filasLFA(f) {
+      const items = f.facturas_venta_items || [];
+
+      return items.map((it, i) => {
+        const fila = new Array(LFA_HEADERS.length).fill(null);
+
+        const cantidad = it.cantidad != null
+          ? parseFloat(it.cantidad) || 0
+          : 0;
+
+        const precio = it.precio_unitario != null
+          ? parseFloat(it.precio_unitario) || 0
+          : 0;
+
+        const dto = it.dto_pct != null
+          ? parseFloat(it.dto_pct) || 0
+          : 0;
+
+        const total = it.importe_total != null
+          ? parseFloat(it.importe_total) || 0
+          : (cantidad * precio * (1 - dto / 100));
+
+        // A - Tipo de documento
+        fila[0] = FACTUSOL_TIPO_DOC_FACTURA;
+
+        // B - Número de documento
+        fila[1] = f.numero_secuencial || '';
+
+        // C - Posición de línea
+        fila[2] = i + 1;
+
+        // D - Artículo
+        fila[3] = obtenerCodigoArticuloFacturaVenta(it);
+
+        // E - Descripción
+        fila[4] = (it.producto_nombre || '').substring(0, 65000);
+
+        // F - Cantidad
+        fila[5] = cantidad;
+
+        // G - Descuento 1
+        fila[6] = dto;
+
+        // H / I - Descuentos 2 y 3
+        fila[7] = 0;
+        fila[8] = 0;
+
+        // J - Precio del artículo
+        fila[9] = precio;
+
+        // K - Total línea
+        fila[10] = total;
+
+        // L - Tipo IVA
+        fila[11] = 0;
+
+        // M - Documento que creó el pedido
+        fila[12] = '';
+
+        // N - Tipo de documento origen
+        fila[13] = '';
+
+        // O - Código del documento origen
+        fila[14] = '';
+
+        // P - Precio de costo
+        fila[15] = 0;
+
+        // Q - Bultos
+        fila[16] = 0;
+
+        // R - Comisión agente
+        fila[17] = 0;
+
+        // S - Campo interno
+        fila[18] = '';
+
+        // T - Ejercicio
+        fila[19] = f.anio || (
+          f.fecha ? parseInt(f.fecha.substring(0, 4)) : ''
+        );
+
+        // U / V / W - dimensiones
+        fila[20] = 0;
+        fila[21] = 0;
+        fila[22] = 0;
+
+        // X / Y - campos internos
+        fila[23] = '';
+        fila[24] = '';
+
+        // Z - IVA incluido en línea
+        fila[25] = 0;
+
+        // AA - Precio IVA incluido
+        const pctIva = f.pct_iva != null
+          ? parseFloat(f.pct_iva) || 0
+          : 21;
+
+        const precioConIva = precio * (1 + pctIva / 100);
+
+        fila[26] = precioConIva;
+
+        // AB - Total IVA incluido
+        fila[27] = total * (1 + pctIva / 100);
+
+        // AC - Talla
+        fila[28] = '';
+
+        // AD - Color
+        fila[29] = '';
+
+        // AE - Imagen asociada
+        fila[30] = '';
+
+        return fila;
+      });
+    }
+
+
+    // ============================================================
+    // EXPORTACIÓN FAC + LFA
+    // ============================================================
+
     async function exportarFacturasVentaExcel() {
-      const year = parseInt(document.getElementById('exportYear').value);
-      const meses = Array.from(document.querySelectorAll('#exportMeses input:checked')).map(i => parseInt(i.value));
-      const incluirYaExportadas = document.getElementById('exportIncluirYaExportadas')?.checked;
+      const year = parseInt(
+        document.getElementById('exportYear').value
+      );
+
+      const meses = Array.from(
+        document.querySelectorAll('#exportMeses input:checked')
+      ).map(i => parseInt(i.value));
+
+      const incluirYaExportadas =
+        document.getElementById('exportIncluirYaExportadas')?.checked;
 
       let filtrados = registros.filter(f => {
         const [y, m] = (f.fecha || '').split('-').map(Number);
+
         if (y !== year) return false;
         if (meses.length && !meses.includes(m)) return false;
+
         return true;
       });
+
       const totalFiltro = filtrados.length;
-      if (!incluirYaExportadas) filtrados = filtrados.filter(f => !f.exportado_excel);
+
+      if (!incluirYaExportadas) {
+        filtrados = filtrados.filter(f => !f.exportado_excel);
+      }
+
       if (!filtrados.length) {
-        toast(totalFiltro ? 'Todas las facturas de ese filtro ya se habían exportado antes' : 'No hay facturas para ese filtro',
-          'err');
+        toast(
+          totalFiltro
+            ? 'Todas las facturas de ese filtro ya se habían exportado antes'
+            : 'No hay facturas para ese filtro',
+          'err'
+        );
         return;
       }
 
+
+      // ==========================================================
+      // IMPORTANTE:
+      // Las líneas pueden no estar cargadas dentro de "registros".
+      // Las recuperamos expresamente de facturas_venta_items.
+      // ==========================================================
+
+      for (const factura of filtrados) {
+        try {
+          const items = await apiGet(
+            'facturas_venta_items',
+            `factura_venta_id=eq.${factura.id}&order=id.asc`
+          );
+
+          factura.facturas_venta_items = items || [];
+        } catch (e) {
+          console.error(
+            'Error cargando líneas de factura',
+            factura.id,
+            e
+          );
+
+          factura.facturas_venta_items = [];
+        }
+      }
+
+
+      // ==========================================================
+      // FAC - CABECERAS
+      // ==========================================================
+
       const wbFac = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wbFac, XLSX.utils.aoa_to_sheet(filtrados.map(_filaFAC)), 'FAC');
-      XLSX.writeFile(wbFac, 'FAC.xlsx');
+
+      const filasFAC = filtrados.map(_filaFAC);
+
+      XLSX.utils.book_append_sheet(
+        wbFac,
+        XLSX.utils.aoa_to_sheet(filasFAC),
+        'FAC'
+      );
+
+      XLSX.writeFile(
+        wbFac,
+        'FAC.xlsx'
+      );
+
+
+      // ==========================================================
+      // LFA - LÍNEAS
+      // ==========================================================
+
+      const wbLfa = XLSX.utils.book_new();
+
+      const filasLFA = filtrados.flatMap(_filasLFA);
+
+      XLSX.utils.book_append_sheet(
+        wbLfa,
+        XLSX.utils.aoa_to_sheet(filasLFA),
+        'LFA'
+      );
+
+      XLSX.writeFile(
+        wbLfa,
+        'LFA.xlsx'
+      );
+
+
+      // ==========================================================
+      // MARCAR COMO EXPORTADAS
+      // ==========================================================
 
       try {
-        await marcarExportadosExcel('facturas_venta', filtrados.map(f => f.id));
-        cargarDatos();
-      } catch (e) { console.error(e); }
+        await marcarExportadosExcel(
+          'facturas_venta',
+          filtrados.map(f => f.id)
+        );
 
-      toast('<i class="fa-solid fa-file-excel me-1"></i>Descargado <strong>FAC.xlsx</strong> — cópialo a la carpeta de importación de FactuSol', 'ok');
+        cargarDatos();
+
+      } catch (e) {
+        console.error(e);
+      }
+
+
+      // ==========================================================
+      // AVISO
+      // ==========================================================
+
+      const totalLineas = filasLFA.length;
+
+      toast(
+        `<i class="fa-solid fa-file-excel me-1"></i>` +
+        `Descargados <strong>FAC.xlsx</strong> y ` +
+        `<strong>LFA.xlsx</strong> ` +
+        `(${filtrados.length} facturas, ${totalLineas} líneas) ` +
+        `— cópialos juntos a la carpeta de importación de FactuSol`,
+        'ok'
+      );
     }
+
     async function abrirModalEnviarFacturaVenta(id) {
       facturaVentaEnvioActualId = id;
       albaranEnvioActualId = null;
       presupuestoEnvioActualId = null;
       alquilerEnvioActualId = null;
 
-      const f = registros.find(r => r.id === id) || (await apiGet('facturas_venta', `id=eq.${id}`))[0];
+      const f = registros.find(r => r.id === id) || (await apiGet('facturas_venta', `id = eq.${id} `))[0];
       document.getElementById('ea_email').value = ''; // facturas_venta no guarda email de cliente directo; se rellena a mano
       const cliente = clientesDB.find(c => c.id === f?.cliente_id);
       if (cliente?.email) document.getElementById('ea_email').value = cliente.email;
@@ -15631,15 +15971,15 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
         const contenedor = document.createElement('div');
         contenedor.style.cssText = `
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 800px;
-  background: #fff;
-  z-index: -1;
-  opacity: 0.01;
-  pointer-events: none;
-`;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 800px;
+    background: #fff;
+    z - index: -1;
+    opacity: 0.01;
+    pointer - events: none;
+    `;
         contenedor.innerHTML = htmlFactura.replace(
           /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
           ''
@@ -15678,7 +16018,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         });
         if (!res.ok) throw new Error(await res.text());
 
-        toast(`<i class="fa-solid fa-check me-1"></i>Factura enviada a ${email}`, 'ok');
+        toast(`< i class="fa-solid fa-check me-1" ></i > Factura enviada a ${email} `, 'ok');
         cerrarModal('modalEnviarAlbaran');
       } catch (e) {
         toast('Error al enviar la factura: ' + e.message, 'err');
@@ -15694,7 +16034,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       let html, nombreArchivo, payloadExtra;
 
       if (tipo === 'albaran_venta') {
-        const f = registros.find(r => r.id === id) || (await apiGet('albaranes_venta', `id=eq.${id}`))[0];
+        const f = registros.find(r => r.id === id) || (await apiGet('albaranes_venta', `id = eq.${id} `))[0];
         html = await _generarHtmlAlbaranVenta(id);
         nombreArchivo = `albaran_${f?.numero_albaran || id}.pdf`;
         payloadExtra = {
@@ -15702,7 +16042,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             f?.cliente_nombre || ''
         };
       } else if (tipo === 'presupuesto_venta') {
-        const f = registros.find(r => r.id === id) || (await apiGet('presupuestos_venta', `id=eq.${id}`))[0];
+        const f = registros.find(r => r.id === id) || (await apiGet('presupuestos_venta', `id = eq.${id} `))[0];
         html = await _generarHtmlPresupuestoVenta(id);
         nombreArchivo = `presupuesto_${f?.numero_presupuesto || id}.pdf`;
         payloadExtra = {
@@ -15710,7 +16050,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           cliente_nombre: f?.cliente_nombre || ''
         };
       } else if (tipo === 'factura_venta') {
-        const f = registros.find(r => r.id === id) || (await apiGet('facturas_venta', `id=eq.${id}`))[0];
+        const f = registros.find(r => r.id === id) || (await apiGet('facturas_venta', `id = eq.${id} `))[0];
         html = await _generarHtmlFacturaVenta(id);
         nombreArchivo = `factura_${f?.numero_factura || id}.pdf`;
         payloadExtra = {
@@ -15723,14 +16063,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
       const contenedor = document.createElement('div');
       contenedor.style.cssText = `
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 800px;
-  background: #fff;
-  z-index: -1;
-  opacity: 0.01;
-  pointer-events: none;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 800px;
+    background: #fff;
+    z - index: -1;
+    opacity: 0.01;
+    pointer - events: none;
 `;
 
       contenedor.innerHTML = html.replace(

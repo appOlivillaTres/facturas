@@ -15963,13 +15963,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const contenedor = document.createElement('div');
         contenedor.style.cssText = `
     position: fixed;
-    left: 0;
+    left: -99999px;
     top: 0;
     width: 800px;
     background: #fff;
-    z - index: -1;
-    opacity: 0.01;
-    pointer - events: none;
     `;
         contenedor.innerHTML = htmlFactura.replace(
           /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
@@ -16055,13 +16052,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const contenedor = document.createElement('div');
       contenedor.style.cssText = `
     position: fixed;
-    left: 0;
+    left: -99999px;
     top: 0;
     width: 800px;
     background: #fff;
-    z - index: -1;
-    opacity: 0.01;
-    pointer - events: none;
 `;
 
       contenedor.innerHTML = html.replace(

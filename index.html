@@ -15641,9 +15641,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   pointer-events: none;
 `;
         contenedor.innerHTML = htmlFactura.replace(
-  /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
-  ''
-);
+          /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
+          ''
+        );
         document.body.appendChild(contenedor);
         await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -15733,14 +15733,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   pointer-events: none;
 `;
 
-contenedor.innerHTML = html.replace(
-  /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
-  ''
-);
+      contenedor.innerHTML = html.replace(
+        /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
+        ''
+      );
 
-document.body.appendChild(contenedor);
+      document.body.appendChild(contenedor);
 
-await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const pdfBlob = await html2pdf().set({
         margin: 10, filename: nombreArchivo, jsPDF: { unit: 'mm', format: 'a4' }

@@ -12911,7 +12911,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     .firma-linea{margin-top:40px;border-top:1px solid #999;width:220px}
   </style></head><body>
   <div class="cabecera">
-    <img src="logo.png" alt="Olivilla Tres" onerror="this.style.display='none'">
+    <img src="logo.png" alt="Olivilla Tres" width="120" height="100" style="height:100px;width:auto;max-width:220px;object-fit:contain" onerror="this.style.display='none'">
     <div class="datos-cliente" style="text-align:right">
       <h3>DATOS DEL CLIENTE</h3>
       <b>${f.cliente_nombre || '—'}</b><br>
@@ -13035,7 +13035,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     .firma-linea{margin-top:40px;border-top:1px solid #999;width:220px}
   </style></head><body>
   <div class="cabecera">
-    <img src="logo.png" alt="Olivilla Tres" onerror="this.style.display='none'">
+    <img src="logo.png" alt="Olivilla Tres" width="120" height="100" style="height:100px;width:auto;max-width:220px;object-fit:contain" onerror="this.style.display='none'">
     <div class="datos-cliente" style="text-align:right">
       <h3>DATOS DEL CLIENTE</h3>
       <b>${f.cliente_nombre || '—'}</b><br>
@@ -14750,7 +14750,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     .observaciones{border:1.5px solid #333;border-radius:10px;padding:12px 16px;min-height:60px;background:#fff;font-size:.82rem;margin-top:20px}
   </style></head><body>
   <div class="cabecera">
-    <img src="logo.png" alt="Olivilla Tres" onerror="this.style.display='none'">
+    <img src="logo.png" alt="Olivilla Tres" width="120" height="100" style="height:100px;width:auto;max-width:220px;object-fit:contain" onerror="this.style.display='none'">
     <div class="datos-cliente" style="text-align:right">
       <h3>DATOS DEL CLIENTE</h3>
       <b>${f.cliente_nombre || cliente.nombre || '—'}</b><br>
@@ -14855,7 +14855,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 @media print{ .btn-imprimir, .btn-enviar-email{display:none} }    
 </style></head><body>
   <div class="cabecera">
-    <img src="logo.png" alt="Olivilla Tres" onerror="this.style.display='none'">
+    <img src="logo.png" alt="Olivilla Tres" width="120" height="100" style="height:100px;width:auto;max-width:220px;object-fit:contain" onerror="this.style.display='none'">
     <div class="datos-cliente" style="text-align:right">
       <h3>DATOS DEL CLIENTE</h3>
       <b>${f.cliente_nombre || '—'}</b><br>
@@ -15424,7 +15424,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 @media print{ .btn-imprimir, .btn-enviar-email{display:none} }    
 </style></head><body>
   <div class="cabecera">
-    <img src="logo.png" alt="Olivilla Tres" onerror="this.style.display='none'">
+    <img src="logo.png" alt="Olivilla Tres" width="120" height="100" style="height:100px;width:auto;max-width:220px;object-fit:contain" onerror="this.style.display='none'">
     <div class="datos-cliente" style="text-align:right">
       <h3>DATOS DEL CLIENTE</h3>
       <b>${f.cliente_nombre || '—'}</b><br>
@@ -15999,34 +15999,31 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     async function generarPdfBlobDesdeHtml(htmlCompleto, filename) {
-      return new Promise((resolve, reject) => {
-        const iframe = document.createElement('iframe');
-        iframe.style.cssText = 'position:fixed;left:-99999px;top:0;width:800px;height:1131px;border:none;';
-        iframe.onload = async () => {
-          try {
-            const doc = iframe.contentDocument;
-            doc.body.style.background = '#fff';
+  return new Promise((resolve, reject) => {
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;left:-99999px;top:0;width:800px;height:1131px;border:none;';
+    iframe.onload = async () => {
+      try {
+        await new Promise(r => setTimeout(r, 600));
 
-            await new Promise(r => setTimeout(r, 600));
+        const pdfBlob = await html2pdf().set({
+          margin: 10,
+          filename,
+          jsPDF: { unit: 'mm', format: 'a4' },
+          html2canvas: { scale: 2, useCORS: true }
+        }).from(iframe.contentDocument.body).outputPdf('blob');
 
-            const pdfBlob = await html2pdf().set({
-              margin: 10,
-              filename,
-              jsPDF: { unit: 'mm', format: 'a4' },
-              html2canvas: { scale: 2, useCORS: true }
-            }).from(doc.body).outputPdf('blob');
-
-            document.body.removeChild(iframe);
-            resolve(pdfBlob);
-          } catch (e) {
-            document.body.removeChild(iframe);
-            reject(e);
-          }
-        };
-        document.body.appendChild(iframe);
-        iframe.srcdoc = htmlCompleto;
-      });
-    }
+        document.body.removeChild(iframe);
+        resolve(pdfBlob);
+      } catch (e) {
+        document.body.removeChild(iframe);
+        reject(e);
+      }
+    };
+    document.body.appendChild(iframe);
+    iframe.srcdoc = htmlCompleto;
+  });
+}
   </script>
 </body>
 

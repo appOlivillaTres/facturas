@@ -6851,6 +6851,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             const esAlta = f._tipoAlquiler === 'alta';
             const fnImprimir = esAlta ? 'imprimirAltaAlquiler' : 'imprimirBajaAlquiler';
             const fnEditar = esAlta ? 'abrirModalEditarAltaAlquiler' : 'abrirModalEditarBajaAlquiler';
+            const factAlq = !!f.facturado;
             return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => ${fnEditar}(${f.id}))">
     <td><strong>${f.numero_albaran || '—'}</strong></td>
     <td>${fmtF(f.fecha)}</td>
@@ -6860,7 +6861,12 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <td>${NOMBRES_PERSONAS[f.creado_por] || f.creado_por || '—'}</td>
     <td>—</td>
     <td><span class="badge-estado ${esAlta ? 'badge-pagado' : 'badge-vencido'}">${esAlta ? 'ALTA ALQUILER' : 'BAJA ALQUILER'}</span></td>
-    <td>—</td>
+    <td>
+      <span class="badge-estado ${factAlq ? 'badge-pagado' : 'badge-vencido'}">${factAlq ? 'SÍ' : 'NO'}</span><br>
+      <button class="btn-toggle-facturado ${factAlq ? 'si' : 'no'}" style="margin-top:4px" onclick="toggleFacturadoAlquiler(${f.id},${factAlq})">
+        ${factAlq ? '<i class="fa-solid fa-rotate-left me-1"></i>Sin facturar' : '<i class="fa-solid fa-file-circle-check me-1"></i>Marcar facturado'}
+      </button>
+    </td>
     <td>
       <button class="btn-toggle-pago pendiente" onclick="${fnImprimir}(${f.id})" title="Imprimir / descargar PDF">
         <i class="fa-solid fa-print"></i>
@@ -6868,9 +6874,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <button class="btn-toggle-pago" style="background:#1565c0;color:#fff;border:1.5px solid #1565c0" onclick="abrirModalEnviarAlquiler(${f.id},'${f._tipoAlquiler}')" title="Enviar por email">
         <i class="fa-solid fa-envelope"></i>
       </button>
+      ${!factAlq ? `<button class="btn-toggle-pago" style="background:#b53987;color:#fff;border:1.5px solid #b53987" onclick="abrirModalFacturaVenta(null, ${f.id})" title="Generar factura"><i class="fa-solid fa-file-invoice-dollar"></i></button>` : ''}
     </td>
-  </tr>`;                                       // 👈 sin el botón "Facturar" aquí — los alquileres no van a Facturas de Venta
-          }
+  </tr>`;
+          }                                      // 👈 sin el botón "Facturar" aquí — los alquileres no van a Facturas de Venta
+        }
 
           return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarAlbaranVenta(${f.id}))">
     <td><strong>${f.numero_albaran || '—'}</strong></td>
@@ -6902,19 +6910,19 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       ${!fact && forma !== 'efectivo' ? `<button class="btn-toggle-pago" style="background:#b53987;color:#fff;border:1.5px solid #b53987" onclick="abrirModalFacturaVenta(${f.id})" title="Generar factura"><i class="fa-solid fa-file-invoice-dollar"></i></button>` : ''}
     </td>
   </tr>`;
-        }).join('');
+      }).join('');
 
-      } else if (tablaActual === 'facturas_venta') {
-        hdr.innerHTML = `<tr><th>Nº Factura</th><th>Fecha</th><th>Cliente</th><th>NIF</th><th>Obra</th><th class="num-cell">Total</th><th>Albaranes</th><th>Estado</th><th></th><th></th></tr>`;
-        const lista = registros.filter(f => {
-          const mQ = [f.numero_factura, f.cliente_nombre, f.nif].some(v => (v || '').toLowerCase().includes(q));
-          return mQ && (!fEst || fEst === (f.estado || 'pendiente'));
-        });
-        if (!lista.length) { bdy.innerHTML = emptyRow(9, 'No hay facturas de venta registradas'); return; }
-        bdy.innerHTML = lista.map(f => {
-          const est = f.estado || 'pendiente';
-          const albs = f.facturas_venta_albaranes || [];
-          return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarFacturaVenta(${f.id}))">
+    } else if (tablaActual === 'facturas_venta') {
+      hdr.innerHTML = `<tr><th>Nº Factura</th><th>Fecha</th><th>Cliente</th><th>NIF</th><th>Obra</th><th class="num-cell">Total</th><th>Albaranes</th><th>Estado</th><th></th><th></th></tr>`;
+      const lista = registros.filter(f => {
+        const mQ = [f.numero_factura, f.cliente_nombre, f.nif].some(v => (v || '').toLowerCase().includes(q));
+        return mQ && (!fEst || fEst === (f.estado || 'pendiente'));
+      });
+      if (!lista.length) { bdy.innerHTML = emptyRow(9, 'No hay facturas de venta registradas'); return; }
+      bdy.innerHTML = lista.map(f => {
+        const est = f.estado || 'pendiente';
+        const albs = f.facturas_venta_albaranes || [];
+        return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarFacturaVenta(${f.id}))">
       <td><strong>${f.numero_factura || '—'}</strong></td>
       <td>${fmtF(f.fecha)}</td>
       <td class="td-nombre">${f.cliente_nombre || '—'}</td>
@@ -6928,17 +6936,17 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <button class="btn-toggle-pago" style="background:#1565c0;color:#fff;border:1.5px solid #1565c0" onclick="abrirModalEnviarFacturaVenta(${f.id})" title="Enviar por email"><i class="fa-solid fa-envelope"></i></button></td>
       <td><button class="btn-eliminar" onclick="eliminarFacturaVenta(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
     </tr>`;
-        }).join('');
-      } else if (tablaActual === 'presupuestos_venta') {
-        hdr.innerHTML = `<tr><th>Nº Presupuesto</th><th>Fecha</th><th>Cliente</th><th>NIF</th><th class="num-cell">Total</th><th>Válido hasta</th><th></th><th></th></tr>`;
-        const lista = registros.filter(f => [f.numero_presupuesto, f.cliente_nombre].some(v => (v || '').toLowerCase().includes(q)));
-        if (!lista.length) { bdy.innerHTML = emptyRow(9, 'No hay presupuestos registrados'); return; }
-        bdy.innerHTML = lista.map(f => {
-          const caduca = new Date(f.fecha);
-          caduca.setDate(caduca.getDate() + (f.validez_dias || 8));
-          const hoyD2 = new Date(); hoyD2.setHours(0, 0, 0, 0);
-          const vencido = caduca < hoyD2;
-          return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarPresupuesto(${f.id}))">
+      }).join('');
+    } else if (tablaActual === 'presupuestos_venta') {
+      hdr.innerHTML = `<tr><th>Nº Presupuesto</th><th>Fecha</th><th>Cliente</th><th>NIF</th><th class="num-cell">Total</th><th>Válido hasta</th><th></th><th></th></tr>`;
+      const lista = registros.filter(f => [f.numero_presupuesto, f.cliente_nombre].some(v => (v || '').toLowerCase().includes(q)));
+      if (!lista.length) { bdy.innerHTML = emptyRow(9, 'No hay presupuestos registrados'); return; }
+      bdy.innerHTML = lista.map(f => {
+        const caduca = new Date(f.fecha);
+        caduca.setDate(caduca.getDate() + (f.validez_dias || 8));
+        const hoyD2 = new Date(); hoyD2.setHours(0, 0, 0, 0);
+        const vencido = caduca < hoyD2;
+        return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarPresupuesto(${f.id}))">
       <td><strong>${f.numero_presupuesto || '—'}</strong></td>
       <td>${fmtF(f.fecha)}</td>
       <td class="td-nombre">${f.cliente_nombre || '—'}</td>
@@ -6949,10 +6957,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <td><button class="btn-toggle-pago" style="background:#1565c0;color:#fff;border:1.5px solid #1565c0" onclick="abrirModalEnviarPresupuesto(${f.id})" title="Enviar por email"><i class="fa-solid fa-envelope"></i></button></td>
       <td><button class="btn-eliminar" onclick="eliminarPresupuestoVenta(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
     </tr>`;
-        }).join('');
+      }).join('');
 
-      } else if (tablaActual === 'ingresos') {
-        hdr.innerHTML = `<tr>
+    } else if (tablaActual === 'ingresos') {
+      hdr.innerHTML = `<tr>
           <th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th>
     <th>Nº Int.</th><th>Fecha</th><th>Recibido</th><th>Cobro previsto</th><th>NIF</th><th>Cliente</th><th>Obra</th>
     <th>Nº Factura</th><th>Concepto</th>
@@ -6961,21 +6969,21 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <th class="num-cell">Descuento</th><th class="num-cell">Pago permisos</th><th class="pct-cell">%IVA permisos</th><th class="num-cell">Total IVA permisos</th><th class="num-cell">Total con permisos</th>
     <th></th>
   </tr>`;
-        const fObraIng = document.getElementById('filtroObra').value;
-        const lista = registros.filter(f => {
-          const mQ = [f.numero_ingreso, f.cliente, f.numero_interno, f.concepto, f.nombre_obra].some(v => (v || '').toLowerCase().includes(q));
-          const mObra = !fObraIng || f.nombre_obra === fObraIng;
-          const esVenc = f.estado === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
-          const estReal = esVenc ? 'vencido' : (f.estado || 'pendiente');
-          return mQ && mObra && (!fEst || fEst === estReal) && (!filtroPorRevisar || faltaPorRevisar(f, 'ingresos')) && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'ingresos', filtroPorRevisarDeOtro));
-        });
-        if (!lista.length) { bdy.innerHTML = emptyRow(17, 'No se encontraron ingresos'); return; }
-        bdy.innerHTML = lista.map(f => {
-          const est = f.estado || 'pendiente';
-          const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
-          const eR = esVenc ? 'vencido' : est;
-          const claseFila = claseFilaVencimiento(f, est, esVenc, hoyD);
-          return `<tr data-id="${f.id}" class="${claseFila}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${f.id},'ingresos'))">
+      const fObraIng = document.getElementById('filtroObra').value;
+      const lista = registros.filter(f => {
+        const mQ = [f.numero_ingreso, f.cliente, f.numero_interno, f.concepto, f.nombre_obra].some(v => (v || '').toLowerCase().includes(q));
+        const mObra = !fObraIng || f.nombre_obra === fObraIng;
+        const esVenc = f.estado === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
+        const estReal = esVenc ? 'vencido' : (f.estado || 'pendiente');
+        return mQ && mObra && (!fEst || fEst === estReal) && (!filtroPorRevisar || faltaPorRevisar(f, 'ingresos')) && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'ingresos', filtroPorRevisarDeOtro));
+      });
+      if (!lista.length) { bdy.innerHTML = emptyRow(17, 'No se encontraron ingresos'); return; }
+      bdy.innerHTML = lista.map(f => {
+        const est = f.estado || 'pendiente';
+        const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
+        const eR = esVenc ? 'vencido' : est;
+        const claseFila = claseFilaVencimiento(f, est, esVenc, hoyD);
+        return `<tr data-id="${f.id}" class="${claseFila}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${f.id},'ingresos'))">
             <td>${celdaCheck(f.id)}</td>
       <td style="font-size:.78rem;color:#888">${nvl(f.numero_interno)}</td>
       <td>${fmtF(f.fecha)}</td><td>${fmtF(f.fecha_recibido)}</td><td>${fmtF(f.fecha_vencimiento)}</td>
@@ -7004,12 +7012,12 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 <td class="num-cell">${fmtN(f.total_con_permisos)}</td>
 <td><button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
     </tr>`;
-        }).join('');
-      } else if (tablaActual === 'varios') {
-        hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Recibido</th><th>Remitente</th><th>Mensaje</th><th>Archivo</th><th></th></tr>`;
-        const lista = registros.filter(f => [f.remitente, f.mensaje].some(v => (v || '').toLowerCase().includes(q)));
-        if (!lista.length) { bdy.innerHTML = emptyRow(6, 'No hay nada guardado en Varios'); return; }
-        bdy.innerHTML = lista.map(f => `<tr data-id="${f.id}">
+      }).join('');
+    } else if (tablaActual === 'varios') {
+      hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Recibido</th><th>Remitente</th><th>Mensaje</th><th>Archivo</th><th></th></tr>`;
+      const lista = registros.filter(f => [f.remitente, f.mensaje].some(v => (v || '').toLowerCase().includes(q)));
+      if (!lista.length) { bdy.innerHTML = emptyRow(6, 'No hay nada guardado en Varios'); return; }
+      bdy.innerHTML = lista.map(f => `<tr data-id="${f.id}">
     <td>${celdaCheck(f.id)}</td>
     <td style="font-size:.78rem;color:#888;white-space:nowrap">${f.fecha_recibido ? new Date(f.fecha_recibido).toLocaleString('es-ES') : '—'}</td>
     <td class="td-nombre">${f.remitente || '—'}</td>
@@ -7017,17 +7025,17 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <td>${f.archivo_url ? `<span class="link-badge factura" onclick="verArchivoPanel('${f.archivo_url}','${(f.remitente || 'Varios').replace(/'/g, "\\'")}')"><i class="fa-solid fa-paperclip"></i></span>` : '—'}</td>
     <td><button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
   </tr>`).join('');
-      } else if (tablaActual === 'maquinaria') {
-        hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Código</th><th>Nombre</th><th class="num-cell">Precio/día</th><th>Estado</th><th>Cliente actual</th><th>Obra</th><th>Desde</th><th>Historial</th><th>Acción</th><th></th></tr>`;
-        const lista = registros.filter(m => [m.codigo, m.nombre].some(v => (v || '').toLowerCase().includes(q)))
-          .filter(m => !fEst || (m.estado || 'disponible') === fEst);
-        if (!lista.length) { bdy.innerHTML = emptyRow(10, 'No hay máquinas en el catálogo'); return; }
-        bdy.innerHTML = lista.map(m => {
-          const alquilada = m.estado === 'alquilada';
-          const averiada = m.estado === 'averiada';
-          const claseBadge = alquilada ? 'badge-vencido' : averiada ? 'badge-pendiente' : 'badge-pagado';
-          const textoBadge = alquilada ? 'ALQUILADA' : averiada ? 'AVERIADA' : 'DISPONIBLE';
-          return `<tr data-id="${m.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${m.id},'maquinaria'))">
+    } else if (tablaActual === 'maquinaria') {
+      hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Código</th><th>Nombre</th><th class="num-cell">Precio/día</th><th>Estado</th><th>Cliente actual</th><th>Obra</th><th>Desde</th><th>Historial</th><th>Acción</th><th></th></tr>`;
+      const lista = registros.filter(m => [m.codigo, m.nombre].some(v => (v || '').toLowerCase().includes(q)))
+        .filter(m => !fEst || (m.estado || 'disponible') === fEst);
+      if (!lista.length) { bdy.innerHTML = emptyRow(10, 'No hay máquinas en el catálogo'); return; }
+      bdy.innerHTML = lista.map(m => {
+        const alquilada = m.estado === 'alquilada';
+        const averiada = m.estado === 'averiada';
+        const claseBadge = alquilada ? 'badge-vencido' : averiada ? 'badge-pendiente' : 'badge-pagado';
+        const textoBadge = alquilada ? 'ALQUILADA' : averiada ? 'AVERIADA' : 'DISPONIBLE';
+        return `<tr data-id="${m.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${m.id},'maquinaria'))">
     <td>${celdaCheck(m.id)}</td>
     <td><strong>${m.codigo || '—'}</strong></td>
     <td class="td-nombre">${m.nombre || '—'}</td>
@@ -7039,26 +7047,26 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <td><span class="link-badge" onclick="verHistorialMaquina(${m.id},'${(m.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-clock-rotate-left"></i>Ver</span></td>
     <td>
       ${alquilada
-              ? `<button class="btn-toggle-pago pagado" onclick="marcarMaquinaDevuelta(${m.id})"><i class="fa-solid fa-rotate-left me-1"></i>Devolver</button>`
-              : averiada
-                ? `<button class="btn-toggle-pago pagado" onclick="marcarMaquinaReparada(${m.id})"><i class="fa-solid fa-wrench me-1"></i>Reparada</button>`
-                : `<button class="btn-toggle-pago vencido" onclick="marcarMaquinaAveriada(${m.id})"><i class="fa-solid fa-triangle-exclamation me-1"></i>Avería</button>`}
+            ? `<button class="btn-toggle-pago pagado" onclick="marcarMaquinaDevuelta(${m.id})"><i class="fa-solid fa-rotate-left me-1"></i>Devolver</button>`
+            : averiada
+              ? `<button class="btn-toggle-pago pagado" onclick="marcarMaquinaReparada(${m.id})"><i class="fa-solid fa-wrench me-1"></i>Reparada</button>`
+              : `<button class="btn-toggle-pago vencido" onclick="marcarMaquinaAveriada(${m.id})"><i class="fa-solid fa-triangle-exclamation me-1"></i>Avería</button>`}
     </td>
     <td>
       <button class="btn-eliminar" onclick="eliminar(${m.id})"><i class="fa-solid fa-trash"></i></button>
     </td>
   </tr>`;
-        }).join('');
-      } else if (tablaActual === 'consumo_interno') {
-        hdr.innerHTML = `<tr><th>Fecha</th><th>Productos</th><th class="num-cell">Total</th><th>Registrado por</th><th>Detalle</th><th></th><th></th></tr>`;
-        const lista = registros.filter(f => (f.empleado || '').toLowerCase().includes(q));
-        if (!lista.length) { bdy.innerHTML = emptyRow(7, 'No hay consumos internos registrados'); return; }
-        bdy.innerHTML = lista.map(f => {
-          const items = f.consumo_interno_items || [];
-          const resumen = items.length
-            ? items.slice(0, 2).map(i => `${i.producto_nombre} (${i.cantidad})`).join(', ') + (items.length > 2 ? ` +${items.length - 2} más` : '')
-            : 'Sin productos';
-          return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalConsumoInterno(${f.id}))">
+      }).join('');
+    } else if (tablaActual === 'consumo_interno') {
+      hdr.innerHTML = `<tr><th>Fecha</th><th>Productos</th><th class="num-cell">Total</th><th>Registrado por</th><th>Detalle</th><th></th><th></th></tr>`;
+      const lista = registros.filter(f => (f.empleado || '').toLowerCase().includes(q));
+      if (!lista.length) { bdy.innerHTML = emptyRow(7, 'No hay consumos internos registrados'); return; }
+      bdy.innerHTML = lista.map(f => {
+        const items = f.consumo_interno_items || [];
+        const resumen = items.length
+          ? items.slice(0, 2).map(i => `${i.producto_nombre} (${i.cantidad})`).join(', ') + (items.length > 2 ? ` +${items.length - 2} más` : '')
+          : 'Sin productos';
+        return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalConsumoInterno(${f.id}))">
       <td>${fmtF(f.fecha)}</td>
       <td class="td-concepto" title="${resumen}">${resumen}</td>
       <td class="td-total">${fmt(f.total)}</td>
@@ -7067,10 +7075,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <td><button class="btn-toggle-pago pendiente" onclick="imprimirConsumoInterno(${f.id})" title="Imprimir ticket"><i class="fa-solid fa-print"></i></button></td>
       <td><button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
     </tr>`;
-        }).join('');
-      }
-      actualizarBarraSeleccion();
-      actualizarBarraScrollFija();
+      }).join('');
+    }
+    actualizarBarraSeleccion();
+    actualizarBarraScrollFija();
     }
 
 
@@ -7591,6 +7599,16 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         if (reg) reg.facturado = !actual;
         renderTablaConScroll();
         toast(`Albarán de venta: <strong>${!actual ? 'FACTURADO' : 'SIN FACTURAR'}</strong>`);
+      } catch (e) { toast('Error: ' + e.message, 'err'); }
+    }
+
+    async function toggleFacturadoAlquiler(id, actual) {
+      try {
+        await apiPatch('alquileres', id, { facturado: !actual });
+        const reg = registros.find(r => r.id === id && r._esAlquiler);
+        if (reg) reg.facturado = !actual;
+        renderTablaConScroll();
+        toast(`Alquiler: <strong>${!actual ? 'FACTURADO' : 'SIN FACTURAR'}</strong>`);
       } catch (e) { toast('Error: ' + e.message, 'err'); }
     }
 
@@ -15188,21 +15206,32 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       inpN.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
     }
 
-    async function cargarAlbaranesSinFacturarCliente(clienteId, marcarIds) {
+    async function cargarAlbaranesSinFacturarCliente(clienteId, marcarKeys) {
       const cont = document.getElementById('fvAlbaranesLista');
       cont.innerHTML = `<p style="text-align:center;color:#aaa;font-size:.82rem"><i class="fa-solid fa-spinner fa-spin"></i> Cargando...</p>`;
       try {
-        // Solo recargamos de la BD si es la primera vez (cambio de cliente);
-        // si solo cambia el filtro de mes, reusamos lo ya traído.
         if (!fvAlbaranesCliente.length || fvAlbaranesCliente[0]?.cliente_id !== clienteId) {
-          fvAlbaranesCliente = await apiGetAll('albaranes_venta',
-            `cliente_id=eq.${clienteId}&facturado=eq.false&select=*,albaranes_venta_items(*)&order=fecha.asc`);
+          const [ventas, alquileres] = await Promise.all([
+            apiGetAll('albaranes_venta', `cliente_id=eq.${clienteId}&facturado=eq.false&select=*,albaranes_venta_items(*)&order=fecha.asc`),
+            apiGetAll('alquileres', `cliente_id=eq.${clienteId}&facturado=eq.false&select=*,alquileres_items(*)&order=fecha.asc`)
+          ]);
+          fvAlbaranesCliente = [
+            ...(ventas || []).map(a => ({ ...a, _fvTipo: 'venta', _fvKey: `venta:${a.id}` })),
+            ...(alquileres || []).map(a => ({ ...a, _fvTipo: 'alquiler', _fvKey: `alquiler:${a.id}` }))
+          ].sort((x, y) => (x.fecha || '').localeCompare(y.fecha || ''));
+
           if (fvEditId) {
             const yaVinculados = await apiGet('facturas_venta_albaranes', `factura_venta_id=eq.${fvEditId}`);
-            const idsYaVinculados = yaVinculados.map(v => v.albaran_venta_id);
-            if (idsYaVinculados.length) {
-              const extra = await apiGetAll('albaranes_venta', `id=in.(${idsYaVinculados.join(',')})&select=*,albaranes_venta_items(*)`);
-              extra.forEach(a => { if (!fvAlbaranesCliente.some(x => x.id === a.id)) fvAlbaranesCliente.push(a); });
+            const idsVentaYaVinculados = yaVinculados.filter(v => v.albaran_venta_id).map(v => v.albaran_venta_id);
+            const idsAlquilerYaVinculados = yaVinculados.filter(v => v.alquiler_id).map(v => v.alquiler_id);
+
+            if (idsVentaYaVinculados.length) {
+              const extra = await apiGetAll('albaranes_venta', `id=in.(${idsVentaYaVinculados.join(',')})&select=*,albaranes_venta_items(*)`);
+              extra.forEach(a => { if (!fvAlbaranesCliente.some(x => x._fvTipo === 'venta' && x.id === a.id)) fvAlbaranesCliente.push({ ...a, _fvTipo: 'venta', _fvKey: `venta:${a.id}` }); });
+            }
+            if (idsAlquilerYaVinculados.length) {
+              const extra = await apiGetAll('alquileres', `id=in.(${idsAlquilerYaVinculados.join(',')})&select=*,alquileres_items(*)`);
+              extra.forEach(a => { if (!fvAlbaranesCliente.some(x => x._fvTipo === 'alquiler' && x.id === a.id)) fvAlbaranesCliente.push({ ...a, _fvTipo: 'alquiler', _fvKey: `alquiler:${a.id}` }); });
             }
           }
         }
@@ -15223,12 +15252,18 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           recalcTotalFacturaVenta(); return;
         }
 
-        cont.innerHTML = listaFiltrada.map(a => `
+        cont.innerHTML = listaFiltrada.map(a => {
+          const esAlquiler = a._fvTipo === 'alquiler';
+          const etiquetaTipo = esAlquiler
+            ? (a.tipo === 'baja' ? ' <span style="font-size:.68rem;color:#c0392b;font-weight:600">(Baja alquiler)</span>' : ' <span style="font-size:.68rem;color:#2d7a4f;font-weight:600">(Alta alquiler)</span>')
+            : '';
+          return `
       <label style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:1px solid #f0eaf8;font-size:.85rem">
-        <input type="checkbox" class="fv-chk-alb" value="${a.id}" data-base="${a.base_imponible || 0}" ${marcarIds && marcarIds.includes(a.id) ? 'checked' : ''} onchange="recalcTotalFacturaVenta()">
-        <span style="flex:1"><strong>${a.numero_albaran || 's/n'}</strong> — ${fmtF(a.fecha)}${a.nombre_obra ? ' — ' + a.nombre_obra : ''}</span>
+        <input type="checkbox" class="fv-chk-alb" value="${a._fvKey}" data-base="${a.base_imponible || 0}" ${marcarKeys && marcarKeys.includes(a._fvKey) ? 'checked' : ''} onchange="recalcTotalFacturaVenta()">
+        <span style="flex:1"><strong>${a.numero_albaran || 's/n'}</strong> — ${fmtF(a.fecha)}${a.nombre_obra ? ' — ' + a.nombre_obra : ''}${a.obra ? ' — ' + a.obra : ''}${etiquetaTipo}</span>
         <span>${fmt(a.total)}</span>
-      </label>`).join('');
+      </label>`;
+        }).join('');
         document.getElementById('fv_marcar_todos').checked = false;
         recalcTotalFacturaVenta();
       } catch (e) {
@@ -15249,7 +15284,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById('fv_total').value = (base + base * pct / 100).toFixed(2);
     }
 
-    function abrirModalFacturaVenta(albaranPreseleccionadoId) {
+    function abrirModalFacturaVenta(albaranPreseleccionadoId, alquilerPreseleccionadoId) {
       fvEditId = null;
       fvClienteSelId = null;
       document.getElementById('facturaVentaTitulo').textContent = 'Nueva Factura de Venta';
@@ -15270,16 +15305,25 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById('modalFacturaVenta').classList.add('visible');
       setTimeout(async () => {
         setupClienteFacturaAC('fv_cliente', 'fv_nif', 'fv_cliente_id');
-        // Si venimos de "Facturar" desde un albarán concreto, preseleccionamos su cliente
         if (albaranPreseleccionadoId) {
-          const alb = registros.find(r => r.id === albaranPreseleccionadoId)
+          const alb = registros.find(r => r.id === albaranPreseleccionadoId && !r._esAlquiler)
             || (await apiGet('albaranes_venta', `id=eq.${albaranPreseleccionadoId}`))[0];
           if (alb) {
             document.getElementById('fv_cliente').value = alb.cliente_nombre || '';
             document.getElementById('fv_nif').value = alb.nif || '';
             document.getElementById('fv_cliente_id').value = alb.cliente_id;
             fvClienteSelId = alb.cliente_id;
-            await cargarAlbaranesSinFacturarCliente(alb.cliente_id, [albaranPreseleccionadoId]);
+            await cargarAlbaranesSinFacturarCliente(alb.cliente_id, [`venta:${albaranPreseleccionadoId}`]);
+          }
+        } else if (alquilerPreseleccionadoId) {
+          const alq = registros.find(r => r.id === alquilerPreseleccionadoId && r._esAlquiler)
+            || (await apiGet('alquileres', `id=eq.${alquilerPreseleccionadoId}`))[0];
+          if (alq) {
+            document.getElementById('fv_cliente').value = alq.cliente_nombre || '';
+            document.getElementById('fv_nif').value = alq.nif || '';
+            document.getElementById('fv_cliente_id').value = alq.cliente_id;
+            fvClienteSelId = alq.cliente_id;
+            await cargarAlbaranesSinFacturarCliente(alq.cliente_id, [`alquiler:${alquilerPreseleccionadoId}`]);
           }
         }
       }, 50);
@@ -15305,7 +15349,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById('modalFacturaVenta').classList.add('visible');
       setTimeout(async () => {
         setupClienteFacturaAC('fv_cliente', 'fv_nif', 'fv_cliente_id');
-        const vinculados = (f.facturas_venta_albaranes || []).map(v => v.albaran_venta_id);
+        const vinculados = (f.facturas_venta_albaranes || []).map(v => v.albaran_venta_id ? `venta:${v.albaran_venta_id}` : `alquiler:${v.alquiler_id}`);
         await cargarAlbaranesSinFacturarCliente(f.cliente_id, vinculados);
       }, 50);
     }
@@ -15324,8 +15368,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       if (!fecha) { toast('La fecha es obligatoria', 'err'); return; }
       if (!fvClienteSelId) { toast('Selecciona un cliente de la lista', 'err'); return; }
 
-      const idsSeleccionados = [...document.querySelectorAll('.fv-chk-alb:checked')].map(chk => parseInt(chk.value));
-      if (!idsSeleccionados.length) { toast('Selecciona al menos un albarán a facturar', 'err'); return; }
+      const clavesSeleccionadas = [...document.querySelectorAll('.fv-chk-alb:checked')].map(chk => chk.value);
+      if (!clavesSeleccionadas.length) { toast('Selecciona al menos un albarán a facturar', 'err'); return; }
 
       const cliente_nombre = document.getElementById('fv_cliente').value.trim();
       const nif = document.getElementById('fv_nif').value.trim() || null;
@@ -15354,13 +15398,17 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           await apiPatch('facturas_venta', fvEditId, payload);
           facturaId = fvEditId;
 
-          // Reconstruir los enlaces con albaranes: primero liberamos los antiguos
           const antiguos = await apiGet('facturas_venta_albaranes', `factura_venta_id=eq.${facturaId}`);
-          const idsAntiguos = antiguos.map(a => a.albaran_venta_id);
           for (const a of antiguos) await apiDelete('facturas_venta_albaranes', a.id);
-          // Los que ya no están seleccionados, vuelven a "sin facturar"
-          const liberar = idsAntiguos.filter(id => !idsSeleccionados.includes(id));
-          for (const id of liberar) await apiPatch('albaranes_venta', id, { facturado: false });
+
+          const liberar = antiguos.filter(a => {
+            const clave = a.albaran_venta_id ? `venta:${a.albaran_venta_id}` : `alquiler:${a.alquiler_id}`;
+            return !clavesSeleccionadas.includes(clave);
+          });
+          for (const a of liberar) {
+            if (a.albaran_venta_id) await apiPatch('albaranes_venta', a.albaran_venta_id, { facturado: false });
+            else if (a.alquiler_id) await apiPatch('alquileres', a.alquiler_id, { facturado: false });
+          }
 
         } else {
           const anio = new Date(fecha).getFullYear();
@@ -15374,22 +15422,41 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           facturaId = nueva.id;
         }
 
-        // Vincular albaranes seleccionados + marcarlos como facturados + copiar sus líneas
-        for (const albId of idsSeleccionados) {
-          const alb = fvAlbaranesCliente.find(a => a.id === albId);
-          await apiPost('facturas_venta_albaranes', [{
-            factura_venta_id: facturaId, albaran_venta_id: albId, numero_albaran: alb?.numero_albaran || null
-          }]);
-          await apiPatch('albaranes_venta', albId, { facturado: true });
-          if (alb?.albaranes_venta_items?.length) {
-            await apiPost('facturas_venta_items', alb.albaranes_venta_items.map(it => ({
-              factura_venta_id: facturaId,
-              producto_nombre: it.producto_nombre,
-              cantidad: it.cantidad,
-              precio_unitario: it.precio_unitario,
-              dto_pct: it.dto_pct || 0,
-              importe_total: it.importe_total
-            })));
+        for (const clave of clavesSeleccionadas) {
+          const [tipo, idStr] = clave.split(':');
+          const id = parseInt(idStr);
+          const reg = fvAlbaranesCliente.find(a => a._fvKey === clave);
+
+          if (tipo === 'venta') {
+            await apiPost('facturas_venta_albaranes', [{
+              factura_venta_id: facturaId, albaran_venta_id: id, numero_albaran: reg?.numero_albaran || null
+            }]);
+            await apiPatch('albaranes_venta', id, { facturado: true });
+            if (reg?.albaranes_venta_items?.length) {
+              await apiPost('facturas_venta_items', reg.albaranes_venta_items.map(it => ({
+                factura_venta_id: facturaId,
+                producto_nombre: it.producto_nombre,
+                cantidad: it.cantidad,
+                precio_unitario: it.precio_unitario,
+                dto_pct: it.dto_pct || 0,
+                importe_total: it.importe_total
+              })));
+            }
+          } else if (tipo === 'alquiler') {
+            await apiPost('facturas_venta_albaranes', [{
+              factura_venta_id: facturaId, alquiler_id: id, numero_albaran: reg?.numero_albaran || null
+            }]);
+            await apiPatch('alquileres', id, { facturado: true });
+            if (reg?.alquileres_items?.length) {
+              await apiPost('facturas_venta_items', reg.alquileres_items.map(it => ({
+                factura_venta_id: facturaId,
+                producto_nombre: it.descripcion,
+                cantidad: it.cantidad,
+                precio_unitario: it.precio_unitario,
+                dto_pct: it.dto_pct || 0,
+                importe_total: it.total_linea
+              })));
+            }
           }
         }
 
@@ -15398,14 +15465,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         fvEditId = null;
         cerrarModal('modalFacturaVenta');
         cargarDatos();
-        if (!payload.numero_factura || true) imprimirFacturaVenta(idParaImprimir);
+        imprimirFacturaVenta(idParaImprimir);
       } catch (e) {
         toast('Error al guardar la factura: ' + e.message, 'err');
       } finally {
         btn.disabled = false;
       }
     }
-
     async function toggleEstadoFacturaVenta(id, estadoActual) {
       const ciclo = { pendiente: 'cobrada', cobrada: 'anulada', anulada: 'pendiente' };
       const nuevo = ciclo[estadoActual] || 'pendiente';
@@ -15422,7 +15488,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       try {
         const vinculados = await apiGet('facturas_venta_albaranes', `factura_venta_id=eq.${id}`);
         for (const v of vinculados) {
-          await apiPatch('albaranes_venta', v.albaran_venta_id, { facturado: false });
+          if (v.albaran_venta_id) await apiPatch('albaranes_venta', v.albaran_venta_id, { facturado: false });
+          else if (v.alquiler_id) await apiPatch('alquileres', v.alquiler_id, { facturado: false });
           await apiDelete('facturas_venta_albaranes', v.id);
         }
         const items = await apiGet('facturas_venta_items', `factura_venta_id=eq.${id}`);

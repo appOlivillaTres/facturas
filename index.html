@@ -15416,7 +15416,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     th,td{border-bottom:1px solid #ccc;padding:7px;text-align:left;font-size:.75rem}
     th{background:#f7f0f5;font-weight:500}
     .pie{display:flex;justify-content:space-between;gap:16px;margin-top:20px;align-items:flex-start}
-.iva-tabla{box-shadow: inset 0 0 0 1.5px #333; border-radius:10px; padding:10px 14px; font-size:.75rem}
+.iva-tabla{box-shadow: inset 0 0 0 1.5px #333; border-radius:10px; padding:10px 14px; font-size:.85rem}
     .iva-tabla table{margin:0}
     .iva-tabla th,.iva-tabla td{border:none;padding:4px 10px}
 .total-box{box-shadow: inset 0 0 0 1.5px #333; border-radius:10px; padding:14px 24px; font-weight:700; display:flex; justify-content:space-between; gap:20px; align-items:center; min-width:220px}  .btn-imprimir{position:fixed;top:16px;right:16px}
@@ -15449,7 +15449,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   ${filaAlbaranes}
   <div class="pie">
     <div class="iva-tabla">
-      <table><thead><tr><th>BASE</th><th>%IVA</th><th>IMPORTE IVA</th></tr></thead>
+      <table><thead><tr><th>BASE</th><th>%IVA</th><th>IMPORTE IVA</th><th>TOTAL</th></tr></thead>
         <tbody><tr><td>${fmtN(f.base_imponible)}</td><td>${fmtN(f.pct_iva)}</td><td>${fmtN(f.importe_iva)}</td><td>${fmt(f.total)}</td></tr></tbody></table>
     </div>
   </div>

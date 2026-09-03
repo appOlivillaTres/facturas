@@ -14935,29 +14935,27 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const f = registros.find(r => r.id === presupuestoEnvioActualId);
         const htmlPresupuesto = await _generarHtmlPresupuestoVenta(presupuestoEnvioActualId);
 
-        const wrapper = document.createElement('div');
-wrapper.style.cssText = 'height:0;overflow:hidden;';
+                const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'height:0;overflow:hidden;';
 
-const contenedor = document.createElement('div');
-contenedor.style.cssText = 'width:800px;background:#fff;';
-contenedor.innerHTML = htmlFactura.replace(
-  /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
-  ''
-);
+        const contenedor = document.createElement('div');
+        contenedor.style.cssText = 'width:800px;background:#fff;';
+        contenedor.innerHTML = htmlPresupuesto.replace(
+          /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
+          ''
+        );
 
-wrapper.appendChild(contenedor);
-document.body.appendChild(wrapper);
-await new Promise(resolve => setTimeout(resolve, 500));
+        wrapper.appendChild(contenedor);
+        document.body.appendChild(wrapper);
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-const pdfBlob = await html2pdf().set({
-  margin: 10,
-  filename: `factura_${f?.numero_factura || facturaVentaEnvioActualId}.pdf`,
-  jsPDF: { unit: 'mm', format: 'a4' }
-}).from(contenedor).outputPdf('blob');
+        const pdfBlob = await html2pdf().set({
+          margin: 10,
+          filename: `presupuesto_${f?.numero_presupuesto || presupuestoEnvioActualId}.pdf`,
+          jsPDF: { unit: 'mm', format: 'a4' }
+        }).from(contenedor).outputPdf('blob');
 
-document.body.removeChild(wrapper);
-
-        document.body.removeChild(contenedor);
+        document.body.removeChild(wrapper);
 
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Enviando...';
 
@@ -15006,29 +15004,27 @@ document.body.removeChild(wrapper);
         const f = registros.find(r => r.id === albaranEnvioActualId);
         const htmlAlbaran = await _generarHtmlAlbaranVenta(albaranEnvioActualId);
 
-        const wrapper = document.createElement('div');
-wrapper.style.cssText = 'height:0;overflow:hidden;';
+                const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'height:0;overflow:hidden;';
 
-const contenedor = document.createElement('div');
-contenedor.style.cssText = 'width:800px;background:#fff;';
-contenedor.innerHTML = htmlFactura.replace(
-  /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
-  ''
-);
+        const contenedor = document.createElement('div');
+        contenedor.style.cssText = 'width:800px;background:#fff;';
+        contenedor.innerHTML = htmlAlbaran.replace(
+          /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
+          ''
+        );
 
-wrapper.appendChild(contenedor);
-document.body.appendChild(wrapper);
-await new Promise(resolve => setTimeout(resolve, 500));
+        wrapper.appendChild(contenedor);
+        document.body.appendChild(wrapper);
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-const pdfBlob = await html2pdf().set({
-  margin: 10,
-  filename: `factura_${f?.numero_factura || facturaVentaEnvioActualId}.pdf`,
-  jsPDF: { unit: 'mm', format: 'a4' }
-}).from(contenedor).outputPdf('blob');
+        const pdfBlob = await html2pdf().set({
+          margin: 10,
+          filename: `albaran_${f?.numero_albaran || albaranEnvioActualId}.pdf`,
+          jsPDF: { unit: 'mm', format: 'a4' }
+        }).from(contenedor).outputPdf('blob');
 
-document.body.removeChild(wrapper);
-
-        document.body.removeChild(contenedor);
+        document.body.removeChild(wrapper);
 
 
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Enviando...';
@@ -15082,29 +15078,27 @@ document.body.removeChild(wrapper);
           ? await _generarHtmlAltaAlquiler(alquilerEnvioActualId)
           : await _generarHtmlBajaAlquiler(alquilerEnvioActualId);
 
-        const wrapper = document.createElement('div');
-wrapper.style.cssText = 'height:0;overflow:hidden;';
+                const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'height:0;overflow:hidden;';
 
-const contenedor = document.createElement('div');
-contenedor.style.cssText = 'width:800px;background:#fff;';
-contenedor.innerHTML = htmlFactura.replace(
-  /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
-  ''
-);
+        const contenedor = document.createElement('div');
+        contenedor.style.cssText = 'width:800px;background:#fff;';
+        contenedor.innerHTML = htmlDoc.replace(
+          /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
+          ''
+        );
 
-wrapper.appendChild(contenedor);
-document.body.appendChild(wrapper);
-await new Promise(resolve => setTimeout(resolve, 500));
+        wrapper.appendChild(contenedor);
+        document.body.appendChild(wrapper);
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-const pdfBlob = await html2pdf().set({
-  margin: 10,
-  filename: `factura_${f?.numero_factura || facturaVentaEnvioActualId}.pdf`,
-  jsPDF: { unit: 'mm', format: 'a4' }
-}).from(contenedor).outputPdf('blob');
+        const pdfBlob = await html2pdf().set({
+          margin: 10,
+          filename: `${esAlta ? 'alta' : 'baja'}_alquiler_${reg?.numero_albaran || alquilerEnvioActualId}.pdf`,
+          jsPDF: { unit: 'mm', format: 'a4' }
+        }).from(contenedor).outputPdf('blob');
 
-document.body.removeChild(wrapper);
-
-        document.body.removeChild(contenedor);
+        document.body.removeChild(wrapper);
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Enviando...';
 
         const pdfBase64 = await new Promise((resolve, reject) => {
@@ -15962,29 +15956,27 @@ document.body.removeChild(wrapper);
         const f = registros.find(r => r.id === facturaVentaEnvioActualId);
         const htmlFactura = await _generarHtmlFacturaVenta(facturaVentaEnvioActualId);
 
-        const wrapper = document.createElement('div');
-wrapper.style.cssText = 'height:0;overflow:hidden;';
+                const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'height:0;overflow:hidden;';
 
-const contenedor = document.createElement('div');
-contenedor.style.cssText = 'width:800px;background:#fff;';
-contenedor.innerHTML = htmlFactura.replace(
-  /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
-  ''
-);
+        const contenedor = document.createElement('div');
+        contenedor.style.cssText = 'width:800px;background:#fff;';
+        contenedor.innerHTML = htmlFactura.replace(
+          /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
+          ''
+        );
 
-wrapper.appendChild(contenedor);
-document.body.appendChild(wrapper);
-await new Promise(resolve => setTimeout(resolve, 500));
+        wrapper.appendChild(contenedor);
+        document.body.appendChild(wrapper);
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-const pdfBlob = await html2pdf().set({
-  margin: 10,
-  filename: `factura_${f?.numero_factura || facturaVentaEnvioActualId}.pdf`,
-  jsPDF: { unit: 'mm', format: 'a4' }
-}).from(contenedor).outputPdf('blob');
+        const pdfBlob = await html2pdf().set({
+          margin: 10,
+          filename: `factura_${f?.numero_factura || facturaVentaEnvioActualId}.pdf`,
+          jsPDF: { unit: 'mm', format: 'a4' }
+        }).from(contenedor).outputPdf('blob');
 
-document.body.removeChild(wrapper);
-
-        document.body.removeChild(contenedor);
+        document.body.removeChild(wrapper);
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Enviando...';
 
         const pdfBase64 = await new Promise((resolve, reject) => {
@@ -16009,7 +16001,7 @@ document.body.removeChild(wrapper);
         });
         if (!res.ok) throw new Error(await res.text());
 
-        toast(`< i class="fa-solid fa-check me-1" ></i > Factura enviada a ${email} `, 'ok');
+        toast(`<i class="fa-solid fa-check me-1"></i>Factura enviada a ${email}`, 'ok');
         cerrarModal('modalEnviarAlbaran');
       } catch (e) {
         toast('Error al enviar la factura: ' + e.message, 'err');
@@ -16052,28 +16044,27 @@ document.body.removeChild(wrapper);
         throw new Error('Tipo de documento no soportado');
       }
 
-      const wrapper = document.createElement('div');
-wrapper.style.cssText = 'height:0;overflow:hidden;';
+            const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'height:0;overflow:hidden;';
 
-const contenedor = document.createElement('div');
-contenedor.style.cssText = 'width:800px;background:#fff;';
-contenedor.innerHTML = htmlFactura.replace(
-  /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
-  ''
-);
+      const contenedor = document.createElement('div');
+      contenedor.style.cssText = 'width:800px;background:#fff;';
+      contenedor.innerHTML = html.replace(
+        /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
+        ''
+      );
 
-wrapper.appendChild(contenedor);
-document.body.appendChild(wrapper);
-await new Promise(resolve => setTimeout(resolve, 500));
+      wrapper.appendChild(contenedor);
+      document.body.appendChild(wrapper);
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-const pdfBlob = await html2pdf().set({
-  margin: 10,
-  filename: `factura_${f?.numero_factura || facturaVentaEnvioActualId}.pdf`,
-  jsPDF: { unit: 'mm', format: 'a4' }
-}).from(contenedor).outputPdf('blob');
+      const pdfBlob = await html2pdf().set({
+        margin: 10,
+        filename: nombreArchivo,
+        jsPDF: { unit: 'mm', format: 'a4' }
+      }).from(contenedor).outputPdf('blob');
 
-document.body.removeChild(wrapper);
-      document.body.removeChild(contenedor);
+      document.body.removeChild(wrapper);
 
       const pdfBase64 = await new Promise((resolve, reject) => {
         const reader = new FileReader();

@@ -16005,24 +16005,15 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         iframe.onload = async () => {
           try {
             const doc = iframe.contentDocument;
+            doc.body.style.background = '#fff';
 
-            // Esperar a que TODAS las imágenes hayan terminado de cargar/decodificar de verdad
-            const imgs = Array.from(doc.querySelectorAll('img'));
-            await Promise.all(imgs.map(img => {
-              if (img.complete && img.naturalHeight !== 0) return Promise.resolve();
-              return new Promise(res => {
-                img.addEventListener('load', res, { once: true });
-                img.addEventListener('error', res, { once: true }); // si falla, seguimos igualmente
-              });
-            }));
-            await new Promise(r => setTimeout(r, 150)); // pequeño margen extra para el reflow del CSS
+            await new Promise(r => setTimeout(r, 600));
 
             const pdfBlob = await html2pdf().set({
               margin: 10,
               filename,
               jsPDF: { unit: 'mm', format: 'a4' },
-              html2canvas: { scale: 2, useCORS: true },
-              pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }   // evita cortar elementos por la mitad
+              html2canvas: { scale: 2, useCORS: true }
             }).from(doc.body).outputPdf('blob');
 
             document.body.removeChild(iframe);

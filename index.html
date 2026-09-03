@@ -6877,8 +6877,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       ${!factAlq ? `<button class="btn-toggle-pago" style="background:#b53987;color:#fff;border:1.5px solid #b53987" onclick="abrirModalFacturaVenta(null, ${f.id})" title="Generar factura"><i class="fa-solid fa-file-invoice-dollar"></i></button>` : ''}
     </td>
   </tr>`;
-          }                                      // 👈 sin el botón "Facturar" aquí — los alquileres no van a Facturas de Venta
-        }
+          }                                     // 👈 sin el botón "Facturar" aquí — los alquileres no van a Facturas de Venta
+        
 
           return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarAlbaranVenta(${f.id}))">
     <td><strong>${f.numero_albaran || '—'}</strong></td>

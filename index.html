@@ -12969,17 +12969,17 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   <div class="pie">
     <div class="iva-tabla">
       <table>
-        <thead><tr><th>TIPO</th><th>IMPORTE</th><th>DESCUENTO</th><th>BASE</th><th>I.V.A.</th></tr></thead>
+        <thead><tr><th>IVA</th><th>IMPORTE</th><th>DESCUENTO</th><th>BASE</th><th>IMPORTE IVA</th><th>TOTAL</th></tr></thead>
         <tbody><tr>
           <td>${fmtN(f.pct_iva)}</td>
           <td>${fmtN(f.base_imponible)}</td>
           <td>—</td>
           <td>${fmtN(f.base_imponible)}</td>
           <td>${fmtN(f.importe_iva)}</td>
+          <td>${fmt(f.total)}</td>
         </tr></tbody>
       </table>
     </div>
-    <div class="total-box"><span>TOTAL:</span><span>${fmt(f.total)}</span></div>
   </div>
   <div class="firma-box">
     <b>NOMBRE:</b> ${f.nombre_operario || '—'}<br><br>
@@ -13070,17 +13070,17 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   <div class="pie">
     <div class="iva-tabla">
       <table>
-        <thead><tr><th>TIPO</th><th>IMPORTE</th><th>DESCUENTO</th><th>BASE</th><th>I.V.A.</th></tr></thead>
+        <thead><tr><th>IVA</th><th>IMPORTE</th><th>DESCUENTO</th><th>BASE</th><th>IMPORTE IVA</th><th>TOTAL</th></tr></thead>
         <tbody><tr>
           <td>${fmtN(f.pct_iva)}</td>
           <td>${fmtN(f.base_imponible)}</td>
           <td>—</td>
           <td>${fmtN(f.base_imponible)}</td>
           <td>${fmtN(f.importe_iva)}</td>
+          <td>${fmt(f.total)}</td>
         </tr></tbody>
       </table>
     </div>
-    <div class="total-box"><span>TOTAL:</span><span>${fmt(f.total)}</span></div>
   </div>
   <div class="firma-box">
     <b>NOMBRE:</b> ${f.nombre_operario || '—'}<br><br>
@@ -14784,17 +14784,17 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   <div class="pie">
     <div class="iva-tabla">
       <table>
-        <thead><tr><th>TIPO</th><th>IMPORTE</th><th>DESCUENTO</th><th>BASE</th><th>I.V.A.</th></tr></thead>
+        <thead><tr><th>IVA</th><th>IMPORTE</th><th>DESCUENTO</th><th>BASE</th><th>IMPORTE IVA</th><th>TOTAL</th></tr></thead>
         <tbody><tr>
-          <td>${f.pct_iva != null ? fmtN(f.pct_iva) : '21,00'}</td>
+          <td>${f.pct_iva != null ? fmtN(f.pct_iva) : '21,00%'}</td>
           <td>${fmtN(f.base_imponible)}</td>
           <td>${f.descuento_pct ? f.descuento_pct + '% (' + fmtN(f.importe_descuento) + '€)' : '—'}</td>
           <td>${fmtN(f.base_imponible)}</td>
           <td>${fmtN(f.importe_iva)}</td>
+          <td>${fmt(f.total)}</td>
         </tr></tbody>
       </table>
     </div>
-    <div class="total-box"><span>TOTAL:</span><span>${fmt(f.total)}</span></div>
   </div>`}
   <div class="observaciones">
   ${f.nombre_obra ? `<b>OBRA:</b> ${f.nombre_obra}<br>` : ''}<b>OBSERVACIONES:</b><br>${f.notas || ''}
@@ -15998,11 +15998,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     async function generarPdfBlobDesdeHtml(htmlCompleto, filename) {
-  return new Promise((resolve, reject) => {
+      return new Promise((resolve, reject) => {
 
-    const iframe = document.createElement('iframe');
+        const iframe = document.createElement('iframe');
 
-    iframe.style.cssText = `
+        iframe.style.cssText = `
       position: fixed;
       left: -99999px;
       top: 0;
@@ -16013,25 +16013,25 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       background: #ffffff;
     `;
 
-    document.body.appendChild(iframe);
+        document.body.appendChild(iframe);
 
-    iframe.onload = async () => {
-      try {
+        iframe.onload = async () => {
+          try {
 
-        await new Promise(r => setTimeout(r, 500));
+            await new Promise(r => setTimeout(r, 500));
 
-        const doc = iframe.contentDocument;
-        const body = doc.body;
+            const doc = iframe.contentDocument;
+            const body = doc.body;
 
-        // FORZAR EL DOCUMENTO DEL PDF A BLANCO Y NEGRO
-        doc.documentElement.style.cssText = `
+            // FORZAR EL DOCUMENTO DEL PDF A BLANCO Y NEGRO
+            doc.documentElement.style.cssText = `
           margin: 0 !important;
           padding: 0 !important;
           background: #ffffff !important;
           color: #000000 !important;
         `;
 
-        body.style.cssText = `
+            body.style.cssText = `
           margin: 0 !important;
           padding: 36px !important;
           background: #ffffff !important;
@@ -16039,50 +16039,50 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           font-family: Arial, sans-serif !important;
         `;
 
-        // Forzar todos los elementos del documento
-        body.querySelectorAll('*').forEach(el => {
-          el.style.color = '#000000';
-        });
+            // Forzar todos los elementos del documento
+            body.querySelectorAll('*').forEach(el => {
+              el.style.color = '#000000';
+            });
 
-        const pdfBlob = await html2pdf()
-          .set({
-            margin: 10,
-            filename: filename,
-            image: {
-              type: 'jpeg',
-              quality: 0.98
-            },
-            html2canvas: {
-              scale: 2,
-              useCORS: true,
-              backgroundColor: '#ffffff'
-            },
-            jsPDF: {
-              unit: 'mm',
-              format: 'a4',
-              orientation: 'portrait'
+            const pdfBlob = await html2pdf()
+              .set({
+                margin: 10,
+                filename: filename,
+                image: {
+                  type: 'jpeg',
+                  quality: 0.98
+                },
+                html2canvas: {
+                  scale: 2,
+                  useCORS: true,
+                  backgroundColor: '#ffffff'
+                },
+                jsPDF: {
+                  unit: 'mm',
+                  format: 'a4',
+                  orientation: 'portrait'
+                }
+              })
+              .from(body)
+              .outputPdf('blob');
+
+            document.body.removeChild(iframe);
+
+            resolve(pdfBlob);
+
+          } catch (e) {
+
+            if (iframe.parentNode) {
+              iframe.parentNode.removeChild(iframe);
             }
-          })
-          .from(body)
-          .outputPdf('blob');
 
-        document.body.removeChild(iframe);
+            reject(e);
+          }
+        };
 
-        resolve(pdfBlob);
-
-      } catch (e) {
-
-        if (iframe.parentNode) {
-          iframe.parentNode.removeChild(iframe);
-        }
-
-        reject(e);
-      }
-    };
-
-    iframe.srcdoc = htmlCompleto;
-  });
-}
+        iframe.srcdoc = htmlCompleto;
+      });
+    }
   </script>
 </body>
 

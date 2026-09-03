@@ -6216,8 +6216,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const mQ = [f.numero_factura, f.proveedor, f.nif, f.numero_interno, f.concepto].some(v => (v || '').toLowerCase().includes(q));
           const esVenc = f.estado === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
           const estReal = f.imputado ? 'imputado' : (esVenc ? 'vencido' : (f.estado || 'pendiente'));
-          return mQ && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_almacen') && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'facturas_almacen', filtroPorRevisarDeOtro)));
-        });
+return mQ && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_almacen')) && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'facturas_almacen', filtroPorRevisarDeOtro));        });
         if (!lista.length) { bdy.innerHTML = emptyRow(36, 'No se encontraron facturas'); return; }
         bdy.innerHTML = lista.map(f => {
           const est = f.estado || 'pendiente';
@@ -6329,8 +6328,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const mObra = !fObra || f.nombre_obra === fObra || (f._reparto && f._reparto.some(r => r.nombre_obra === fObra));
           const esVenc = f.estado === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
           const estReal = f.imputado ? 'imputado' : (esVenc ? 'vencido' : (f.estado || 'pendiente'));
-          return mQ && mObra && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_obra') && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'facturas_almacen', filtroPorRevisarDeOtro)));
-        });
+return mQ && mObra && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_obra')) && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'facturas_obra', filtroPorRevisarDeOtro));        });
         const resumenEl = document.getElementById('resumenObra');
         if (fObra) {
           const suma = lista.reduce((acc, f) => acc + (parseFloat(f.total) || 0), 0);
@@ -6444,8 +6442,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const mObra = !fObra || f.nombre_obra === fObra || (f._reparto && f._reparto.some(r => r.nombre_obra === fObra));
           const esVenc = f.estado === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
           const estReal = f.imputado ? 'imputado' : (esVenc ? 'vencido' : (f.estado || 'pendiente'));
-          return mQ && mObra && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_csg') && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'facturas_almacen', filtroPorRevisarDeOtro)));
-        });
+return mQ && mObra && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_csg')) && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'facturas_csg', filtroPorRevisarDeOtro));        });
         if (!lista.length) { bdy.innerHTML = emptyRow(37, 'No se encontraron facturas'); return; }
         bdy.innerHTML = lista.map(f => {
           const est = f.estado || 'pendiente';
@@ -6967,8 +6964,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const mObra = !fObraIng || f.nombre_obra === fObraIng;
           const esVenc = f.estado === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
           const estReal = esVenc ? 'vencido' : (f.estado || 'pendiente');
-          return mQ && mObra && (!fEst || fEst === estReal) && (!filtroPorRevisar || faltaPorRevisar(f, 'ingresos') && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'facturas_almacen', filtroPorRevisarDeOtro)));
-        });
+return mQ && mObra && (!fEst || fEst === estReal) && (!filtroPorRevisar || faltaPorRevisar(f, 'ingresos')) && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'ingresos', filtroPorRevisarDeOtro));        });
         if (!lista.length) { bdy.innerHTML = emptyRow(17, 'No se encontraron ingresos'); return; }
         bdy.innerHTML = lista.map(f => {
           const est = f.estado || 'pendiente';

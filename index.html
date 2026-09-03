@@ -14935,28 +14935,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const f = registros.find(r => r.id === presupuestoEnvioActualId);
         const htmlPresupuesto = await _generarHtmlPresupuestoVenta(presupuestoEnvioActualId);
 
-        const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'height:0;overflow:hidden;';
-
-        const contenedor = document.createElement('div');
-        contenedor.style.cssText = 'width:800px;background:#fff;';
-        contenedor.innerHTML = htmlPresupuesto.replace(
-          /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
-          ''
+        const pdfBlob = await generarPdfBlobDesdeHtml(
+          htmlPresupuesto,
+          `presupuesto_${f?.numero_presupuesto || presupuestoEnvioActualId}.pdf`
         );
-
-        wrapper.appendChild(contenedor);
-        document.body.appendChild(wrapper);
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        const pdfBlob = await html2pdf().set({
-          margin: 10,
-          filename: `factura_${f?.numero_factura || facturaVentaEnvioActualId}.pdf`,
-          jsPDF: { unit: 'mm', format: 'a4' },
-          html2canvas: { scale: 2, windowWidth: 800, useCORS: true }   // 👈 añade esta línea
-        }).from(contenedor).outputPdf('blob');
-
-        document.body.removeChild(wrapper);
 
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Enviando...';
 
@@ -15005,29 +14987,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const f = registros.find(r => r.id === albaranEnvioActualId);
         const htmlAlbaran = await _generarHtmlAlbaranVenta(albaranEnvioActualId);
 
-        const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'height:0;overflow:hidden;';
-
-        const contenedor = document.createElement('div');
-        contenedor.style.cssText = 'width:800px;background:#fff;';
-        contenedor.innerHTML = htmlAlbaran.replace(
-          /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
-          ''
+        const pdfBlob = await generarPdfBlobDesdeHtml(
+          htmlAlbaran,
+          `albaran_${f?.numero_albaran || albaranEnvioActualId}.pdf`
         );
-
-        wrapper.appendChild(contenedor);
-        document.body.appendChild(wrapper);
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        const pdfBlob = await html2pdf().set({
-          margin: 10,
-          filename: `factura_${f?.numero_factura || facturaVentaEnvioActualId}.pdf`,
-          jsPDF: { unit: 'mm', format: 'a4' },
-          html2canvas: { scale: 2, windowWidth: 800, useCORS: true }   // 👈 añade esta línea
-        }).from(contenedor).outputPdf('blob');
-
-        document.body.removeChild(wrapper);
-
 
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Enviando...';
 
@@ -15080,28 +15043,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           ? await _generarHtmlAltaAlquiler(alquilerEnvioActualId)
           : await _generarHtmlBajaAlquiler(alquilerEnvioActualId);
 
-        const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'height:0;overflow:hidden;';
-
-        const contenedor = document.createElement('div');
-        contenedor.style.cssText = 'width:800px;background:#fff;';
-        contenedor.innerHTML = htmlDoc.replace(
-          /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
-          ''
+        const pdfBlob = await generarPdfBlobDesdeHtml(
+          htmlDoc,
+          `${esAlta ? 'alta' : 'baja'}_alquiler_${reg?.numero_albaran || alquilerEnvioActualId}.pdf`
         );
 
-        wrapper.appendChild(contenedor);
-        document.body.appendChild(wrapper);
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        const pdfBlob = await html2pdf().set({
-          margin: 10,
-          filename: `factura_${f?.numero_factura || facturaVentaEnvioActualId}.pdf`,
-          jsPDF: { unit: 'mm', format: 'a4' },
-          html2canvas: { scale: 2, windowWidth: 800, useCORS: true }   // 👈 añade esta línea
-        }).from(contenedor).outputPdf('blob');
-
-        document.body.removeChild(wrapper);
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Enviando...';
 
         const pdfBase64 = await new Promise((resolve, reject) => {
@@ -15959,28 +15905,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const f = registros.find(r => r.id === facturaVentaEnvioActualId);
         const htmlFactura = await _generarHtmlFacturaVenta(facturaVentaEnvioActualId);
 
-        const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'height:0;overflow:hidden;';
-
-        const contenedor = document.createElement('div');
-        contenedor.style.cssText = 'width:800px;background:#fff;';
-        contenedor.innerHTML = htmlFactura.replace(
-          /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
-          ''
+        const pdfBlob = await generarPdfBlobDesdeHtml(
+          htmlFactura,
+          `factura_${f?.numero_factura || facturaVentaEnvioActualId}.pdf`
         );
 
-        wrapper.appendChild(contenedor);
-        document.body.appendChild(wrapper);
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        const pdfBlob = await html2pdf().set({
-          margin: 10,
-          filename: `factura_${f?.numero_factura || facturaVentaEnvioActualId}.pdf`,
-          jsPDF: { unit: 'mm', format: 'a4' },
-          html2canvas: { scale: 2, windowWidth: 800, useCORS: true }   // 👈 añade esta línea
-        }).from(contenedor).outputPdf('blob');
-
-        document.body.removeChild(wrapper);
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Enviando...';
 
         const pdfBase64 = await new Promise((resolve, reject) => {
@@ -16048,28 +15977,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         throw new Error('Tipo de documento no soportado');
       }
 
-      const wrapper = document.createElement('div');
-      wrapper.style.cssText = 'height:0;overflow:hidden;';
-
-      const contenedor = document.createElement('div');
-      contenedor.style.cssText = 'width:800px;background:#fff;';
-      contenedor.innerHTML = html.replace(
-        /<!DOCTYPE[^>]*>|<\/?html[^>]*>|<\/?head[^>]*>|<\/?body[^>]*>/gi,
-        ''
-      );
-
-      wrapper.appendChild(contenedor);
-      document.body.appendChild(wrapper);
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const pdfBlob = await html2pdf().set({
-        margin: 10,
-        filename: `factura_${f?.numero_factura || facturaVentaEnvioActualId}.pdf`,
-        jsPDF: { unit: 'mm', format: 'a4' },
-        html2canvas: { scale: 2, windowWidth: 800, useCORS: true }   // 👈 añade esta línea
-      }).from(contenedor).outputPdf('blob');
-
-      document.body.removeChild(wrapper);
+      const pdfBlob = await generarPdfBlobDesdeHtml(html, nombreArchivo);   // 👈 así de simple
 
       const pdfBase64 = await new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -16089,6 +15997,31 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       if (!res.ok) throw new Error(await res.text());
       return true;
     }
+
+    async function generarPdfBlobDesdeHtml(htmlCompleto, filename) {
+  return new Promise((resolve, reject) => {
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;left:-99999px;top:0;width:800px;height:1131px;border:none;';
+    iframe.onload = async () => {
+      try {
+        await new Promise(r => setTimeout(r, 400)); // esperar imágenes/fuentes dentro del iframe
+        const pdfBlob = await html2pdf().set({
+          margin: 10,
+          filename,
+          jsPDF: { unit: 'mm', format: 'a4' },
+          html2canvas: { scale: 2, useCORS: true }
+        }).from(iframe.contentDocument.body).outputPdf('blob');
+        document.body.removeChild(iframe);
+        resolve(pdfBlob);
+      } catch (e) {
+        document.body.removeChild(iframe);
+        reject(e);
+      }
+    };
+    document.body.appendChild(iframe);
+    iframe.srcdoc = htmlCompleto;   // el HTML completo tal cual, sin recortar doctype/head/body
+  });
+}
   </script>
 </body>
 

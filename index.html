@@ -15996,7 +15996,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     async function generarPdfBlobDesdeHtml(htmlCompleto, filename) {
       return new Promise((resolve, reject) => {
         const iframe = document.createElement('iframe');
-        iframe.style.cssText = 'position:fixed;left:-99999px;top:0;width:800px;height:1131px;border:none;';
+        iframe.style.cssText = 'position:fixed;left:-99999px;top:0;width:1000px;height:1131px;border:none;';
         iframe.onload = async () => {
           try {
             await new Promise(r => setTimeout(r, 600));

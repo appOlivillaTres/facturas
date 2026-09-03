@@ -15450,9 +15450,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   <div class="pie">
     <div class="iva-tabla">
       <table><thead><tr><th>BASE</th><th>%IVA</th><th>IMPORTE IVA</th></tr></thead>
-        <tbody><tr><td>${fmtN(f.base_imponible)}</td><td>${fmtN(f.pct_iva)}</td><td>${fmtN(f.importe_iva)}</td></tr></tbody></table>
+        <tbody><tr><td>${fmtN(f.base_imponible)}</td><td>${fmtN(f.pct_iva)}</td><td>${fmtN(f.importe_iva)}</td><td>${fmt(f.total)}</td></tr></tbody></table>
     </div>
-    <div class="total-box"><span>TOTAL:</span><span>${fmt(f.total)}</span></div>
   </div>
   ${f.notas ? `<p style="margin-top:16px"><b>Notas:</b> ${f.notas}</p>` : ''}
     ${f.notas ? `<p style="margin-top:16px"><b>Notas:</b> ${f.notas}</p>` : ''}

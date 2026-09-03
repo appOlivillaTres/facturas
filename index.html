@@ -6216,7 +6216,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const mQ = [f.numero_factura, f.proveedor, f.nif, f.numero_interno, f.concepto].some(v => (v || '').toLowerCase().includes(q));
           const esVenc = f.estado === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
           const estReal = f.imputado ? 'imputado' : (esVenc ? 'vencido' : (f.estado || 'pendiente'));
-return mQ && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_almacen')) && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'facturas_almacen', filtroPorRevisarDeOtro));        });
+          return mQ && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_almacen')) && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'facturas_almacen', filtroPorRevisarDeOtro));
+        });
         if (!lista.length) { bdy.innerHTML = emptyRow(36, 'No se encontraron facturas'); return; }
         bdy.innerHTML = lista.map(f => {
           const est = f.estado || 'pendiente';
@@ -6328,7 +6329,8 @@ return mQ && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.i
           const mObra = !fObra || f.nombre_obra === fObra || (f._reparto && f._reparto.some(r => r.nombre_obra === fObra));
           const esVenc = f.estado === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
           const estReal = f.imputado ? 'imputado' : (esVenc ? 'vencido' : (f.estado || 'pendiente'));
-return mQ && mObra && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_obra')) && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'facturas_obra', filtroPorRevisarDeOtro));        });
+          return mQ && mObra && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_obra')) && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'facturas_obra', filtroPorRevisarDeOtro));
+        });
         const resumenEl = document.getElementById('resumenObra');
         if (fObra) {
           const suma = lista.reduce((acc, f) => acc + (parseFloat(f.total) || 0), 0);
@@ -6442,7 +6444,8 @@ return mQ && mObra && (!fEst || fEst === estReal || (fEst === 'vencido' && esVen
           const mObra = !fObra || f.nombre_obra === fObra || (f._reparto && f._reparto.some(r => r.nombre_obra === fObra));
           const esVenc = f.estado === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
           const estReal = f.imputado ? 'imputado' : (esVenc ? 'vencido' : (f.estado || 'pendiente'));
-return mQ && mObra && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_csg')) && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'facturas_csg', filtroPorRevisarDeOtro));        });
+          return mQ && mObra && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_csg')) && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'facturas_csg', filtroPorRevisarDeOtro));
+        });
         if (!lista.length) { bdy.innerHTML = emptyRow(37, 'No se encontraron facturas'); return; }
         bdy.innerHTML = lista.map(f => {
           const est = f.estado || 'pendiente';
@@ -6964,7 +6967,8 @@ return mQ && mObra && (!fEst || fEst === estReal || (fEst === 'vencido' && esVen
           const mObra = !fObraIng || f.nombre_obra === fObraIng;
           const esVenc = f.estado === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
           const estReal = esVenc ? 'vencido' : (f.estado || 'pendiente');
-return mQ && mObra && (!fEst || fEst === estReal) && (!filtroPorRevisar || faltaPorRevisar(f, 'ingresos')) && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'ingresos', filtroPorRevisarDeOtro));        });
+          return mQ && mObra && (!fEst || fEst === estReal) && (!filtroPorRevisar || faltaPorRevisar(f, 'ingresos')) && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'ingresos', filtroPorRevisarDeOtro));
+        });
         if (!lista.length) { bdy.innerHTML = emptyRow(17, 'No se encontraron ingresos'); return; }
         bdy.innerHTML = lista.map(f => {
           const est = f.estado || 'pendiente';
@@ -12023,6 +12027,7 @@ return mQ && mObra && (!fEst || fEst === estReal) && (!filtroPorRevisar || falta
         set('f_exento', f.exento); set('f_descuento', f.descuento);
         set('f_base_ret', f.base_retencion); set('f_pct_ret', f.pct_retencion); set('f_total_ret', f.total_retencion);
         set('f_num_albaranes', (f.numeros_albaran || []).join(', '));
+        renderAlbaranesVerModal(f);
         if (tabla === 'facturas_obra' || tabla === 'facturas_csg') {
           apiGet('facturas_reparto_obras', `factura_tabla=eq.${tabla}&factura_id=eq.${f.id}`).then(reparto => {
             const chk = document.getElementById('f_reparto_activo');
@@ -12325,8 +12330,11 @@ return mQ && mObra && (!fEst || fEst === estReal) && (!filtroPorRevisar || falta
         </div>
 
         <div class="form-group span3"><label>Concepto</label><input type="text" id="f_concepto" placeholder="Descripción de la factura"></div>
-<div class="form-group span2"><label>Números de albarán <span style="font-size:.72rem;color:#888">(separados por coma)</span></label><input type="text" id="f_num_albaranes" placeholder="ALB-001, ALB-002, ALB-003"></div>
-        <div class="form-group"><label>Total *</label><input type="number" id="f_total" value="0" step="0.01" min="0"></div>
+<div class="form-group span2">
+  <label>Números de albarán <span style="font-size:.72rem;color:#888">(separados por coma)</span></label>
+  <input type="text" id="f_num_albaranes" placeholder="ALB-001, ALB-002, ALB-003">
+  <div id="albaranesVerWrap" style="margin-top:6px"></div>
+</div>        <div class="form-group"><label>Total *</label><input type="number" id="f_total" value="0" step="0.01" min="0"></div>
         <div class="form-group">
   <label>Moneda</label>
   <select id="f_moneda">
@@ -12415,8 +12423,11 @@ return mQ && mObra && (!fEst || fEst === estReal) && (!filtroPorRevisar || falta
         <div class="form-group span3" id="obraUnicaWrap"><label>Nombre de la obra *</label>${htmlSelectObras('f_obra', 'Selecciona una obra...')}<p style="font-size:.72rem;color:#888;margin-top:4px">Si la obra no existe todavía, créala primero en la pestaña Obras.</p></div>
         ${htmlRepartoObras()}
         <div class="form-group span3"><label>Concepto</label><input type="text" id="f_concepto" placeholder="Descripción de la factura"></div>
-<div class="form-group span2"><label>Números de albarán <span style="font-size:.72rem;color:#888">(separados por coma)</span></label><input type="text" id="f_num_albaranes" placeholder="ALB-001, ALB-002, ALB-003"></div>
-        <div class="form-group"><label>Total *</label><input type="number" id="f_total" value="0" step="0.01" min="0"></div>
+<div class="form-group span2">
+  <label>Números de albarán <span style="font-size:.72rem;color:#888">(separados por coma)</span></label>
+  <input type="text" id="f_num_albaranes" placeholder="ALB-001, ALB-002, ALB-003">
+  <div id="albaranesVerWrap" style="margin-top:6px"></div>
+</div>        <div class="form-group"><label>Total *</label><input type="number" id="f_total" value="0" step="0.01" min="0"></div>
         <div class="form-group">
   <label>Moneda</label>
   <select id="f_moneda">
@@ -12510,8 +12521,11 @@ return mQ && mObra && (!fEst || fEst === estReal) && (!filtroPorRevisar || falta
         <div class="form-group span3" id="obraUnicaWrap"><label>Nombre de la obra <span style="font-size:.72rem;color:#888">(opcional)</span></label>${htmlSelectObras('f_obra', 'Sin obra')}</div>
         ${htmlRepartoObras()}
 <div class="form-group span3"><label>Concepto</label><input type="text" id="f_concepto" placeholder="Descripción de la factura"></div>
-<div class="form-group span2"><label>Números de albarán <span style="font-size:.72rem;color:#888">(separados por coma)</span></label><input type="text" id="f_num_albaranes" placeholder="ALB-001, ALB-002, ALB-003"></div>
-        <div class="form-group"><label>Total *</label><input type="number" id="f_total" value="0" step="0.01" min="0"></div>
+<div class="form-group span2">
+  <label>Números de albarán <span style="font-size:.72rem;color:#888">(separados por coma)</span></label>
+  <input type="text" id="f_num_albaranes" placeholder="ALB-001, ALB-002, ALB-003">
+  <div id="albaranesVerWrap" style="margin-top:6px"></div>
+</div>        <div class="form-group"><label>Total *</label><input type="number" id="f_total" value="0" step="0.01" min="0"></div>
         <div class="form-group">
   <label>Moneda</label>
   <select id="f_moneda">
@@ -12759,6 +12773,18 @@ return mQ && mObra && (!fEst || fEst === estReal) && (!filtroPorRevisar || falta
     </div>`;
         document.getElementById('modalNueva').classList.add('visible');
       }
+    }
+
+
+    function renderAlbaranesVerModal(f) {
+      const cont = document.getElementById('albaranesVerWrap');
+      if (!cont) return;
+      const numeros = (f && f.numeros_albaran) || [];
+      if (!numeros.length) { cont.innerHTML = ''; return; }
+      cont.innerHTML = `<select class="select-albaranes" onchange="if(this.value) verAlbaranPorNumero(this.value,'${(f.nif || '').replace(/'/g, "\\'")}')">
+    <option value="">${numeros.length} albarán${numeros.length > 1 ? 'es' : ''} — ver</option>
+    ${numeros.map(n => `<option value="${n}">${n}</option>`).join('')}
+  </select>`;
     }
 
     // Cuando el usuario cambia el desplegable "Estado" a mano dentro del modal

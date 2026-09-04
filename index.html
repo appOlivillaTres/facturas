@@ -2126,8 +2126,6 @@
             class="fa-solid fa-calendar-days"></i>Calendario</button>
         <button class="btn-nav" onclick="cambiarSeccion('notificaciones_presupuestos')"><i
             class="fa-solid fa-file-invoice-dollar"></i>Notificaciones Presupuestos</button>
-        <button class="btn-nav" onclick="cambiarSeccion('estudio_obras')"><i
-            class="fa-solid fa-magnifying-glass-dollar"></i>Estudio de Obras</button>
         <button class="btn-nav" onclick="cambiarSeccion('albaranes')"><i
             class="fa-solid fa-file-signature"></i>Albaranes</button>
         <button class="btn-nav" onclick="cambiarSeccion('albaranes_venta')"><i
@@ -2148,6 +2146,8 @@
             class="fa-solid fa-truck-monster"></i>Maquinaria</button>
         <button class="btn-nav" onclick="cambiarSeccion('consumo_interno')"><i
             class="fa-solid fa-user-check"></i>Consumo Interno</button>
+        <button class="btn-nav" onclick="cambiarSeccion('estudio_obras')"><i
+            class="fa-solid fa-magnifying-glass-dollar"></i>Estudio de Obras</button>
       </div>
       <span id="usuarioConectado" style="color:#fff;opacity:.85;font-size:.85rem;margin-right:10px"></span>
       <button class="btn-salir" onclick="volverAlPanel()" style="margin-right:8px"><i
@@ -3794,7 +3794,7 @@
         cachesIniciales = Promise.all([
           cargarInventarioCache(), cargarClientesCache(), cargarProveedoresCache(),
           cargarObrasCache(), cargarMaterialesExclusivosCache(),
-          cargarMaquinariaCache(), cargarMunicipiosCache() , cargarTemasFasesEstudioCache()  // 👈 añadido
+          cargarMaquinariaCache(), cargarMunicipiosCache(), cargarTemasFasesEstudioCache()  // 👈 añadido
         ]);
       }
       await cachesIniciales;
@@ -5049,10 +5049,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
     async function cargarClientesCache() { clientesDB = await apiGetAll('clientes', 'order=nombre'); }
     async function cargarProveedoresCache() {
-  proveedoresDB = await apiGet('proveedores', 'order=nombre');
-  const dl = document.getElementById('dl_proveedores_envio');
-  if (dl) dl.innerHTML = proveedoresDB.map(p => `<option value="${(p.nombre || '').replace(/"/g, '&quot;')}"></option>`).join('');
-}
+      proveedoresDB = await apiGet('proveedores', 'order=nombre');
+      const dl = document.getElementById('dl_proveedores_envio');
+      if (dl) dl.innerHTML = proveedoresDB.map(p => `<option value="${(p.nombre || '').replace(/"/g, '&quot;')}"></option>`).join('');
+    }
     async function cargarObrasCache() { obrasDB = await apiGetAll('obras', 'order=nombre'); actualizarDatalistObras(); }
     async function cargarMunicipiosCache() {
       municipiosDB = await apiGetAll('municipios_toledo', 'order=nombre');
@@ -6806,17 +6806,17 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         </td>
       </tr>`;
         }).join('');
-} else if (tablaActual === 'estudio_obras') {
-  hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Proveedor</th><th>Email</th><th>Obra</th><th>Fase</th><th>Tema</th><th>Fecha envío</th><th>Recordatorio</th><th>Estado</th><th>Archivos</th><th>Acciones</th><th></th></tr>`;
-  const lista = registros
-    .filter(f => [f.proveedor, f.nombre_obra, f.tema, f.fase_obra].some(v => (v || '').toLowerCase().includes(q)))
-    .filter(f => !fEst || (fEst === 'respondido' ? f.respondido : !f.respondido));
-  if (!lista.length) { bdy.innerHTML = emptyRow(11, 'No hay envíos registrados'); return; }
-  bdy.innerHTML = lista.map(f => {
-    const respondido = !!f.respondido;
-    const vencido = !respondido && f.fecha_recordatorio && f.fecha_recordatorio <= hoy();
-    const archivosLista = f.archivos_urls || [];
-    return `<tr data-id="${f.id}" style="${vencido ? 'background:#fff8e1' : ''};cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${f.id},'estudio_obras'))">
+      } else if (tablaActual === 'estudio_obras') {
+        hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Proveedor</th><th>Email</th><th>Obra</th><th>Fase</th><th>Tema</th><th>Fecha envío</th><th>Recordatorio</th><th>Estado</th><th>Archivos</th><th>Acciones</th><th></th></tr>`;
+        const lista = registros
+          .filter(f => [f.proveedor, f.nombre_obra, f.tema, f.fase_obra].some(v => (v || '').toLowerCase().includes(q)))
+          .filter(f => !fEst || (fEst === 'respondido' ? f.respondido : !f.respondido));
+        if (!lista.length) { bdy.innerHTML = emptyRow(11, 'No hay envíos registrados'); return; }
+        bdy.innerHTML = lista.map(f => {
+          const respondido = !!f.respondido;
+          const vencido = !respondido && f.fecha_recordatorio && f.fecha_recordatorio <= hoy();
+          const archivosLista = f.archivos_urls || [];
+          return `<tr data-id="${f.id}" style="${vencido ? 'background:#fff8e1' : ''};cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${f.id},'estudio_obras'))">
       <td>${celdaCheck(f.id)}</td>
       <td class="td-nombre">${f.proveedor || '—'}</td>
       <td style="font-size:.82rem">${f.email_proveedor || '—'}</td>
@@ -6838,7 +6838,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       </td>
       <td><button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
     </tr>`;
-  }).join('');
+        }).join('');
 
         // INVENTARIO
       } else if (tablaActual === 'inventario') {
@@ -8334,55 +8334,55 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             payload.recordatorio_enviado = false;
             await apiPost('presupuestos_seguimiento', payload);
           }
-} else if (tabla === 'estudio_obras') {
-  const proveedor = document.getElementById('eo_proveedor').value.trim();
-  const email = document.getElementById('eo_email').value.trim();
-  const obra = document.getElementById('eo_obra').value.trim();
-  const tema = document.getElementById('eo_tema').value.trim();
-  const fase = document.getElementById('eo_fase').value.trim() || null;
-  const fecha_envio = document.getElementById('eo_fecha_envio').value;
-  const fecha_recordatorio = document.getElementById('eo_fecha_recordatorio').value;
-  const notas = document.getElementById('eo_notas').value.trim() || null;
+        } else if (tabla === 'estudio_obras') {
+          const proveedor = document.getElementById('eo_proveedor').value.trim();
+          const email = document.getElementById('eo_email').value.trim();
+          const obra = document.getElementById('eo_obra').value.trim();
+          const tema = document.getElementById('eo_tema').value.trim();
+          const fase = document.getElementById('eo_fase').value.trim() || null;
+          const fecha_envio = document.getElementById('eo_fecha_envio').value;
+          const fecha_recordatorio = document.getElementById('eo_fecha_recordatorio').value;
+          const notas = document.getElementById('eo_notas').value.trim() || null;
 
-  if (!proveedor || !email || !obra || !tema || !fecha_envio || !fecha_recordatorio) {
-    toast('Proveedor, email, obra, tema, fecha de envío y fecha de recordatorio son obligatorios', 'err');
-    return;
-  }
+          if (!proveedor || !email || !obra || !tema || !fecha_envio || !fecha_recordatorio) {
+            toast('Proveedor, email, obra, tema, fecha de envío y fecha de recordatorio son obligatorios', 'err');
+            return;
+          }
 
-  const payload = {
-    proveedor, email_proveedor: email, nombre_obra: obra, fase_obra: fase, tema,
-    fecha_envio, fecha_recordatorio, notas,
-    archivos_urls: archivosEstudioSeleccionados.map(a => a.url)
-  };
+          const payload = {
+            proveedor, email_proveedor: email, nombre_obra: obra, fase_obra: fase, tema,
+            fecha_envio, fecha_recordatorio, notas,
+            archivos_urls: archivosEstudioSeleccionados.map(a => a.url)
+          };
 
-  if (modalEditId) {
-    await apiPatch('estudio_obras_envios', modalEditId, payload);
-    toast('Envío actualizado correctamente');
-  } else {
-    payload.respondido = false;
-    payload.recordatorio_enviado = false;
-    payload.creado_por = currentPersona;
-    const [nuevo] = await apiPost('estudio_obras_envios', payload);
-    toast('Envío guardado — enviando email...');
-    try {
-      await enviarEmailEstudioObra(
-        email,
-        `Solicitud de presupuesto — ${obra}`,
-        construirMensajeEstudioObra(tema, obra, fase, notas),
-        archivosEstudioSeleccionados
-      );
-      toast(`<i class="fa-solid fa-check me-1"></i>Solicitud enviada a ${email}`, 'ok');
-    } catch (e) {
-      toast('El registro se guardó, pero falló el envío del email: ' + e.message, 'err');
-    }
-  }
+          if (modalEditId) {
+            await apiPatch('estudio_obras_envios', modalEditId, payload);
+            toast('Envío actualizado correctamente');
+          } else {
+            payload.respondido = false;
+            payload.recordatorio_enviado = false;
+            payload.creado_por = currentPersona;
+            const [nuevo] = await apiPost('estudio_obras_envios', payload);
+            toast('Envío guardado — enviando email...');
+            try {
+              await enviarEmailEstudioObra(
+                email,
+                `Solicitud de presupuesto — ${obra}`,
+                construirMensajeEstudioObra(tema, obra, fase, notas),
+                archivosEstudioSeleccionados
+              );
+              toast(`<i class="fa-solid fa-check me-1"></i>Solicitud enviada a ${email}`, 'ok');
+            } catch (e) {
+              toast('El registro se guardó, pero falló el envío del email: ' + e.message, 'err');
+            }
+          }
 
-  cerrarModal('modalNueva');
-  archivosEstudioSeleccionados = [];
-  cargarDatos();
-  cargarTemasFasesEstudioCache();
-  return;
-} else if (tabla === 'inventario') {
+          cerrarModal('modalNueva');
+          archivosEstudioSeleccionados = [];
+          cargarDatos();
+          cargarTemasFasesEstudioCache();
+          return;
+        } else if (tabla === 'inventario') {
           const nombre = document.getElementById('f_nombre').value.trim();
           if (!nombre) { toast('El nombre es obligatorio', 'err'); return; }
           const nuevoStock = parseFloat(document.getElementById('f_stock').value || 0);
@@ -8797,17 +8797,17 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     let temasEstudioDB = [];
-let fasesEstudioDB = [];
+    let fasesEstudioDB = [];
 
-async function cargarTemasFasesEstudioCache() {
-  const filas = await apiGetAll('estudio_obras_envios', 'select=tema,fase_obra');
-  temasEstudioDB = [...new Set(filas.map(f => f.tema).filter(Boolean))].sort();
-  fasesEstudioDB = [...new Set(filas.map(f => f.fase_obra).filter(Boolean))].sort();
-  const dlTema = document.getElementById('dl_temas_estudio');
-  if (dlTema) dlTema.innerHTML = temasEstudioDB.map(n => `<option value="${n.replace(/"/g, '&quot;')}"></option>`).join('');
-  const dlFase = document.getElementById('dl_fases_estudio');
-  if (dlFase) dlFase.innerHTML = fasesEstudioDB.map(n => `<option value="${n.replace(/"/g, '&quot;')}"></option>`).join('');
-}
+    async function cargarTemasFasesEstudioCache() {
+      const filas = await apiGetAll('estudio_obras_envios', 'select=tema,fase_obra');
+      temasEstudioDB = [...new Set(filas.map(f => f.tema).filter(Boolean))].sort();
+      fasesEstudioDB = [...new Set(filas.map(f => f.fase_obra).filter(Boolean))].sort();
+      const dlTema = document.getElementById('dl_temas_estudio');
+      if (dlTema) dlTema.innerHTML = temasEstudioDB.map(n => `<option value="${n.replace(/"/g, '&quot;')}"></option>`).join('');
+      const dlFase = document.getElementById('dl_fases_estudio');
+      if (dlFase) dlFase.innerHTML = fasesEstudioDB.map(n => `<option value="${n.replace(/"/g, '&quot;')}"></option>`).join('');
+    }
 
     let lineasMaterialExclusivoCount = 0;
 
@@ -12022,24 +12022,24 @@ async function cargarTemasFasesEstudioCache() {
         return;
       }
       if (tabla == "estudio_obras") {
-  abrirModalNuevo("estudio_obras");
-  setTimeout(() => {
-    document.getElementById("modalTitulo").textContent = "Editar envío";
-    document.getElementById("btnGuardar").innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i>Guardar cambios';
-    document.getElementById("eo_proveedor").value = f.proveedor || "";
-    document.getElementById("eo_email").value = f.email_proveedor || "";
-    setSelectObraValue('eo_obra', f.nombre_obra);
-    document.getElementById("eo_fase").value = f.fase_obra || "";
-    document.getElementById("eo_tema").value = f.tema || "";
-    document.getElementById("eo_fecha_envio").value = f.fecha_envio || "";
-    document.getElementById("eo_fecha_recordatorio").value = f.fecha_recordatorio || "";
-    document.getElementById("eo_notas").value = f.notas || "";
-    archivosEstudioSeleccionados = (f.archivos_urls || []).map((url, i) => ({ url, nombre: `Archivo ${i + 1}` }));
-    renderArchivosEstudioChips();
-    actualizarPreviewEstudioObra();
-  }, 100);
-  return;
-}
+        abrirModalNuevo("estudio_obras");
+        setTimeout(() => {
+          document.getElementById("modalTitulo").textContent = "Editar envío";
+          document.getElementById("btnGuardar").innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i>Guardar cambios';
+          document.getElementById("eo_proveedor").value = f.proveedor || "";
+          document.getElementById("eo_email").value = f.email_proveedor || "";
+          setSelectObraValue('eo_obra', f.nombre_obra);
+          document.getElementById("eo_fase").value = f.fase_obra || "";
+          document.getElementById("eo_tema").value = f.tema || "";
+          document.getElementById("eo_fecha_envio").value = f.fecha_envio || "";
+          document.getElementById("eo_fecha_recordatorio").value = f.fecha_recordatorio || "";
+          document.getElementById("eo_notas").value = f.notas || "";
+          archivosEstudioSeleccionados = (f.archivos_urls || []).map((url, i) => ({ url, nombre: `Archivo ${i + 1}` }));
+          renderArchivosEstudioChips();
+          actualizarPreviewEstudioObra();
+        }, 100);
+        return;
+      }
 
       /* ===========================
          INVENTARIO
@@ -12902,9 +12902,9 @@ async function cargarTemasFasesEstudioCache() {
     </div>
     <p style="font-size:.78rem;color:#888;margin-top:10px"><i class="fa-solid fa-info-circle me-1"></i>Cuando llegue la fecha del recordatorio, se enviará automáticamente un email al cliente pidiéndole que responda al presupuesto.</p>`;
         document.getElementById('modalNueva').classList.add('visible');
-} else if (tabla === 'estudio_obras') {
-  document.getElementById('modalTitulo').textContent = 'Nuevo Envío — Estudio de Obras';
-  cont.innerHTML = `
+      } else if (tabla === 'estudio_obras') {
+        document.getElementById('modalTitulo').textContent = 'Nuevo Envío — Estudio de Obras';
+        cont.innerHTML = `
     <div class="form-grid-2">
       <div class="form-group span2">
         <label>Proveedor *</label>
@@ -12942,14 +12942,14 @@ async function cargarTemasFasesEstudioCache() {
         <p id="eo_preview" style="font-size:.85rem;color:#4a3b68;margin:0"></p>
       </div>
     </div>`;
-  archivosEstudioSeleccionados = [];
-  document.getElementById('modalNueva').classList.add('visible');
-  setTimeout(() => {
-    setupObraAC('eo_obra');
-    ['eo_tema', 'eo_obra', 'eo_fase'].forEach(id => document.getElementById(id).addEventListener('input', actualizarPreviewEstudioObra));
-    actualizarPreviewEstudioObra();
-    ocultarPdfModal();
-  }, 50);
+        archivosEstudioSeleccionados = [];
+        document.getElementById('modalNueva').classList.add('visible');
+        setTimeout(() => {
+          setupObraAC('eo_obra');
+          ['eo_tema', 'eo_obra', 'eo_fase'].forEach(id => document.getElementById(id).addEventListener('input', actualizarPreviewEstudioObra));
+          actualizarPreviewEstudioObra();
+          ocultarPdfModal();
+        }, 50);
 
 
         // ── INVENTARIO ──
@@ -13577,35 +13577,35 @@ async function cargarTemasFasesEstudioCache() {
 
     let archivosEstudioSeleccionados = [];
 
-function renderArchivosEstudioChips() {
-  const cont = document.getElementById('archivosEstudioLista');
-  if (!cont) return;
-  cont.innerHTML = archivosEstudioSeleccionados.map((a, i) => `
+    function renderArchivosEstudioChips() {
+      const cont = document.getElementById('archivosEstudioLista');
+      if (!cont) return;
+      cont.innerHTML = archivosEstudioSeleccionados.map((a, i) => `
     <span class="archivo-chip">
       <span onclick="verArchivoPanel('${a.url}','${(a.nombre || 'Archivo').replace(/'/g, "\\'")}')" title="Ver archivo"><i class="fa-solid fa-paperclip" style="margin-right:4px"></i>${a.nombre || 'Archivo'}</span>
       <span class="archivo-chip-quitar" onclick="quitarArchivoEstudio(${i})" title="Quitar"><i class="fa-solid fa-xmark"></i></span>
     </span>`).join('');
-}
-
-function quitarArchivoEstudio(i) {
-  archivosEstudioSeleccionados.splice(i, 1);
-  renderArchivosEstudioChips();
-}
-
-async function _leerArchivosEstudioObra(input) {
-  if (!input.files || !input.files.length) return;
-  for (const file of Array.from(input.files)) {
-    try {
-      toast(`Subiendo ${file.name}...`, 'ok');
-      const url = await subirArchivoStorage(file);
-      archivosEstudioSeleccionados.push({ url, nombre: file.name });
-      renderArchivosEstudioChips();
-    } catch (e) {
-      toast(`No se pudo subir ${file.name}: ` + e.message, 'err');
     }
-  }
-  input.value = '';
-}
+
+    function quitarArchivoEstudio(i) {
+      archivosEstudioSeleccionados.splice(i, 1);
+      renderArchivosEstudioChips();
+    }
+
+    async function _leerArchivosEstudioObra(input) {
+      if (!input.files || !input.files.length) return;
+      for (const file of Array.from(input.files)) {
+        try {
+          toast(`Subiendo ${file.name}...`, 'ok');
+          const url = await subirArchivoStorage(file);
+          archivosEstudioSeleccionados.push({ url, nombre: file.name });
+          renderArchivosEstudioChips();
+        } catch (e) {
+          toast(`No se pudo subir ${file.name}: ` + e.message, 'err');
+        }
+      }
+      input.value = '';
+    }
 
 
 
@@ -16482,87 +16482,87 @@ async function _leerArchivosEstudioObra(input) {
     }
 
     function construirMensajeEstudioObra(tema, obra, fase, notas) {
-  let msg = `Buenos días, les solicitamos presupuesto para ${tema} para la obra ${obra} que se encuentra en fase de ${fase}.`;
-  if (notas) msg += `<br><br>${notas}`;
-  return msg;
-}
-
-function actualizarPreviewEstudioObra() {
-  const tema = document.getElementById('eo_tema')?.value.trim() || '_____';
-  const obra = document.getElementById('eo_obra')?.value.trim() || '_____';
-  const fase = document.getElementById('eo_fase')?.value.trim() || '_____';
-  const preview = document.getElementById('eo_preview');
-  if (!preview) return;
-  preview.textContent = `Buenos días, les solicitamos presupuesto para ${tema} para la obra ${obra} que se encuentra en fase de ${fase}.`;
-}
-
-function autocompletarEmailProveedor() {
-  const inpProv = document.getElementById('eo_proveedor');
-  const inpEmail = document.getElementById('eo_email');
-  if (!inpProv || !inpEmail) return;
-  const nombre = inpProv.value.trim().toLowerCase();
-  const match = proveedoresDB.find(p => (p.nombre || '').trim().toLowerCase() === nombre);
-  if (match && match.email) inpEmail.value = match.email;
-}
-
-// Convierte cada archivo (ya subido a Storage) en base64 para adjuntarlo al email
-async function _archivosUrlsABase64(archivos) { // archivos: [{url, nombre}]
-  const resultado = [];
-  for (const a of archivos) {
-    try {
-      const r = await fetch(a.url);
-      const blob = await r.blob();
-      const base64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result.split(',')[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-      resultado.push({ filename: a.nombre, content: base64 });
-    } catch (e) {
-      console.error('No se pudo adjuntar', a.nombre, e);
+      let msg = `Buenos días, les solicitamos presupuesto para ${tema} para la obra ${obra} que se encuentra en fase de ${fase}.`;
+      if (notas) msg += `<br><br>${notas}`;
+      return msg;
     }
-  }
-  return resultado;
-}
 
-async function enviarEmailEstudioObra(email, asunto, mensajeHtml, archivos) {
-  const archivosBase64 = await _archivosUrlsABase64(archivos);
-  const res = await fetch('https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
-    body: JSON.stringify({ tipo: 'enviar_estudio_obra', email, asunto, mensaje: mensajeHtml, archivos: archivosBase64 })
-  });
-  if (!res.ok) throw new Error(await res.text());
-}
+    function actualizarPreviewEstudioObra() {
+      const tema = document.getElementById('eo_tema')?.value.trim() || '_____';
+      const obra = document.getElementById('eo_obra')?.value.trim() || '_____';
+      const fase = document.getElementById('eo_fase')?.value.trim() || '_____';
+      const preview = document.getElementById('eo_preview');
+      if (!preview) return;
+      preview.textContent = `Buenos días, les solicitamos presupuesto para ${tema} para la obra ${obra} que se encuentra en fase de ${fase}.`;
+    }
 
-async function reenviarEstudioObra(id) {
-  const f = registros.find(r => r.id === id) || (await apiGet('estudio_obras_envios', `id=eq.${id}`))[0];
-  if (!f) { toast('No se ha encontrado el envío', 'err'); return; }
-  if (!confirm(`¿Reenviar la solicitud a ${f.email_proveedor}?`)) return;
-  try {
-    const archivos = (f.archivos_urls || []).map(url => ({ url, nombre: url.split('/').pop() }));
-    await enviarEmailEstudioObra(
-      f.email_proveedor,
-      `Solicitud de presupuesto — ${f.nombre_obra}`,
-      construirMensajeEstudioObra(f.tema, f.nombre_obra, f.fase_obra, f.notas),
-      archivos
-    );
-    toast(`Reenviado a ${f.email_proveedor}`, 'ok');
-  } catch (e) {
-    toast('Error al reenviar: ' + e.message, 'err');
-  }
-}
+    function autocompletarEmailProveedor() {
+      const inpProv = document.getElementById('eo_proveedor');
+      const inpEmail = document.getElementById('eo_email');
+      if (!inpProv || !inpEmail) return;
+      const nombre = inpProv.value.trim().toLowerCase();
+      const match = proveedoresDB.find(p => (p.nombre || '').trim().toLowerCase() === nombre);
+      if (match && match.email) inpEmail.value = match.email;
+    }
 
-async function toggleRespondidoEstudioObra(id, actual) {
-  try {
-    await apiPatch('estudio_obras_envios', id, { respondido: !actual });
-    const reg = registros.find(r => r.id === id);
-    if (reg) reg.respondido = !actual;
-    renderTablaConScroll();
-    toast(!actual ? 'Marcado como respondido' : 'Vuelto a marcar como pendiente');
-  } catch (e) { toast('Error: ' + e.message, 'err'); }
-}
+    // Convierte cada archivo (ya subido a Storage) en base64 para adjuntarlo al email
+    async function _archivosUrlsABase64(archivos) { // archivos: [{url, nombre}]
+      const resultado = [];
+      for (const a of archivos) {
+        try {
+          const r = await fetch(a.url);
+          const blob = await r.blob();
+          const base64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+          resultado.push({ filename: a.nombre, content: base64 });
+        } catch (e) {
+          console.error('No se pudo adjuntar', a.nombre, e);
+        }
+      }
+      return resultado;
+    }
+
+    async function enviarEmailEstudioObra(email, asunto, mensajeHtml, archivos) {
+      const archivosBase64 = await _archivosUrlsABase64(archivos);
+      const res = await fetch('https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+        body: JSON.stringify({ tipo: 'enviar_estudio_obra', email, asunto, mensaje: mensajeHtml, archivos: archivosBase64 })
+      });
+      if (!res.ok) throw new Error(await res.text());
+    }
+
+    async function reenviarEstudioObra(id) {
+      const f = registros.find(r => r.id === id) || (await apiGet('estudio_obras_envios', `id=eq.${id}`))[0];
+      if (!f) { toast('No se ha encontrado el envío', 'err'); return; }
+      if (!confirm(`¿Reenviar la solicitud a ${f.email_proveedor}?`)) return;
+      try {
+        const archivos = (f.archivos_urls || []).map(url => ({ url, nombre: url.split('/').pop() }));
+        await enviarEmailEstudioObra(
+          f.email_proveedor,
+          `Solicitud de presupuesto — ${f.nombre_obra}`,
+          construirMensajeEstudioObra(f.tema, f.nombre_obra, f.fase_obra, f.notas),
+          archivos
+        );
+        toast(`Reenviado a ${f.email_proveedor}`, 'ok');
+      } catch (e) {
+        toast('Error al reenviar: ' + e.message, 'err');
+      }
+    }
+
+    async function toggleRespondidoEstudioObra(id, actual) {
+      try {
+        await apiPatch('estudio_obras_envios', id, { respondido: !actual });
+        const reg = registros.find(r => r.id === id);
+        if (reg) reg.respondido = !actual;
+        renderTablaConScroll();
+        toast(!actual ? 'Marcado como respondido' : 'Vuelto a marcar como pendiente');
+      } catch (e) { toast('Error: ' + e.message, 'err'); }
+    }
   </script>
 </body>
 

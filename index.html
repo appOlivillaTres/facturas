@@ -3562,6 +3562,7 @@
     let clientesDB = [];
     let proveedoresDB = [];
     let obrasDB = [];
+    let municipiosDB = [];
     let clienteSelId = null;
     let clienteSelPuntos = 0;
     let lineasCompraCount = 0;
@@ -3779,12 +3780,12 @@
       document.getElementById('loginView').style.display = 'none';
       document.getElementById('appView').style.display = 'none';
       if (!cachesIniciales) {
-        cachesIniciales = Promise.all([
-          cargarInventarioCache(), cargarClientesCache(), cargarProveedoresCache(),
-          cargarObrasCache(), cargarMaterialesExclusivosCache(),
-          cargarMaquinariaCache()
-        ]);
-      }
+  cachesIniciales = Promise.all([
+    cargarInventarioCache(), cargarClientesCache(), cargarProveedoresCache(),
+    cargarObrasCache(), cargarMaterialesExclusivosCache(),
+    cargarMaquinariaCache(), cargarMunicipiosCache()   // 👈 añadido
+  ]);
+}
       await cachesIniciales;
       mostrarSelectorPanel();
     }
@@ -5031,6 +5032,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     async function cargarClientesCache() { clientesDB = await apiGetAll('clientes', 'order=nombre'); }
     async function cargarProveedoresCache() { proveedoresDB = await apiGet('proveedores', 'order=nombre'); }
     async function cargarObrasCache() { obrasDB = await apiGetAll('obras', 'order=nombre'); actualizarDatalistObras(); }
+    async function cargarMunicipiosCache() {
+  municipiosDB = await apiGetAll('municipios_toledo', 'order=nombre');
+}
     async function cargarMaquinariaCache() {
       maquinariaDB = await apiGetAll('maquinaria', 'order=codigo');
       actualizarDatalistMaquinaria();
@@ -5193,7 +5197,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       recalcTotalBaja();
 
       document.getElementById('modalBajaAlquiler').classList.add('visible');
-      setTimeout(() => setupClienteBajaAC('ba_cliente', 'ba_nif', 'ba_cliente_id'), 50);
+setTimeout(() => {
+  setupClienteBajaAC('ba_cliente', 'ba_nif', 'ba_cliente_id');
+  setupMunicipioAC('ba_poblacion', 'ba_cp');
+}, 50);
     }
     async function confirmarDevolucionMaquina() {
       const id = maquinaDevolverActualId;
@@ -5544,6 +5551,41 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       inp.addEventListener('focus', () => render(filtrar(inp.value.toLowerCase().trim())));
       inp.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
     }
+
+    // AUTOCOMPLETADO DE MUNICIPIOS — rellena el código postal automáticamente
+function setupMunicipioAC(inputPoblacionId, inputCpId) {
+  const inpP = document.getElementById(inputPoblacionId);
+  const inpCp = document.getElementById(inputCpId);
+  if (!inpP) return;
+  inpP.parentElement.style.position = 'relative';
+  const lista = _crearLista('ac_mun_' + inputPoblacionId, inpP.parentElement);
+
+  function filtrar(q) {
+    return municipiosDB.filter(m => (m.nombre || '').toLowerCase().includes(q)).slice(0, 10);
+  }
+  function seleccionar(m) {
+    inpP.value = m.nombre || '';
+    if (inpCp) inpCp.value = m.codigo_postal || '';
+    lista.style.display = 'none';
+  }
+  function render(items) {
+    if (!items.length) { lista.style.display = 'none'; return; }
+    lista.innerHTML = items.map(m =>
+      `<div class="ac-item" data-id="${m.id}"><span class="ac-nombre">${m.nombre || '—'}</span><span class="ac-nif">${m.codigo_postal || ''}</span></div>`
+    ).join('');
+    lista.style.display = 'block';
+    lista.querySelectorAll('.ac-item').forEach(el => {
+      el.addEventListener('mousedown', e => {
+        e.preventDefault();
+        const m = municipiosDB.find(x => x.id == el.dataset.id);
+        if (m) seleccionar(m);
+      });
+    });
+  }
+  inpP.addEventListener('input', () => render(filtrar(inpP.value.toLowerCase().trim())));
+  inpP.addEventListener('focus', () => { if (inpP.value.trim()) render(filtrar(inpP.value.toLowerCase().trim())); });
+  inpP.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
+}
 
     // Busca un proveedor ya existente en la base de datos por nombre exacto
     // (ignorando mayúsculas/espacios) y devuelve su NIF si lo encuentra.
@@ -11029,7 +11071,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById('aa_num').value = '';
 
       document.getElementById('modalAltaAlquiler').classList.add('visible');
-      setTimeout(() => setupClienteAltaAC('aa_cliente', 'aa_nif', 'aa_cliente_id'), 50);
+setTimeout(() => {
+  setupClienteAltaAC('aa_cliente', 'aa_nif', 'aa_cliente_id');
+  setupMunicipioAC('aa_poblacion', 'aa_cp');
+}, 50);
     }
 
     async function abrirModalEditarAltaAlquiler(id) {
@@ -11074,7 +11119,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         recalcTotalAlta();
 
         document.getElementById('modalAltaAlquiler').classList.add('visible');
-        setTimeout(() => setupClienteAltaAC('aa_cliente', 'aa_nif', 'aa_cliente_id'), 50);
+setTimeout(() => {
+  setupClienteAltaAC('aa_cliente', 'aa_nif', 'aa_cliente_id');
+  setupMunicipioAC('aa_poblacion', 'aa_cp');
+}, 50);
       } catch (e) {
         toast('Error al cargar el alta de alquiler: ' + e.message, 'err');
       }
@@ -11122,7 +11170,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         recalcTotalBaja();
 
         document.getElementById('modalBajaAlquiler').classList.add('visible');
-        setTimeout(() => setupClienteBajaAC('ba_cliente', 'ba_nif', 'ba_cliente_id'), 50);
+setTimeout(() => {
+  setupClienteBajaAC('ba_cliente', 'ba_nif', 'ba_cliente_id');
+  setupMunicipioAC('ba_poblacion', 'ba_cp');
+}, 50);
       } catch (e) {
         toast('Error al cargar la baja de alquiler: ' + e.message, 'err');
       }
@@ -11553,7 +11604,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById('ba_num').value = '';
 
       document.getElementById('modalBajaAlquiler').classList.add('visible');
-      setTimeout(() => setupClienteBajaAC('ba_cliente', 'ba_nif', 'ba_cliente_id'), 50);
+setTimeout(() => {
+  setupClienteBajaAC('ba_cliente', 'ba_nif', 'ba_cliente_id');
+  setupMunicipioAC('ba_poblacion', 'ba_cp');
+}, 50);
     }
 
     async function guardarBajaAlquiler() {
@@ -12699,6 +12753,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 </div>
     </div>`;
         document.getElementById('modalNueva').classList.add('visible');
+        setTimeout(() => setupMunicipioAC('f_poblacion', 'f_cp'), 50);
 
         // ── PRESUPUESTOS ENVIADOS ──
       } else if (tabla === 'notificaciones_presupuestos') {
@@ -13445,6 +13500,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById('cr_cp').value = '';
       document.getElementById('cr_provincia').value = '';
       document.getElementById('modalClienteRapido').classList.add('visible');
+      setTimeout(() => setupMunicipioAC('cr_poblacion', 'cr_cp'), 50);
     }
 
     async function guardarClienteRapido() {

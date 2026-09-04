@@ -2126,6 +2126,8 @@
             class="fa-solid fa-calendar-days"></i>Calendario</button>
         <button class="btn-nav" onclick="cambiarSeccion('notificaciones_presupuestos')"><i
             class="fa-solid fa-file-invoice-dollar"></i>Notificaciones Presupuestos</button>
+        <button class="btn-nav" onclick="cambiarSeccion('estudio_obras')"><i
+            class="fa-solid fa-magnifying-glass-dollar"></i>Estudio de Obras</button>
         <button class="btn-nav" onclick="cambiarSeccion('albaranes')"><i
             class="fa-solid fa-file-signature"></i>Albaranes</button>
         <button class="btn-nav" onclick="cambiarSeccion('albaranes_venta')"><i
@@ -3104,6 +3106,9 @@
   <datalist id="dl_materiales_exclusivos"></datalist>
   <datalist id="dl_obras"></datalist>
   <datalist id="dl_maquinaria"></datalist>
+  <datalist id="dl_temas_estudio"></datalist>
+  <datalist id="dl_fases_estudio"></datalist>
+  <datalist id="dl_proveedores_envio"></datalist>
   <div class="barra-scroll-fija" id="barraScrollFija">
     <div id="barraScrollFijaInner"></div>
   </div>
@@ -3238,7 +3243,7 @@
     const TABLAS_REALTIME = [
       'facturas_pendientes', 'facturas_almacen', 'facturas_obra', 'facturas_csg',
       'albaranes', 'clientes', 'inventario', 'proveedores', 'materiales_obra', 'citas',
-      'ingresos', 'varios', 'albaranes_venta', 'facturas_venta', 'maquinaria', 'consumo_interno', 'notificaciones_presupuestos', 'facturas_reparto_obras', 'presupuestos_venta'
+      'ingresos', 'varios', 'albaranes_venta', 'facturas_venta', 'maquinaria', 'consumo_interno', 'notificaciones_presupuestos', 'facturas_reparto_obras', 'presupuestos_venta', 'estudio_obras_envios'
     ];
 
     let canalRealtime = null;
@@ -3338,7 +3343,8 @@
       facturas_venta: ['cynthia', 'emilio', 'jose'],
       presupuestos_venta: ['cynthia', 'emilio', 'jose'],
       maquinaria: ['cynthia', 'emilio', 'jose'],
-      consumo_interno: ['cynthia', 'emilio', 'jose']
+      consumo_interno: ['cynthia', 'emilio', 'jose'],
+      estudio_obras: ['emilio', 'natalia']
     };
 
     // Personas con acceso EXCLUSIVO a una lista concreta de secciones
@@ -3367,8 +3373,12 @@
     let tablaActual = 'clasificacion';
 
     // 'clasificacion' es la clave interna de la sección; la tabla real es 'facturas_pendientes'
-    function tablaReal(t) { return t === 'clasificacion' ? 'facturas_pendientes' : t === 'notificaciones_presupuestos' ? 'presupuestos_seguimiento' : t; }
-    let modalDestinoTabla = null;   // tabla destino del modal "Nuevo registro" (puede diferir de tablaActual)
+    function tablaReal(t) {
+      return t === 'clasificacion' ? 'facturas_pendientes'
+        : t === 'notificaciones_presupuestos' ? 'presupuestos_seguimiento'
+          : t === 'estudio_obras' ? 'estudio_obras_envios'
+            : t;
+    } let modalDestinoTabla = null;   // tabla destino del modal "Nuevo registro" (puede diferir de tablaActual)
     let modalEditId = null;   // id del registro que se está editando (null = modo "nuevo")
     let archivosAlbaranSeleccionados = []; // [{url, nombre}] — archivos adjuntos al albarán en el modal actual
     let archivosFacturaSeleccionados = []; // [{url, nombre}] — archivos adjuntos a la factura en el modal actual
@@ -3380,7 +3390,7 @@
       'clasificacion', 'facturas_almacen', 'facturas_obra', 'facturas_csg',
       'revisadas_facturadas', 'obras', 'calendario_pagos', 'notificaciones_presupuestos',
       'albaranes', 'albaranes_venta', 'facturas_venta', 'presupuestos_venta', 'clientes', 'inventario',
-      'materiales_obra', 'ingresos', 'varios', 'maquinaria', 'consumo_interno'
+      'materiales_obra', 'ingresos', 'varios', 'maquinaria', 'consumo_interno', 'estudio_obras'
     ];
 
     // Qué campos se buscan en cada tabla, y cómo se pinta cada resultado
@@ -3759,6 +3769,7 @@
       presupuestos_venta: ['Presupuestos', 'fa-file-lines', false],
       maquinaria: ['Maquinaria', 'fa-truck-monster', false],
       consumo_interno: ['Consumo Interno', 'fa-user-check', false],
+      estudio_obras: ['Estudio de Obras', 'fa-magnifying-glass-dollar', false],
     };
 
     function aplicarPermisosMenu() {
@@ -3780,12 +3791,12 @@
       document.getElementById('loginView').style.display = 'none';
       document.getElementById('appView').style.display = 'none';
       if (!cachesIniciales) {
-  cachesIniciales = Promise.all([
-    cargarInventarioCache(), cargarClientesCache(), cargarProveedoresCache(),
-    cargarObrasCache(), cargarMaterialesExclusivosCache(),
-    cargarMaquinariaCache(), cargarMunicipiosCache()   // 👈 añadido
-  ]);
-}
+        cachesIniciales = Promise.all([
+          cargarInventarioCache(), cargarClientesCache(), cargarProveedoresCache(),
+          cargarObrasCache(), cargarMaterialesExclusivosCache(),
+          cargarMaquinariaCache(), cargarMunicipiosCache() , cargarTemasFasesEstudioCache()  // 👈 añadido
+        ]);
+      }
       await cachesIniciales;
       mostrarSelectorPanel();
     }
@@ -4039,7 +4050,8 @@
               : sec === 'presupuestos_venta' ? 'Nuevo presupuesto'
                 : sec === 'consumo_interno' ? 'Nuevo consumo'
                   : sec === 'facturas_venta' ? 'Nueva factura'
-                    : 'Añadir Nuevo';
+                    : sec === 'estudio_obras' ? 'Nuevo envío'
+                      : 'Añadir Nuevo';
 
       const sel = document.getElementById('filtroEstado');  // barra de busqueda
       const sp = document.getElementById('searchInput');
@@ -4106,6 +4118,12 @@
       } else if (sec === 'consumo_interno') {
         sel.innerHTML = `<option value="">Todos</option>`;
         sp.placeholder = 'Buscar por empleado...';
+      } else if (sec === 'estudio_obras') {
+        sel.innerHTML = `<option value="">Todos los estados</option>
+    <option value="pendiente">Pendiente de respuesta</option>
+    <option value="respondido">Respondido</option>`;
+        sp.placeholder = 'Buscar proveedor, obra o tema...';
+
 
       } else {
         sel.innerHTML = `<option value="">Todos</option>`;
@@ -5030,11 +5048,15 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       }
     }
     async function cargarClientesCache() { clientesDB = await apiGetAll('clientes', 'order=nombre'); }
-    async function cargarProveedoresCache() { proveedoresDB = await apiGet('proveedores', 'order=nombre'); }
+    async function cargarProveedoresCache() {
+  proveedoresDB = await apiGet('proveedores', 'order=nombre');
+  const dl = document.getElementById('dl_proveedores_envio');
+  if (dl) dl.innerHTML = proveedoresDB.map(p => `<option value="${(p.nombre || '').replace(/"/g, '&quot;')}"></option>`).join('');
+}
     async function cargarObrasCache() { obrasDB = await apiGetAll('obras', 'order=nombre'); actualizarDatalistObras(); }
     async function cargarMunicipiosCache() {
-  municipiosDB = await apiGetAll('municipios_toledo', 'order=nombre');
-}
+      municipiosDB = await apiGetAll('municipios_toledo', 'order=nombre');
+    }
     async function cargarMaquinariaCache() {
       maquinariaDB = await apiGetAll('maquinaria', 'order=codigo');
       actualizarDatalistMaquinaria();
@@ -5197,10 +5219,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       recalcTotalBaja();
 
       document.getElementById('modalBajaAlquiler').classList.add('visible');
-setTimeout(() => {
-  setupClienteBajaAC('ba_cliente', 'ba_nif', 'ba_cliente_id');
-  setupMunicipioAC('ba_poblacion', 'ba_cp');
-}, 50);
+      setTimeout(() => {
+        setupClienteBajaAC('ba_cliente', 'ba_nif', 'ba_cliente_id');
+        setupMunicipioAC('ba_poblacion', 'ba_cp');
+      }, 50);
     }
     async function confirmarDevolucionMaquina() {
       const id = maquinaDevolverActualId;
@@ -5553,39 +5575,39 @@ setTimeout(() => {
     }
 
     // AUTOCOMPLETADO DE MUNICIPIOS — rellena el código postal automáticamente
-function setupMunicipioAC(inputPoblacionId, inputCpId) {
-  const inpP = document.getElementById(inputPoblacionId);
-  const inpCp = document.getElementById(inputCpId);
-  if (!inpP) return;
-  inpP.parentElement.style.position = 'relative';
-  const lista = _crearLista('ac_mun_' + inputPoblacionId, inpP.parentElement);
+    function setupMunicipioAC(inputPoblacionId, inputCpId) {
+      const inpP = document.getElementById(inputPoblacionId);
+      const inpCp = document.getElementById(inputCpId);
+      if (!inpP) return;
+      inpP.parentElement.style.position = 'relative';
+      const lista = _crearLista('ac_mun_' + inputPoblacionId, inpP.parentElement);
 
-  function filtrar(q) {
-    return municipiosDB.filter(m => (m.nombre || '').toLowerCase().includes(q)).slice(0, 10);
-  }
-  function seleccionar(m) {
-    inpP.value = m.nombre || '';
-    if (inpCp) inpCp.value = m.codigo_postal || '';
-    lista.style.display = 'none';
-  }
-  function render(items) {
-    if (!items.length) { lista.style.display = 'none'; return; }
-    lista.innerHTML = items.map(m =>
-      `<div class="ac-item" data-id="${m.id}"><span class="ac-nombre">${m.nombre || '—'}</span><span class="ac-nif">${m.codigo_postal || ''}</span></div>`
-    ).join('');
-    lista.style.display = 'block';
-    lista.querySelectorAll('.ac-item').forEach(el => {
-      el.addEventListener('mousedown', e => {
-        e.preventDefault();
-        const m = municipiosDB.find(x => x.id == el.dataset.id);
-        if (m) seleccionar(m);
-      });
-    });
-  }
-  inpP.addEventListener('input', () => render(filtrar(inpP.value.toLowerCase().trim())));
-  inpP.addEventListener('focus', () => { if (inpP.value.trim()) render(filtrar(inpP.value.toLowerCase().trim())); });
-  inpP.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
-}
+      function filtrar(q) {
+        return municipiosDB.filter(m => (m.nombre || '').toLowerCase().includes(q)).slice(0, 10);
+      }
+      function seleccionar(m) {
+        inpP.value = m.nombre || '';
+        if (inpCp) inpCp.value = m.codigo_postal || '';
+        lista.style.display = 'none';
+      }
+      function render(items) {
+        if (!items.length) { lista.style.display = 'none'; return; }
+        lista.innerHTML = items.map(m =>
+          `<div class="ac-item" data-id="${m.id}"><span class="ac-nombre">${m.nombre || '—'}</span><span class="ac-nif">${m.codigo_postal || ''}</span></div>`
+        ).join('');
+        lista.style.display = 'block';
+        lista.querySelectorAll('.ac-item').forEach(el => {
+          el.addEventListener('mousedown', e => {
+            e.preventDefault();
+            const m = municipiosDB.find(x => x.id == el.dataset.id);
+            if (m) seleccionar(m);
+          });
+        });
+      }
+      inpP.addEventListener('input', () => render(filtrar(inpP.value.toLowerCase().trim())));
+      inpP.addEventListener('focus', () => { if (inpP.value.trim()) render(filtrar(inpP.value.toLowerCase().trim())); });
+      inpP.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
+    }
 
     // Busca un proveedor ya existente en la base de datos por nombre exacto
     // (ignorando mayúsculas/espacios) y devuelve su NIF si lo encuentra.
@@ -5692,6 +5714,7 @@ function setupMunicipioAC(inputPoblacionId, inputCpId) {
           varios: 'order=fecha_recibido.desc',
           maquinaria: 'order=codigo',
           consumo_interno: 'select=*,consumo_interno_items(*)&order=id.desc',
+          estudio_obras: 'order=fecha_recordatorio.asc',
         };
         registros = await apiGetAll(tablaReal(tablaActual), orden[tablaActual] || '');
         inventarioDB = await apiGetAll('inventario', 'order=nombre');
@@ -6783,7 +6806,39 @@ function setupMunicipioAC(inputPoblacionId, inputCpId) {
         </td>
       </tr>`;
         }).join('');
-
+} else if (tablaActual === 'estudio_obras') {
+  hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Proveedor</th><th>Email</th><th>Obra</th><th>Fase</th><th>Tema</th><th>Fecha envío</th><th>Recordatorio</th><th>Estado</th><th>Archivos</th><th>Acciones</th><th></th></tr>`;
+  const lista = registros
+    .filter(f => [f.proveedor, f.nombre_obra, f.tema, f.fase_obra].some(v => (v || '').toLowerCase().includes(q)))
+    .filter(f => !fEst || (fEst === 'respondido' ? f.respondido : !f.respondido));
+  if (!lista.length) { bdy.innerHTML = emptyRow(11, 'No hay envíos registrados'); return; }
+  bdy.innerHTML = lista.map(f => {
+    const respondido = !!f.respondido;
+    const vencido = !respondido && f.fecha_recordatorio && f.fecha_recordatorio <= hoy();
+    const archivosLista = f.archivos_urls || [];
+    return `<tr data-id="${f.id}" style="${vencido ? 'background:#fff8e1' : ''};cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${f.id},'estudio_obras'))">
+      <td>${celdaCheck(f.id)}</td>
+      <td class="td-nombre">${f.proveedor || '—'}</td>
+      <td style="font-size:.82rem">${f.email_proveedor || '—'}</td>
+      <td class="td-nombre">${f.nombre_obra || '—'}</td>
+      <td style="font-size:.82rem">${f.fase_obra || '—'}</td>
+      <td style="font-size:.82rem">${f.tema || '—'}</td>
+      <td>${fmtF(f.fecha_envio)}</td>
+      <td>${fmtF(f.fecha_recordatorio)}${vencido ? '<br><span style="color:#c47a00;font-size:.72rem">Sin respuesta</span>' : ''}</td>
+      <td><span class="badge-estado ${respondido ? 'badge-pagado' : 'badge-vencido'}">${respondido ? 'Respondido' : 'Pendiente'}</span></td>
+      <td>${archivosLista.length ? `<select class="select-albaranes" onchange="if(this.value) verArchivoPanel(this.value,'${(f.proveedor || 'Envío').replace(/'/g, "\\'")}')">
+        <option value="">${archivosLista.length} archivo${archivosLista.length > 1 ? 's' : ''}</option>
+        ${archivosLista.map((u, i) => `<option value="${u}">Archivo ${i + 1}</option>`).join('')}
+      </select>` : '—'}</td>
+      <td class="td-acciones">
+        <button class="btn-toggle-facturado ${respondido ? 'si' : 'no'}" onclick="toggleRespondidoEstudioObra(${f.id},${respondido})">
+          ${respondido ? '<i class="fa-solid fa-rotate-left me-1"></i>Reabrir' : '<i class="fa-solid fa-check me-1"></i>Marcar respondido'}
+        </button>
+        <button class="btn-toggle-pago pendiente" onclick="reenviarEstudioObra(${f.id})" title="Reenviar email"><i class="fa-solid fa-paper-plane"></i></button>
+      </td>
+      <td><button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
+    </tr>`;
+  }).join('');
 
         // INVENTARIO
       } else if (tablaActual === 'inventario') {
@@ -6920,7 +6975,7 @@ function setupMunicipioAC(inputPoblacionId, inputCpId) {
     </td>
   </tr>`;
           }                                     // 👈 sin el botón "Facturar" aquí — los alquileres no van a Facturas de Venta
-        
+
 
           return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarAlbaranVenta(${f.id}))">
     <td><strong>${f.numero_albaran || '—'}</strong></td>
@@ -6952,19 +7007,19 @@ function setupMunicipioAC(inputPoblacionId, inputCpId) {
       ${!fact && forma !== 'efectivo' ? `<button class="btn-toggle-pago" style="background:#b53987;color:#fff;border:1.5px solid #b53987" onclick="abrirModalFacturaVenta(${f.id})" title="Generar factura"><i class="fa-solid fa-file-invoice-dollar"></i></button>` : ''}
     </td>
   </tr>`;
-      }).join('');
+        }).join('');
 
-    } else if (tablaActual === 'facturas_venta') {
-      hdr.innerHTML = `<tr><th>Nº Factura</th><th>Fecha</th><th>Cliente</th><th>NIF</th><th>Obra</th><th class="num-cell">Total</th><th>Albaranes</th><th>Estado</th><th></th><th></th></tr>`;
-      const lista = registros.filter(f => {
-        const mQ = [f.numero_factura, f.cliente_nombre, f.nif].some(v => (v || '').toLowerCase().includes(q));
-        return mQ && (!fEst || fEst === (f.estado || 'pendiente'));
-      });
-      if (!lista.length) { bdy.innerHTML = emptyRow(9, 'No hay facturas de venta registradas'); return; }
-      bdy.innerHTML = lista.map(f => {
-        const est = f.estado || 'pendiente';
-        const albs = f.facturas_venta_albaranes || [];
-        return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarFacturaVenta(${f.id}))">
+      } else if (tablaActual === 'facturas_venta') {
+        hdr.innerHTML = `<tr><th>Nº Factura</th><th>Fecha</th><th>Cliente</th><th>NIF</th><th>Obra</th><th class="num-cell">Total</th><th>Albaranes</th><th>Estado</th><th></th><th></th></tr>`;
+        const lista = registros.filter(f => {
+          const mQ = [f.numero_factura, f.cliente_nombre, f.nif].some(v => (v || '').toLowerCase().includes(q));
+          return mQ && (!fEst || fEst === (f.estado || 'pendiente'));
+        });
+        if (!lista.length) { bdy.innerHTML = emptyRow(9, 'No hay facturas de venta registradas'); return; }
+        bdy.innerHTML = lista.map(f => {
+          const est = f.estado || 'pendiente';
+          const albs = f.facturas_venta_albaranes || [];
+          return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarFacturaVenta(${f.id}))">
       <td><strong>${f.numero_factura || '—'}</strong></td>
       <td>${fmtF(f.fecha)}</td>
       <td class="td-nombre">${f.cliente_nombre || '—'}</td>
@@ -6978,17 +7033,17 @@ function setupMunicipioAC(inputPoblacionId, inputCpId) {
       <button class="btn-toggle-pago" style="background:#1565c0;color:#fff;border:1.5px solid #1565c0" onclick="abrirModalEnviarFacturaVenta(${f.id})" title="Enviar por email"><i class="fa-solid fa-envelope"></i></button></td>
       <td><button class="btn-eliminar" onclick="eliminarFacturaVenta(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
     </tr>`;
-      }).join('');
-    } else if (tablaActual === 'presupuestos_venta') {
-      hdr.innerHTML = `<tr><th>Nº Presupuesto</th><th>Fecha</th><th>Cliente</th><th>NIF</th><th class="num-cell">Total</th><th>Válido hasta</th><th></th><th></th></tr>`;
-      const lista = registros.filter(f => [f.numero_presupuesto, f.cliente_nombre].some(v => (v || '').toLowerCase().includes(q)));
-      if (!lista.length) { bdy.innerHTML = emptyRow(9, 'No hay presupuestos registrados'); return; }
-      bdy.innerHTML = lista.map(f => {
-        const caduca = new Date(f.fecha);
-        caduca.setDate(caduca.getDate() + (f.validez_dias || 8));
-        const hoyD2 = new Date(); hoyD2.setHours(0, 0, 0, 0);
-        const vencido = caduca < hoyD2;
-        return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarPresupuesto(${f.id}))">
+        }).join('');
+      } else if (tablaActual === 'presupuestos_venta') {
+        hdr.innerHTML = `<tr><th>Nº Presupuesto</th><th>Fecha</th><th>Cliente</th><th>NIF</th><th class="num-cell">Total</th><th>Válido hasta</th><th></th><th></th></tr>`;
+        const lista = registros.filter(f => [f.numero_presupuesto, f.cliente_nombre].some(v => (v || '').toLowerCase().includes(q)));
+        if (!lista.length) { bdy.innerHTML = emptyRow(9, 'No hay presupuestos registrados'); return; }
+        bdy.innerHTML = lista.map(f => {
+          const caduca = new Date(f.fecha);
+          caduca.setDate(caduca.getDate() + (f.validez_dias || 8));
+          const hoyD2 = new Date(); hoyD2.setHours(0, 0, 0, 0);
+          const vencido = caduca < hoyD2;
+          return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarPresupuesto(${f.id}))">
       <td><strong>${f.numero_presupuesto || '—'}</strong></td>
       <td>${fmtF(f.fecha)}</td>
       <td class="td-nombre">${f.cliente_nombre || '—'}</td>
@@ -6999,10 +7054,10 @@ function setupMunicipioAC(inputPoblacionId, inputCpId) {
       <td><button class="btn-toggle-pago" style="background:#1565c0;color:#fff;border:1.5px solid #1565c0" onclick="abrirModalEnviarPresupuesto(${f.id})" title="Enviar por email"><i class="fa-solid fa-envelope"></i></button></td>
       <td><button class="btn-eliminar" onclick="eliminarPresupuestoVenta(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
     </tr>`;
-      }).join('');
+        }).join('');
 
-    } else if (tablaActual === 'ingresos') {
-      hdr.innerHTML = `<tr>
+      } else if (tablaActual === 'ingresos') {
+        hdr.innerHTML = `<tr>
           <th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th>
     <th>Nº Int.</th><th>Fecha</th><th>Recibido</th><th>Cobro previsto</th><th>NIF</th><th>Cliente</th><th>Obra</th>
     <th>Nº Factura</th><th>Concepto</th>
@@ -7011,21 +7066,21 @@ function setupMunicipioAC(inputPoblacionId, inputCpId) {
     <th class="num-cell">Descuento</th><th class="num-cell">Pago permisos</th><th class="pct-cell">%IVA permisos</th><th class="num-cell">Total IVA permisos</th><th class="num-cell">Total con permisos</th>
     <th></th>
   </tr>`;
-      const fObraIng = document.getElementById('filtroObra').value;
-      const lista = registros.filter(f => {
-        const mQ = [f.numero_ingreso, f.cliente, f.numero_interno, f.concepto, f.nombre_obra].some(v => (v || '').toLowerCase().includes(q));
-        const mObra = !fObraIng || f.nombre_obra === fObraIng;
-        const esVenc = f.estado === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
-        const estReal = esVenc ? 'vencido' : (f.estado || 'pendiente');
-        return mQ && mObra && (!fEst || fEst === estReal) && (!filtroPorRevisar || faltaPorRevisar(f, 'ingresos')) && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'ingresos', filtroPorRevisarDeOtro));
-      });
-      if (!lista.length) { bdy.innerHTML = emptyRow(17, 'No se encontraron ingresos'); return; }
-      bdy.innerHTML = lista.map(f => {
-        const est = f.estado || 'pendiente';
-        const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
-        const eR = esVenc ? 'vencido' : est;
-        const claseFila = claseFilaVencimiento(f, est, esVenc, hoyD);
-        return `<tr data-id="${f.id}" class="${claseFila}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${f.id},'ingresos'))">
+        const fObraIng = document.getElementById('filtroObra').value;
+        const lista = registros.filter(f => {
+          const mQ = [f.numero_ingreso, f.cliente, f.numero_interno, f.concepto, f.nombre_obra].some(v => (v || '').toLowerCase().includes(q));
+          const mObra = !fObraIng || f.nombre_obra === fObraIng;
+          const esVenc = f.estado === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
+          const estReal = esVenc ? 'vencido' : (f.estado || 'pendiente');
+          return mQ && mObra && (!fEst || fEst === estReal) && (!filtroPorRevisar || faltaPorRevisar(f, 'ingresos')) && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'ingresos', filtroPorRevisarDeOtro));
+        });
+        if (!lista.length) { bdy.innerHTML = emptyRow(17, 'No se encontraron ingresos'); return; }
+        bdy.innerHTML = lista.map(f => {
+          const est = f.estado || 'pendiente';
+          const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
+          const eR = esVenc ? 'vencido' : est;
+          const claseFila = claseFilaVencimiento(f, est, esVenc, hoyD);
+          return `<tr data-id="${f.id}" class="${claseFila}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${f.id},'ingresos'))">
             <td>${celdaCheck(f.id)}</td>
       <td style="font-size:.78rem;color:#888">${nvl(f.numero_interno)}</td>
       <td>${fmtF(f.fecha)}</td><td>${fmtF(f.fecha_recibido)}</td><td>${fmtF(f.fecha_vencimiento)}</td>
@@ -7054,12 +7109,12 @@ function setupMunicipioAC(inputPoblacionId, inputCpId) {
 <td class="num-cell">${fmtN(f.total_con_permisos)}</td>
 <td><button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
     </tr>`;
-      }).join('');
-    } else if (tablaActual === 'varios') {
-      hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Recibido</th><th>Remitente</th><th>Mensaje</th><th>Archivo</th><th></th></tr>`;
-      const lista = registros.filter(f => [f.remitente, f.mensaje].some(v => (v || '').toLowerCase().includes(q)));
-      if (!lista.length) { bdy.innerHTML = emptyRow(6, 'No hay nada guardado en Varios'); return; }
-      bdy.innerHTML = lista.map(f => `<tr data-id="${f.id}">
+        }).join('');
+      } else if (tablaActual === 'varios') {
+        hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Recibido</th><th>Remitente</th><th>Mensaje</th><th>Archivo</th><th></th></tr>`;
+        const lista = registros.filter(f => [f.remitente, f.mensaje].some(v => (v || '').toLowerCase().includes(q)));
+        if (!lista.length) { bdy.innerHTML = emptyRow(6, 'No hay nada guardado en Varios'); return; }
+        bdy.innerHTML = lista.map(f => `<tr data-id="${f.id}">
     <td>${celdaCheck(f.id)}</td>
     <td style="font-size:.78rem;color:#888;white-space:nowrap">${f.fecha_recibido ? new Date(f.fecha_recibido).toLocaleString('es-ES') : '—'}</td>
     <td class="td-nombre">${f.remitente || '—'}</td>
@@ -7067,17 +7122,17 @@ function setupMunicipioAC(inputPoblacionId, inputCpId) {
     <td>${f.archivo_url ? `<span class="link-badge factura" onclick="verArchivoPanel('${f.archivo_url}','${(f.remitente || 'Varios').replace(/'/g, "\\'")}')"><i class="fa-solid fa-paperclip"></i></span>` : '—'}</td>
     <td><button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
   </tr>`).join('');
-    } else if (tablaActual === 'maquinaria') {
-      hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Código</th><th>Nombre</th><th class="num-cell">Precio/día</th><th>Estado</th><th>Cliente actual</th><th>Obra</th><th>Desde</th><th>Historial</th><th>Acción</th><th></th></tr>`;
-      const lista = registros.filter(m => [m.codigo, m.nombre].some(v => (v || '').toLowerCase().includes(q)))
-        .filter(m => !fEst || (m.estado || 'disponible') === fEst);
-      if (!lista.length) { bdy.innerHTML = emptyRow(10, 'No hay máquinas en el catálogo'); return; }
-      bdy.innerHTML = lista.map(m => {
-        const alquilada = m.estado === 'alquilada';
-        const averiada = m.estado === 'averiada';
-        const claseBadge = alquilada ? 'badge-vencido' : averiada ? 'badge-pendiente' : 'badge-pagado';
-        const textoBadge = alquilada ? 'ALQUILADA' : averiada ? 'AVERIADA' : 'DISPONIBLE';
-        return `<tr data-id="${m.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${m.id},'maquinaria'))">
+      } else if (tablaActual === 'maquinaria') {
+        hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Código</th><th>Nombre</th><th class="num-cell">Precio/día</th><th>Estado</th><th>Cliente actual</th><th>Obra</th><th>Desde</th><th>Historial</th><th>Acción</th><th></th></tr>`;
+        const lista = registros.filter(m => [m.codigo, m.nombre].some(v => (v || '').toLowerCase().includes(q)))
+          .filter(m => !fEst || (m.estado || 'disponible') === fEst);
+        if (!lista.length) { bdy.innerHTML = emptyRow(10, 'No hay máquinas en el catálogo'); return; }
+        bdy.innerHTML = lista.map(m => {
+          const alquilada = m.estado === 'alquilada';
+          const averiada = m.estado === 'averiada';
+          const claseBadge = alquilada ? 'badge-vencido' : averiada ? 'badge-pendiente' : 'badge-pagado';
+          const textoBadge = alquilada ? 'ALQUILADA' : averiada ? 'AVERIADA' : 'DISPONIBLE';
+          return `<tr data-id="${m.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${m.id},'maquinaria'))">
     <td>${celdaCheck(m.id)}</td>
     <td><strong>${m.codigo || '—'}</strong></td>
     <td class="td-nombre">${m.nombre || '—'}</td>
@@ -7089,26 +7144,26 @@ function setupMunicipioAC(inputPoblacionId, inputCpId) {
     <td><span class="link-badge" onclick="verHistorialMaquina(${m.id},'${(m.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-clock-rotate-left"></i>Ver</span></td>
     <td>
       ${alquilada
-            ? `<button class="btn-toggle-pago pagado" onclick="marcarMaquinaDevuelta(${m.id})"><i class="fa-solid fa-rotate-left me-1"></i>Devolver</button>`
-            : averiada
-              ? `<button class="btn-toggle-pago pagado" onclick="marcarMaquinaReparada(${m.id})"><i class="fa-solid fa-wrench me-1"></i>Reparada</button>`
-              : `<button class="btn-toggle-pago vencido" onclick="marcarMaquinaAveriada(${m.id})"><i class="fa-solid fa-triangle-exclamation me-1"></i>Avería</button>`}
+              ? `<button class="btn-toggle-pago pagado" onclick="marcarMaquinaDevuelta(${m.id})"><i class="fa-solid fa-rotate-left me-1"></i>Devolver</button>`
+              : averiada
+                ? `<button class="btn-toggle-pago pagado" onclick="marcarMaquinaReparada(${m.id})"><i class="fa-solid fa-wrench me-1"></i>Reparada</button>`
+                : `<button class="btn-toggle-pago vencido" onclick="marcarMaquinaAveriada(${m.id})"><i class="fa-solid fa-triangle-exclamation me-1"></i>Avería</button>`}
     </td>
     <td>
       <button class="btn-eliminar" onclick="eliminar(${m.id})"><i class="fa-solid fa-trash"></i></button>
     </td>
   </tr>`;
-      }).join('');
-    } else if (tablaActual === 'consumo_interno') {
-      hdr.innerHTML = `<tr><th>Fecha</th><th>Productos</th><th class="num-cell">Total</th><th>Registrado por</th><th>Detalle</th><th></th><th></th></tr>`;
-      const lista = registros.filter(f => (f.empleado || '').toLowerCase().includes(q));
-      if (!lista.length) { bdy.innerHTML = emptyRow(7, 'No hay consumos internos registrados'); return; }
-      bdy.innerHTML = lista.map(f => {
-        const items = f.consumo_interno_items || [];
-        const resumen = items.length
-          ? items.slice(0, 2).map(i => `${i.producto_nombre} (${i.cantidad})`).join(', ') + (items.length > 2 ? ` +${items.length - 2} más` : '')
-          : 'Sin productos';
-        return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalConsumoInterno(${f.id}))">
+        }).join('');
+      } else if (tablaActual === 'consumo_interno') {
+        hdr.innerHTML = `<tr><th>Fecha</th><th>Productos</th><th class="num-cell">Total</th><th>Registrado por</th><th>Detalle</th><th></th><th></th></tr>`;
+        const lista = registros.filter(f => (f.empleado || '').toLowerCase().includes(q));
+        if (!lista.length) { bdy.innerHTML = emptyRow(7, 'No hay consumos internos registrados'); return; }
+        bdy.innerHTML = lista.map(f => {
+          const items = f.consumo_interno_items || [];
+          const resumen = items.length
+            ? items.slice(0, 2).map(i => `${i.producto_nombre} (${i.cantidad})`).join(', ') + (items.length > 2 ? ` +${items.length - 2} más` : '')
+            : 'Sin productos';
+          return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalConsumoInterno(${f.id}))">
       <td>${fmtF(f.fecha)}</td>
       <td class="td-concepto" title="${resumen}">${resumen}</td>
       <td class="td-total">${fmt(f.total)}</td>
@@ -7117,10 +7172,10 @@ function setupMunicipioAC(inputPoblacionId, inputCpId) {
       <td><button class="btn-toggle-pago pendiente" onclick="imprimirConsumoInterno(${f.id})" title="Imprimir ticket"><i class="fa-solid fa-print"></i></button></td>
       <td><button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
     </tr>`;
-      }).join('');
-    }
-    actualizarBarraSeleccion();
-    actualizarBarraScrollFija();
+        }).join('');
+      }
+      actualizarBarraSeleccion();
+      actualizarBarraScrollFija();
     }
 
 
@@ -8279,6 +8334,55 @@ function setupMunicipioAC(inputPoblacionId, inputCpId) {
             payload.recordatorio_enviado = false;
             await apiPost('presupuestos_seguimiento', payload);
           }
+          } else if (tabla === 'estudio_obras') {
+  const proveedor = document.getElementById('eo_proveedor').value.trim();
+  const email = document.getElementById('eo_email').value.trim();
+  const obra = document.getElementById('eo_obra').value.trim();
+  const tema = document.getElementById('eo_tema').value.trim();
+  const fase = document.getElementById('eo_fase').value.trim() || null;
+  const fecha_envio = document.getElementById('eo_fecha_envio').value;
+  const fecha_recordatorio = document.getElementById('eo_fecha_recordatorio').value;
+  const notas = document.getElementById('eo_notas').value.trim() || null;
+
+  if (!proveedor || !email || !obra || !tema || !fecha_envio || !fecha_recordatorio) {
+    toast('Proveedor, email, obra, tema, fecha de envío y fecha de recordatorio son obligatorios', 'err');
+    return;
+  }
+
+  const payload = {
+    proveedor, email_proveedor: email, nombre_obra: obra, fase_obra: fase, tema,
+    fecha_envio, fecha_recordatorio, notas,
+    archivos_urls: archivosEstudioSeleccionados.map(a => a.url)
+  };
+
+  if (modalEditId) {
+    await apiPatch('estudio_obras_envios', modalEditId, payload);
+    toast('Envío actualizado correctamente');
+  } else {
+    payload.respondido = false;
+    payload.recordatorio_enviado = false;
+    payload.creado_por = currentPersona;
+    const [nuevo] = await apiPost('estudio_obras_envios', payload);
+    toast('Envío guardado — enviando email...');
+    try {
+      await enviarEmailEstudioObra(
+        email,
+        `Solicitud de presupuesto — ${obra}`,
+        construirMensajeEstudioObra(tema, obra, fase, notas),
+        archivosEstudioSeleccionados
+      );
+      toast(`<i class="fa-solid fa-check me-1"></i>Solicitud enviada a ${email}`, 'ok');
+    } catch (e) {
+      toast('El registro se guardó, pero falló el envío del email: ' + e.message, 'err');
+    }
+  }
+
+  cerrarModal('modalNueva');
+  archivosEstudioSeleccionados = [];
+  cargarDatos();
+  cargarTemasFasesEstudioCache();
+  return;
+
 
         } else if (tabla === 'inventario') {
           const nombre = document.getElementById('f_nombre').value.trim();
@@ -8693,6 +8797,19 @@ function setupMunicipioAC(inputPoblacionId, inputCpId) {
       const dl = document.getElementById('dl_materiales_exclusivos');
       if (dl) dl.innerHTML = materialesExclusivosDB.map(n => `<option value="${n.replace(/"/g, '&quot;')}"></option>`).join('');
     }
+
+    let temasEstudioDB = [];
+let fasesEstudioDB = [];
+
+async function cargarTemasFasesEstudioCache() {
+  const filas = await apiGetAll('estudio_obras_envios', 'select=tema,fase_obra');
+  temasEstudioDB = [...new Set(filas.map(f => f.tema).filter(Boolean))].sort();
+  fasesEstudioDB = [...new Set(filas.map(f => f.fase_obra).filter(Boolean))].sort();
+  const dlTema = document.getElementById('dl_temas_estudio');
+  if (dlTema) dlTema.innerHTML = temasEstudioDB.map(n => `<option value="${n.replace(/"/g, '&quot;')}"></option>`).join('');
+  const dlFase = document.getElementById('dl_fases_estudio');
+  if (dlFase) dlFase.innerHTML = fasesEstudioDB.map(n => `<option value="${n.replace(/"/g, '&quot;')}"></option>`).join('');
+}
 
     let lineasMaterialExclusivoCount = 0;
 
@@ -11071,10 +11188,10 @@ function setupMunicipioAC(inputPoblacionId, inputCpId) {
       document.getElementById('aa_num').value = '';
 
       document.getElementById('modalAltaAlquiler').classList.add('visible');
-setTimeout(() => {
-  setupClienteAltaAC('aa_cliente', 'aa_nif', 'aa_cliente_id');
-  setupMunicipioAC('aa_poblacion', 'aa_cp');
-}, 50);
+      setTimeout(() => {
+        setupClienteAltaAC('aa_cliente', 'aa_nif', 'aa_cliente_id');
+        setupMunicipioAC('aa_poblacion', 'aa_cp');
+      }, 50);
     }
 
     async function abrirModalEditarAltaAlquiler(id) {
@@ -11119,10 +11236,10 @@ setTimeout(() => {
         recalcTotalAlta();
 
         document.getElementById('modalAltaAlquiler').classList.add('visible');
-setTimeout(() => {
-  setupClienteAltaAC('aa_cliente', 'aa_nif', 'aa_cliente_id');
-  setupMunicipioAC('aa_poblacion', 'aa_cp');
-}, 50);
+        setTimeout(() => {
+          setupClienteAltaAC('aa_cliente', 'aa_nif', 'aa_cliente_id');
+          setupMunicipioAC('aa_poblacion', 'aa_cp');
+        }, 50);
       } catch (e) {
         toast('Error al cargar el alta de alquiler: ' + e.message, 'err');
       }
@@ -11170,10 +11287,10 @@ setTimeout(() => {
         recalcTotalBaja();
 
         document.getElementById('modalBajaAlquiler').classList.add('visible');
-setTimeout(() => {
-  setupClienteBajaAC('ba_cliente', 'ba_nif', 'ba_cliente_id');
-  setupMunicipioAC('ba_poblacion', 'ba_cp');
-}, 50);
+        setTimeout(() => {
+          setupClienteBajaAC('ba_cliente', 'ba_nif', 'ba_cliente_id');
+          setupMunicipioAC('ba_poblacion', 'ba_cp');
+        }, 50);
       } catch (e) {
         toast('Error al cargar la baja de alquiler: ' + e.message, 'err');
       }
@@ -11604,10 +11721,10 @@ setTimeout(() => {
       document.getElementById('ba_num').value = '';
 
       document.getElementById('modalBajaAlquiler').classList.add('visible');
-setTimeout(() => {
-  setupClienteBajaAC('ba_cliente', 'ba_nif', 'ba_cliente_id');
-  setupMunicipioAC('ba_poblacion', 'ba_cp');
-}, 50);
+      setTimeout(() => {
+        setupClienteBajaAC('ba_cliente', 'ba_nif', 'ba_cliente_id');
+        setupMunicipioAC('ba_poblacion', 'ba_cp');
+      }, 50);
     }
 
     async function guardarBajaAlquiler() {
@@ -11906,6 +12023,25 @@ setTimeout(() => {
         }, 100);
         return;
       }
+      if (tabla == "estudio_obras") {
+  abrirModalNuevo("estudio_obras");
+  setTimeout(() => {
+    document.getElementById("modalTitulo").textContent = "Editar envío";
+    document.getElementById("btnGuardar").innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i>Guardar cambios';
+    document.getElementById("eo_proveedor").value = f.proveedor || "";
+    document.getElementById("eo_email").value = f.email_proveedor || "";
+    setSelectObraValue('eo_obra', f.nombre_obra);
+    document.getElementById("eo_fase").value = f.fase_obra || "";
+    document.getElementById("eo_tema").value = f.tema || "";
+    document.getElementById("eo_fecha_envio").value = f.fecha_envio || "";
+    document.getElementById("eo_fecha_recordatorio").value = f.fecha_recordatorio || "";
+    document.getElementById("eo_notas").value = f.notas || "";
+    archivosEstudioSeleccionados = (f.archivos_urls || []).map((url, i) => ({ url, nombre: `Archivo ${i + 1}` }));
+    renderArchivosEstudioChips();
+    actualizarPreviewEstudioObra();
+  }, 100);
+  return;
+}
 
       /* ===========================
          INVENTARIO
@@ -12768,6 +12904,54 @@ setTimeout(() => {
     </div>
     <p style="font-size:.78rem;color:#888;margin-top:10px"><i class="fa-solid fa-info-circle me-1"></i>Cuando llegue la fecha del recordatorio, se enviará automáticamente un email al cliente pidiéndole que responda al presupuesto.</p>`;
         document.getElementById('modalNueva').classList.add('visible');
+} else if (tabla === 'estudio_obras') {
+  document.getElementById('modalTitulo').textContent = 'Nuevo Envío — Estudio de Obras';
+  cont.innerHTML = `
+    <div class="form-grid-2">
+      <div class="form-group span2">
+        <label>Proveedor *</label>
+        <input type="text" id="eo_proveedor" list="dl_proveedores_envio" placeholder="Nombre del proveedor">
+      </div>
+      <div class="form-group span2">
+        <label>Email del proveedor *</label>
+        <input type="email" id="eo_email" placeholder="correo@proveedor.com">
+      </div>
+      <div class="form-group span2">
+        <label>Obra *</label>
+        ${htmlSelectObras('eo_obra', 'Selecciona una obra existente o escribe una nueva...')}
+      </div>
+      <div class="form-group">
+        <label>Fase de la obra</label>
+        <input type="text" id="eo_fase" list="dl_fases_estudio" placeholder="Ej: Cimentación, Estructura, Acabados...">
+      </div>
+      <div class="form-group">
+        <label>Tema del presupuesto *</label>
+        <input type="text" id="eo_tema" list="dl_temas_estudio" placeholder="Ej: Instalación eléctrica, Aislamiento...">
+      </div>
+      <div class="form-group"><label>Fecha de envío *</label><input type="date" id="eo_fecha_envio" value="${hoy()}"></div>
+      <div class="form-group"><label>Fecha de recordatorio *</label><input type="date" id="eo_fecha_recordatorio"></div>
+      <div class="form-group span2">
+        <label>Mensaje adicional <span style="font-size:.72rem;color:#888">(opcional, se añade después de la frase estándar)</span></label>
+        <input type="text" id="eo_notas" placeholder="Observaciones opcionales">
+      </div>
+      <div class="form-group span2">
+        <label>Archivos a adjuntar <span style="font-size:.72rem;color:#888">(opcional, puedes seleccionar varios)</span></label>
+        <input type="file" id="eo_archivo" multiple onchange="_leerArchivosEstudioObra(this)">
+        <div class="archivos-lista" id="archivosEstudioLista"></div>
+      </div>
+      <div class="form-group span2" style="background:#f7f0f5;border:1.5px solid #ede5f5;border-radius:8px;padding:12px 14px">
+        <label style="margin-bottom:6px">Vista previa del mensaje</label>
+        <p id="eo_preview" style="font-size:.85rem;color:#4a3b68;margin:0"></p>
+      </div>
+    </div>`;
+  archivosEstudioSeleccionados = [];
+  document.getElementById('modalNueva').classList.add('visible');
+  setTimeout(() => {
+    setupObraAC('eo_obra');
+    ['eo_tema', 'eo_obra', 'eo_fase'].forEach(id => document.getElementById(id).addEventListener('input', actualizarPreviewEstudioObra));
+    actualizarPreviewEstudioObra();
+    ocultarPdfModal();
+  }, 50);
 
         // ── INVENTARIO ──
       } else if (tabla === 'inventario') {
@@ -13391,6 +13575,41 @@ setTimeout(() => {
       // más archivos sin que el navegador descarte los ya subidos.
       input.value = '';
     }
+
+    let archivosEstudioSeleccionados = [];
+
+function renderArchivosEstudioChips() {
+  const cont = document.getElementById('archivosEstudioLista');
+  if (!cont) return;
+  cont.innerHTML = archivosEstudioSeleccionados.map((a, i) => `
+    <span class="archivo-chip">
+      <span onclick="verArchivoPanel('${a.url}','${(a.nombre || 'Archivo').replace(/'/g, "\\'")}')" title="Ver archivo"><i class="fa-solid fa-paperclip" style="margin-right:4px"></i>${a.nombre || 'Archivo'}</span>
+      <span class="archivo-chip-quitar" onclick="quitarArchivoEstudio(${i})" title="Quitar"><i class="fa-solid fa-xmark"></i></span>
+    </span>`).join('');
+}
+
+function quitarArchivoEstudio(i) {
+  archivosEstudioSeleccionados.splice(i, 1);
+  renderArchivosEstudioChips();
+}
+
+async function _leerArchivosEstudioObra(input) {
+  if (!input.files || !input.files.length) return;
+  for (const file of Array.from(input.files)) {
+    try {
+      toast(`Subiendo ${file.name}...`, 'ok');
+      const url = await subirArchivoStorage(file);
+      archivosEstudioSeleccionados.push({ url, nombre: file.name });
+      renderArchivosEstudioChips();
+    } catch (e) {
+      toast(`No se pudo subir ${file.name}: ` + e.message, 'err');
+    }
+  }
+  input.value = '';
+}
+
+
+
 
     async function _leerArchivoConIA(input, tipo) {
       if (!input.files || !input.files.length) return;
@@ -16262,6 +16481,82 @@ setTimeout(() => {
         iframe.srcdoc = htmlCompleto;
       });
     }
+
+    function construirMensajeEstudioObra(tema, obra, fase, notas) {
+  let msg = `Buenos días, les solicitamos presupuesto para ${tema} para la obra ${obra}` +
+    (fase ? ` que se encuentra en fase de ${fase}.` : '.');
+  if (notas) msg += `<br><br>${notas}`;
+  return msg;
+}
+
+function actualizarPreviewEstudioObra() {
+  const tema = document.getElementById('eo_tema')?.value.trim() || '_____';
+  const obra = document.getElementById('eo_obra')?.value.trim() || '_____';
+  const fase = document.getElementById('eo_fase')?.value.trim();
+  const preview = document.getElementById('eo_preview');
+  if (!preview) return;
+  preview.textContent = `Buenos días, les solicitamos presupuesto para ${tema} para la obra ${obra}` +
+    (fase ? ` que se encuentra en fase de ${fase}.` : '.');
+}
+
+// Convierte cada archivo (ya subido a Storage) en base64 para adjuntarlo al email
+async function _archivosUrlsABase64(archivos) { // archivos: [{url, nombre}]
+  const resultado = [];
+  for (const a of archivos) {
+    try {
+      const r = await fetch(a.url);
+      const blob = await r.blob();
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      resultado.push({ filename: a.nombre, content: base64 });
+    } catch (e) {
+      console.error('No se pudo adjuntar', a.nombre, e);
+    }
+  }
+  return resultado;
+}
+
+async function enviarEmailEstudioObra(email, asunto, mensajeHtml, archivos) {
+  const archivosBase64 = await _archivosUrlsABase64(archivos);
+  const res = await fetch('https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+    body: JSON.stringify({ tipo: 'enviar_estudio_obra', email, asunto, mensaje: mensajeHtml, archivos: archivosBase64 })
+  });
+  if (!res.ok) throw new Error(await res.text());
+}
+
+async function reenviarEstudioObra(id) {
+  const f = registros.find(r => r.id === id) || (await apiGet('estudio_obras_envios', `id=eq.${id}`))[0];
+  if (!f) { toast('No se ha encontrado el envío', 'err'); return; }
+  if (!confirm(`¿Reenviar la solicitud a ${f.email_proveedor}?`)) return;
+  try {
+    const archivos = (f.archivos_urls || []).map(url => ({ url, nombre: url.split('/').pop() }));
+    await enviarEmailEstudioObra(
+      f.email_proveedor,
+      `Solicitud de presupuesto — ${f.nombre_obra}`,
+      construirMensajeEstudioObra(f.tema, f.nombre_obra, f.fase_obra, f.notas),
+      archivos
+    );
+    toast(`Reenviado a ${f.email_proveedor}`, 'ok');
+  } catch (e) {
+    toast('Error al reenviar: ' + e.message, 'err');
+  }
+}
+
+async function toggleRespondidoEstudioObra(id, actual) {
+  try {
+    await apiPatch('estudio_obras_envios', id, { respondido: !actual });
+    const reg = registros.find(r => r.id === id);
+    if (reg) reg.respondido = !actual;
+    renderTablaConScroll();
+    toast(!actual ? 'Marcado como respondido' : 'Vuelto a marcar como pendiente');
+  } catch (e) { toast('Error: ' + e.message, 'err'); }
+}
   </script>
 </body>
 

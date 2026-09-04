@@ -2148,6 +2148,8 @@
             class="fa-solid fa-user-check"></i>Consumo Interno</button>
         <button class="btn-nav" onclick="cambiarSeccion('estudio_obras')"><i
             class="fa-solid fa-magnifying-glass-dollar"></i>Estudio de Obras</button>
+        <button class="btn-nav" onclick="cambiarSeccion('obras_estudio')"><i class="fa-solid fa-list-check"></i>Obras en
+          Estudio</button>
       </div>
       <span id="usuarioConectado" style="color:#fff;opacity:.85;font-size:.85rem;margin-right:10px"></span>
       <button class="btn-salir" onclick="volverAlPanel()" style="margin-right:8px"><i
@@ -3108,6 +3110,7 @@
   <datalist id="dl_maquinaria"></datalist>
   <datalist id="dl_temas_estudio"></datalist>
   <datalist id="dl_fases_estudio"></datalist>
+  <datalist id="dl_obras_estudio"></datalist>
   <datalist id="dl_proveedores_envio"></datalist>
   <div class="barra-scroll-fija" id="barraScrollFija">
     <div id="barraScrollFijaInner"></div>
@@ -3330,21 +3333,22 @@
     // tras iniciar sesión con Supabase Auth — ver cargarPerfilActual.)
     const ACCESO_SECCIONES = {
       facturas_almacen: ['cynthia', 'emilio'],
-      facturas_obra: ['cynthia', 'angel', 'emilio', 'paula'],       // 👈
-      facturas_csg: ['angel', 'emilio', 'cynthia', 'paula'],         // 👈
-      revisadas_facturadas: ['cynthia', 'angel', 'emilio', 'paula'], // 👈
+      facturas_obra: ['cynthia', 'angel', 'emilio', 'paula'],
+      facturas_csg: ['angel', 'emilio', 'cynthia', 'paula'],
+      revisadas_facturadas: ['cynthia', 'angel', 'emilio', 'paula'],
       clientes: ['cynthia', 'jose', 'emilio'],
       inventario: ['cynthia', 'jose', 'emilio'],
-      materiales_obra: ['cynthia', 'juandavid', 'jose', 'emilio', 'paula'], // 👈
-      calendario_pagos: ['cynthia', 'angel', 'emilio', 'paula'],     // 👈
-      ingresos: ['natalia', 'angel', 'emilio', 'paula'],             // 👈
-      varios: ['cynthia', 'emilio', 'paula'],                        // 👈
+      materiales_obra: ['cynthia', 'juandavid', 'jose', 'emilio', 'paula'],
+      calendario_pagos: ['cynthia', 'angel', 'emilio', 'paula'],
+      ingresos: ['natalia', 'angel', 'emilio', 'paula'],
+      varios: ['cynthia', 'emilio', 'paula'],
       albaranes_venta: ['cynthia', 'emilio', 'jose'],
       facturas_venta: ['cynthia', 'emilio', 'jose'],
       presupuestos_venta: ['cynthia', 'emilio', 'jose'],
       maquinaria: ['cynthia', 'emilio', 'jose'],
       consumo_interno: ['cynthia', 'emilio', 'jose'],
-      estudio_obras: ['emilio', 'natalia']
+      estudio_obras: ['emilio', 'natalia'],
+      obras_estudio: ['emilio', 'natalia']
     };
 
     // Personas con acceso EXCLUSIVO a una lista concreta de secciones
@@ -3390,7 +3394,7 @@
       'clasificacion', 'facturas_almacen', 'facturas_obra', 'facturas_csg',
       'revisadas_facturadas', 'obras', 'calendario_pagos', 'notificaciones_presupuestos',
       'albaranes', 'albaranes_venta', 'facturas_venta', 'presupuestos_venta', 'clientes', 'inventario',
-      'materiales_obra', 'ingresos', 'varios', 'maquinaria', 'consumo_interno', 'estudio_obras'
+      'materiales_obra', 'ingresos', 'varios', 'maquinaria', 'consumo_interno', 'estudio_obras', 'obras_estudio'
     ];
 
     // Qué campos se buscan en cada tabla, y cómo se pinta cada resultado
@@ -3460,7 +3464,13 @@
         campos: ['cliente', 'email_cliente', 'asunto'], orden: 'fecha_recordatorio.desc',
         titulo: f => f.cliente || 'Presupuesto',
         sub: f => f.asunto || f.email_cliente || ''
-      }
+      },
+      {
+        tabla: 'obras_estudio', seccion: 'obras_estudio', label: 'Obras en Estudio', icon: 'fa-list-check',
+        campos: ['nombre'], orden: 'nombre.asc',
+        titulo: f => f.nombre || 'Obra en estudio',
+        sub: f => ''
+      },
     ];
 
     let _busquedaGlobalTimeout = null;
@@ -3770,6 +3780,7 @@
       maquinaria: ['Maquinaria', 'fa-truck-monster', false],
       consumo_interno: ['Consumo Interno', 'fa-user-check', false],
       estudio_obras: ['Estudio de Obras', 'fa-magnifying-glass-dollar', false],
+      obras_estudio: ['Obras en Estudio', 'fa-list-check', false],
     };
 
     function aplicarPermisosMenu() {
@@ -3794,8 +3805,10 @@
         cachesIniciales = Promise.all([
           cargarInventarioCache(), cargarClientesCache(), cargarProveedoresCache(),
           cargarObrasCache(), cargarMaterialesExclusivosCache(),
-          cargarMaquinariaCache(), cargarMunicipiosCache(), cargarTemasFasesEstudioCache()  // 👈 añadido
+          cargarMaquinariaCache(), cargarMunicipiosCache(), cargarTemasFasesEstudioCache(),
+          cargarObrasEstudioCache()
         ]);
+
       }
       await cachesIniciales;
       mostrarSelectorPanel();
@@ -4051,7 +4064,8 @@
                 : sec === 'consumo_interno' ? 'Nuevo consumo'
                   : sec === 'facturas_venta' ? 'Nueva factura'
                     : sec === 'estudio_obras' ? 'Nuevo envío'
-                      : 'Añadir Nuevo';
+                      : sec === 'obras_estudio' ? 'Nueva obra en estudio'
+                        : 'Añadir Nuevo';
 
       const sel = document.getElementById('filtroEstado');  // barra de busqueda
       const sp = document.getElementById('searchInput');
@@ -4123,7 +4137,9 @@
     <option value="pendiente">Pendiente de respuesta</option>
     <option value="respondido">Respondido</option>`;
         sp.placeholder = 'Buscar proveedor, obra o tema...';
-
+      } else if (sec === 'obras_estudio') {
+        sel.innerHTML = `<option value="">Todas</option>`;
+        sp.placeholder = 'Buscar obra en estudio...';
 
       } else {
         sel.innerHTML = `<option value="">Todos</option>`;
@@ -5715,6 +5731,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           maquinaria: 'order=codigo',
           consumo_interno: 'select=*,consumo_interno_items(*)&order=id.desc',
           estudio_obras: 'order=fecha_recordatorio.asc',
+          obras_estudio: 'order=nombre',
         };
         registros = await apiGetAll(tablaReal(tablaActual), orden[tablaActual] || '');
         inventarioDB = await apiGetAll('inventario', 'order=nombre');
@@ -7173,7 +7190,16 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <td><button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
     </tr>`;
         }).join('');
+      } else if (tablaActual === 'obras_estudio') {
+        hdr.innerHTML = `<tr><th>Nombre de la obra</th><th></th></tr>`;
+        const lista = registros.filter(o => (o.nombre || '').toLowerCase().includes(q));
+        if (!lista.length) { bdy.innerHTML = emptyRow(2, 'No hay obras en estudio registradas todavía'); return; }
+        bdy.innerHTML = lista.map(o => `<tr data-id="${o.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${o.id},'obras_estudio'))">
+    <td class="td-nombre"><strong>${o.nombre || '—'}</strong></td>
+    <td><button class="btn-eliminar" onclick="eliminar(${o.id})"><i class="fa-solid fa-trash"></i></button></td>
+  </tr>`).join('');
       }
+
       actualizarBarraSeleccion();
       actualizarBarraScrollFija();
     }
@@ -8460,7 +8486,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             payload.fecha_recibido = new Date().toISOString();
             await apiPost('varios', payload);
           }
-        } else if (tabla === 'ingresos') {
+        }
+        else if (tabla === 'ingresos') {
           const cliente = document.getElementById('f_cliente').value.trim();
           const obra = document.getElementById('f_obra').value.trim();
           const fecha = document.getElementById('f_fecha').value;
@@ -8504,6 +8531,15 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           } else {
             await apiPost('ingresos', payload);
           }
+        } else if (tabla === 'obras_estudio') {
+          const nombre = document.getElementById('f_nombre').value.trim();
+          if (!nombre) { toast('El nombre es obligatorio', 'err'); return; }
+          if (modalEditId) {
+            await apiPatch('obras_estudio', modalEditId, { nombre });
+          } else {
+            await apiPost('obras_estudio', { nombre });
+          }
+          await cargarObrasEstudioCache();
         } else if (tabla === 'maquinaria') {
           const codigo = document.getElementById('f_maq_codigo').value.trim();
           const nombre = document.getElementById('f_maq_nombre').value.trim();
@@ -8798,6 +8834,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     let temasEstudioDB = [];
     let fasesEstudioDB = [];
+    let obrasEstudioDB = [];
 
     async function cargarTemasFasesEstudioCache() {
       const filas = await apiGetAll('estudio_obras_envios', 'select=tema,fase_obra');
@@ -8807,6 +8844,12 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       if (dlTema) dlTema.innerHTML = temasEstudioDB.map(n => `<option value="${n.replace(/"/g, '&quot;')}"></option>`).join('');
       const dlFase = document.getElementById('dl_fases_estudio');
       if (dlFase) dlFase.innerHTML = fasesEstudioDB.map(n => `<option value="${n.replace(/"/g, '&quot;')}"></option>`).join('');
+    }
+
+    async function cargarObrasEstudioCache() {
+      obrasEstudioDB = await apiGetAll('obras_estudio', 'order=nombre');
+      const dl = document.getElementById('dl_obras_estudio');
+      if (dl) dl.innerHTML = obrasEstudioDB.map(o => `<option value="${(o.nombre || '').replace(/"/g, '&quot;')}"></option>`).join('');
     }
 
     let lineasMaterialExclusivoCount = 0;
@@ -12202,6 +12245,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           document.getElementById("f_maq_precio").value = f.precio_dia != null ? f.precio_dia : 0;
         }, 100);
         return;
+      } if (tabla == "obras_estudio") {
+        abrirModalNuevo("obras_estudio");
+        setTimeout(() => {
+          document.getElementById("modalTitulo").textContent = "Editar obra en estudio";
+          document.getElementById("btnGuardar").innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i>Guardar cambios';
+          document.getElementById("f_nombre").value = f.nombre || "";
+        }, 100);
+        return;
       }
       modalEditId = id;
       abrirModalNuevo(tabla);
@@ -12916,7 +12967,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       </div>
       <div class="form-group span2">
         <label>Obra *</label>
-        ${htmlSelectObras('eo_obra', 'Selecciona una obra existente o escribe una nueva...')}
+        <input type="text" id="eo_obra" list="dl_obras_estudio" placeholder="Escribe el nombre de la obra en estudio (nueva o ya usada antes)...">
       </div>
       <div class="form-group">
         <label>Fase de la obra</label>
@@ -12945,7 +12996,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         archivosEstudioSeleccionados = [];
         document.getElementById('modalNueva').classList.add('visible');
         setTimeout(() => {
-          setupObraAC('eo_obra');
           ['eo_tema', 'eo_obra', 'eo_fase'].forEach(id => document.getElementById(id).addEventListener('input', actualizarPreviewEstudioObra));
           actualizarPreviewEstudioObra();
           ocultarPdfModal();
@@ -13020,6 +13070,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   </div>`;
         document.getElementById('modalNueva').classList.add('visible');
         // ── VARIOS ──
+      }
+      else if (tabla === 'obras_estudio') {
+        document.getElementById('modalTitulo').textContent = 'Nueva Obra en Estudio';
+        cont.innerHTML = `<div class="form-grid-2">
+      <div class="form-group span2"><label>Nombre de la obra *</label><input type="text" id="f_nombre" placeholder="Ej: Reforma Calle Mayor 12"></div>
+    </div>`;
+        document.getElementById('modalNueva').classList.add('visible');
       } else if (tabla === 'varios') {
         document.getElementById('modalTitulo').textContent = 'Nuevo registro en Varios';
         cont.innerHTML = `<div class="form-grid-2">

@@ -8334,7 +8334,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             payload.recordatorio_enviado = false;
             await apiPost('presupuestos_seguimiento', payload);
           }
-          } else if (tabla === 'estudio_obras') {
+} else if (tabla === 'estudio_obras') {
   const proveedor = document.getElementById('eo_proveedor').value.trim();
   const email = document.getElementById('eo_email').value.trim();
   const obra = document.getElementById('eo_obra').value.trim();
@@ -8382,9 +8382,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   cargarDatos();
   cargarTemasFasesEstudioCache();
   return;
-
-
-        } else if (tabla === 'inventario') {
+} else if (tabla === 'inventario') {
           const nombre = document.getElementById('f_nombre').value.trim();
           if (!nombre) { toast('El nombre es obligatorio', 'err'); return; }
           const nuevoStock = parseFloat(document.getElementById('f_stock').value || 0);
@@ -12953,6 +12951,7 @@ async function cargarTemasFasesEstudioCache() {
     ocultarPdfModal();
   }, 50);
 
+
         // ── INVENTARIO ──
       } else if (tabla === 'inventario') {
         document.getElementById('modalTitulo').textContent = 'Nuevo Producto';
@@ -16483,8 +16482,7 @@ async function _leerArchivosEstudioObra(input) {
     }
 
     function construirMensajeEstudioObra(tema, obra, fase, notas) {
-  let msg = `Buenos días, les solicitamos presupuesto para ${tema} para la obra ${obra}` +
-    (fase ? ` que se encuentra en fase de ${fase}.` : '.');
+  let msg = `Buenos días, les solicitamos presupuesto para ${tema} para la obra ${obra} que se encuentra en fase de ${fase}.`;
   if (notas) msg += `<br><br>${notas}`;
   return msg;
 }
@@ -16492,11 +16490,19 @@ async function _leerArchivosEstudioObra(input) {
 function actualizarPreviewEstudioObra() {
   const tema = document.getElementById('eo_tema')?.value.trim() || '_____';
   const obra = document.getElementById('eo_obra')?.value.trim() || '_____';
-  const fase = document.getElementById('eo_fase')?.value.trim();
+  const fase = document.getElementById('eo_fase')?.value.trim() || '_____';
   const preview = document.getElementById('eo_preview');
   if (!preview) return;
-  preview.textContent = `Buenos días, les solicitamos presupuesto para ${tema} para la obra ${obra}` +
-    (fase ? ` que se encuentra en fase de ${fase}.` : '.');
+  preview.textContent = `Buenos días, les solicitamos presupuesto para ${tema} para la obra ${obra} que se encuentra en fase de ${fase}.`;
+}
+
+function autocompletarEmailProveedor() {
+  const inpProv = document.getElementById('eo_proveedor');
+  const inpEmail = document.getElementById('eo_email');
+  if (!inpProv || !inpEmail) return;
+  const nombre = inpProv.value.trim().toLowerCase();
+  const match = proveedoresDB.find(p => (p.nombre || '').trim().toLowerCase() === nombre);
+  if (match && match.email) inpEmail.value = match.email;
 }
 
 // Convierte cada archivo (ya subido a Storage) en base64 para adjuntarlo al email

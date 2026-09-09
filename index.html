@@ -3092,9 +3092,13 @@
       <button type="button" class="btn-add-linea" onclick="addLineaConsumoInterno()">
         <i class="fa-solid fa-plus me-1"></i>Añadir producto
       </button>
-      <div class="form-group" style="margin-top:12px;padding-top:12px;border-top:1.5px solid #ede5f5">
+            <div class="form-group" style="margin-top:12px;padding-top:12px;border-top:1.5px solid #ede5f5">
         <label style="font-weight:600">Total (€)</label>
         <input type="number" id="ci_total" readonly style="background:#f7f0f5;font-weight:700;max-width:200px">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;padding-top:10px;border-top:1.5px solid #ede5f5">
+        <span style="font-size:.85rem;color:#888;font-weight:600">Total de unidades:</span>
+        <span id="ci_total_unidades" style="font-size:1.3rem;font-weight:700;color:#b53987">0</span>
       </div>
       <div class="modal-btns">
         <button class="btn-cancelar" onclick="cerrarModal('modalConsumoInterno')">Cancelar</button>
@@ -10769,6 +10773,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       });
       const baseInput = document.getElementById('f_pr_base');
       if (baseInput) { baseInput.value = base.toFixed(2); recalcTotalPresupuesto(); }
+      const elTotalImporte = document.getElementById('totalImportePresupuesto');
+      if (elTotalImporte) elTotalImporte.textContent = fmt(base);
     }
 
     function recalcTotalPresupuesto() {
@@ -12540,6 +12546,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <p style="font-size:.78rem;color:#888;margin-top:-8px"><i class="fa-solid fa-info-circle me-1"></i>Estos productos NO afectan al stock — es solo una simulación de precio.</p>
       <div id="lineasPresupuesto"></div>
       <button type="button" class="btn-add-linea" onclick="addLineaPresupuesto()"><i class="fa-solid fa-plus me-1"></i>Añadir producto</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1.5px solid #ede5f5">
+        <span style="font-size:.85rem;color:#888;font-weight:600">Importe total de las líneas:</span>
+        <span id="totalImportePresupuesto" style="font-size:1.3rem;font-weight:700;color:#b53987">0,00 €</span>
+      </div>
       <div class="form-grid" style="margin-top:14px;padding-top:12px;border-top:1.5px solid #ede5f5">
         <div class="form-group"><label>Base imponible (€)</label><input type="number" id="f_pr_base" step="0.01" readonly style="background:#f7f0f5;font-weight:700"></div>
         <div class="form-group"><label>% IVA</label><input type="number" id="f_pr_pct_iva" step="0.01" value="21" oninput="recalcTotalPresupuesto()"></div>
@@ -13745,6 +13755,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <tr>
       <td>${i.producto_nombre || ''}</td>
       <td style="text-align:center">${fmtStock(i.cantidad)}</td>
+      <td style="text-align:right">${fmt(i.precio_unitario)}</td>
       <td style="text-align:right">${fmt(i.importe_total)}</td>
     </tr>`).join('');
 
@@ -13765,8 +13776,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   <p><b>Fecha:</b> ${fmtF(f.fecha)}</p>
   <div class="linea"></div>
   <table>
-    <thead><tr><th>Producto</th><th style="text-align:center">Cant.</th><th style="text-align:right">Total</th></tr></thead>
-    <tbody>${filas || '<tr><td colspan="3">Sin productos</td></tr>'}</tbody>
+    <thead><tr><th>Producto</th><th style="text-align:center">Cant.</th><th style="text-align:right">Precio Ud.</th><th style="text-align:right">Total</th></tr></thead>
+    <tbody>${filas || '<tr><td colspan="4">Sin productos</td></tr>'}</tbody>
   </table>
   <div class="total">TOTAL: ${fmt(f.total)}</div>
   <button class="btn-imprimir" onclick="window.print()">Imprimir</button>
@@ -13918,14 +13929,18 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     function recalcTotalCI() {
       let total = 0;
+      let totalUnidades = 0;
       document.querySelectorAll('[id^="ci_prod_"]').forEach(inp => {
         const idx = inp.id.split('_')[2];
         const cant = parseFloat(document.getElementById(`ci_cant_${idx}`)?.value || 0);
         const precio = parseFloat(document.getElementById(`ci_precio_${idx}`)?.value || 0);
         total += cant * precio;
+        totalUnidades += cant;
       });
       const esDevolucion = document.getElementById('ci_es_devolucion')?.checked;
       document.getElementById('ci_total').value = (esDevolucion ? -total : total).toFixed(2);
+      const elUnidades = document.getElementById('ci_total_unidades');
+      if (elUnidades) elUnidades.textContent = fmtStock(totalUnidades);
     }
 
     async function guardarConsumoInterno() {

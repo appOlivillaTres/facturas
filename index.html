@@ -10855,14 +10855,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     let lineasPresupuestoCount = 0;
 
-    function addLineaPresupuesto() {
-      lineasPresupuestoCount++;
-      const idx = lineasPresupuestoCount;
-      const div = document.createElement('div');
-      div.id = `lp_${idx}`;
-      div.className = 'linea-prod';
-      div.style.gridTemplateColumns = '1fr 150px 100px 80px auto';
-      div.innerHTML = `
+function addLineaPresupuesto() {
+  lineasPresupuestoCount++;
+  const idx = lineasPresupuestoCount;
+  const div = document.createElement('div');
+  div.id = `lp_${idx}`;
+  div.className = 'linea-prod';
+  div.style.gridTemplateColumns = '1fr 100px 100px 70px 100px auto';
+  div.innerHTML = `
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Producto</label>
       <input type="text" id="lp_prod_${idx}" list="dl_productos" placeholder="Escribe para buscar o escribir libremente..." oninput="autocompletarPrecioLineaPresupuesto(${idx})">
@@ -10879,12 +10879,16 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <label style="font-size:.75rem">Dto. %</label>
       <input type="number" id="lp_dto_${idx}" step="0.01" min="0" max="100" value="0" style="text-align:right;width:100%" oninput="recalcBaseDesdePresupuesto()">
     </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Total (€)</label>
+      <input type="number" id="lp_lineatotal_${idx}" step="0.01" readonly style="background:#f7f0f5;font-weight:600;text-align:right;width:100%" value="0.00">
+    </div>
     <button type="button" onclick="document.getElementById('lp_${idx}').remove(); recalcBaseDesdePresupuesto();"
       style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
       <i class="fa-solid fa-xmark"></i>
     </button>`;
-      document.getElementById('lineasPresupuesto').appendChild(div);
-    }
+  document.getElementById('lineasPresupuesto').appendChild(div);
+}
 
     function autocompletarPrecioLineaPresupuesto(idx) {
       const inpNombre = document.getElementById(`lp_prod_${idx}`);
@@ -10896,20 +10900,23 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     function recalcBaseDesdePresupuesto() {
-      let base = 0;
-      document.querySelectorAll('[id^="lp_prod_"]').forEach(inp => {
-        const idx = inp.id.split('_')[2];
-        const cant = parseFloat(document.getElementById(`lp_cant_${idx}`)?.value || 0);
-        const precio = parseFloat(document.getElementById(`lp_precio_${idx}`)?.value || 0);
-        const dto = parseFloat(document.getElementById(`lp_dto_${idx}`)?.value || 0);
-        const subtotal = cant * precio;
-        base += subtotal - (subtotal * dto / 100);
-      });
-      const baseInput = document.getElementById('f_pr_base');
-      if (baseInput) { baseInput.value = base.toFixed(2); recalcTotalPresupuesto(); }
-      const elTotalImporte = document.getElementById('totalImportePresupuesto');
-      if (elTotalImporte) elTotalImporte.textContent = fmt(base);
-    }
+  let base = 0;
+  document.querySelectorAll('[id^="lp_prod_"]').forEach(inp => {
+    const idx = inp.id.split('_')[2];
+    const cant = parseFloat(document.getElementById(`lp_cant_${idx}`)?.value || 0);
+    const precio = parseFloat(document.getElementById(`lp_precio_${idx}`)?.value || 0);
+    const dto = parseFloat(document.getElementById(`lp_dto_${idx}`)?.value || 0);
+    const subtotal = cant * precio;
+    const lineaTotal = subtotal - (subtotal * dto / 100);
+    const elLineaTotal = document.getElementById(`lp_lineatotal_${idx}`);
+    if (elLineaTotal) elLineaTotal.value = lineaTotal.toFixed(2);
+    base += lineaTotal;
+  });
+  const baseInput = document.getElementById('f_pr_base');
+  if (baseInput) { baseInput.value = base.toFixed(2); recalcTotalPresupuesto(); }
+  const elTotalImporte = document.getElementById('totalImportePresupuesto');
+  if (elTotalImporte) elTotalImporte.textContent = fmt(base);
+}
 
     function recalcTotalPresupuesto() {
       const base = parseFloat(document.getElementById('f_pr_base')?.value || 0);

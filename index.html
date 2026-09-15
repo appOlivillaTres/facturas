@@ -3177,7 +3177,13 @@
       natalia: 'natalia.gm@olivillatres.com',
       paula: 'paulafge@olivillatres.com'
     };
-
+    // Destinos facturas
+    const DESTINOS_PROVEEDOR = {
+      almacen: 'Facturas Almacén',
+      obra: 'Facturas Obra',
+      csg: 'Facturas CSG',
+      gastos_generales: 'Facturas Gastos Generales'
+    };
 
     // SEGÚN LA PERSONA QUE SEA EN EL SELECTOR DE LOGIN, MIRA SI ESE NOMBRE ES DE LOS QUE TENEMOS EN SUPABASE O NO 
     function emailDePersona(persona) {
@@ -6320,16 +6326,17 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       if (tablaActual === 'clasificacion') {
         hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Recibido</th><th>Remitente</th><th>Asunto</th><th>Archivo</th><th>Clasificar como</th><th></th></tr>`;
         const lista = registros.filter(f => [f.remitente, f.asunto].some(v => (v || '').toLowerCase().includes(q)));
-        if (!lista.length) { bdy.innerHTML = emptyRow(6, 'No hay facturas pendientes de clasificar'); actualizarBarraScrollFija(); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(7, 'No hay facturas pendientes de clasificar'); actualizarBarraScrollFija(); return; }
         bdy.innerHTML = lista.map(f => `<tr id="fila-clasif-${f.id}">
         <td>${celdaCheck(f.id)}</td><td style="font-size:.78rem;color:#888;white-space:nowrap">${f.fecha_recibido ? new Date(f.fecha_recibido).toLocaleString('es-ES') : '—'}</td>
         <td class="td-nombre">${f.remitente || '—'}</td>
         <td class="td-concepto" title="${f.asunto || ''}">${f.asunto || '—'}</td>
         <td>${f.archivo_url ? `<span class="link-badge factura" onclick="verArchivoPanel('${f.archivo_url}','${(f.asunto || 'Factura').replace(/'/g, "\\'")}')"><i class="fa-solid fa-file-pdf"></i>Ver archivo</span>` : '<span style="color:#ccc;font-size:.78rem">Sin archivo</span>'}</td>
-        <td class="td-acciones">
+                <td class="td-acciones">
           <button class="btn-toggle-pago pagado" onclick="clasificarPendiente(${f.id},'facturas_almacen')"><i class="fa-solid fa-warehouse me-1"></i>Almacén</button>
           <button class="btn-toggle-pago vencido" onclick="clasificarPendiente(${f.id},'facturas_obra')"><i class="fa-solid fa-helmet-safety me-1"></i>Obra</button>
           <button class="btn-toggle-pago pendiente" onclick="clasificarPendiente(${f.id},'facturas_csg')"><i class="fa-solid fa-building me-1"></i>CSG</button>
+          <button class="btn-toggle-pago" style="background:#fff3e0;color:#c47a00;border:1.5px solid #f0c060" onclick="clasificarPendiente(${f.id},'facturas_gastos_generales')"><i class="fa-solid fa-receipt me-1"></i>Gastos</button>
           <button class="btn-toggle-pago" style="background:#f3e5f5;color:#6a1b9a;border:1.5px solid #d9b8e8" onclick="clasificarComoAlbaran(${f.id})"><i class="fa-solid fa-file-signature me-1"></i>Albarán</button> <button class="btn-toggle-pago" style="background:#607d8b;color:#fff;border:1.5px solid #546570" onclick="clasificarComoVarios(${f.id})"><i class="fa-solid fa-ellipsis me-1"></i>Varios</button>
         </td>
         <td><button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
@@ -6358,7 +6365,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const estReal = f.imputado ? 'imputado' : (esVenc ? 'vencido' : (f.estado || 'pendiente'));
           return mQ && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_almacen')) && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'facturas_almacen', filtroPorRevisarDeOtro));
         });
-        if (!lista.length) { bdy.innerHTML = emptyRow(36, 'No se encontraron facturas'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(37, 'No se encontraron facturas'); return; }
         bdy.innerHTML = lista.map(f => {
           const est = f.estado || 'pendiente';
           const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
@@ -6416,6 +6423,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <i class="fa-solid fa-building"></i>
     CSG
   </button>
+    <button
+    class="btn-toggle-pago"
+    style="background:#fff3e0;color:#c47a00;border:1.5px solid #f0c060;margin-bottom:4px"
+    onclick="moverFactura(${f.id},'facturas_almacen','facturas_gastos_generales')">
+    <i class="fa-solid fa-receipt"></i>
+    Gastos
+  </button>
   <button
     class="btn-toggle-pago"
     style="background:#f3e5f5;color:#6a1b9a;border:1.5px solid #d9b8e8"
@@ -6423,6 +6437,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <i class="fa-solid fa-file-signature"></i>
     Albarán
   </button>
+
 </td>
 
 <td>
@@ -6479,7 +6494,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         } else {
           resumenEl.style.display = 'none';
         }
-        if (!lista.length) { bdy.innerHTML = emptyRow(38, 'No se encontraron facturas'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(39, 'No se encontraron facturas'); return; }
         bdy.innerHTML = lista.map(f => {
           const est = f.estado || 'pendiente';
           const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
@@ -6531,6 +6546,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   onclick="moverFactura(${f.id},'facturas_obra','facturas_csg')">
   CSG
 </button>
+  <button
+    class="btn-toggle-pago"
+    style="background:#fff3e0;color:#c47a00;border:1.5px solid #f0c060;margin-bottom:4px"
+    onclick="moverFactura(${f.id},'facturas_obra','facturas_gastos_generales')">
+    <i class="fa-solid fa-receipt"></i>
+    Gastos
+  </button>
   <button
     class="btn-toggle-pago"
     style="background:#f3e5f5;color:#6a1b9a;border:1.5px solid #d9b8e8"
@@ -6586,7 +6608,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const estReal = f.imputado ? 'imputado' : (esVenc ? 'vencido' : (f.estado || 'pendiente'));
           return mQ && mObra && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_csg')) && (!filtroPorRevisarDeOtro || faltaPorRevisarDe(f, 'facturas_csg', filtroPorRevisarDeOtro));
         });
-        if (!lista.length) { bdy.innerHTML = emptyRow(37, 'No se encontraron facturas'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(38, 'No se encontraron facturas'); return; }
         bdy.innerHTML = lista.map(f => {
           const est = f.estado || 'pendiente';
           const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
@@ -6644,6 +6666,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <i class="fa-solid fa-helmet-safety"></i>
     Obra
   </button>
+    <button
+    class="btn-toggle-pago"
+    style="background:#fff3e0;color:#c47a00;border:1.5px solid #f0c060;margin-bottom:4px"
+    onclick="moverFactura(${f.id},'facturas_csg','facturas_gastos_generales')">
+    <i class="fa-solid fa-receipt"></i>
+    Gastos
+  </button>
   <button
     class="btn-toggle-pago"
     style="background:#f3e5f5;color:#6a1b9a;border:1.5px solid #d9b8e8"
@@ -6680,7 +6709,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <th>Nº Int. Emp</th><th>Fecha</th><th>Recibido</th><th>Vencimiento</th><th>NIF</th><th>Proveedor</th>
     <th>Nº Factura</th><th>Concepto</th>
     <th class="num-cell">Base 1</th><th class="pct-cell">%IVA1</th><th class="num-cell">IVA1</th>
-    <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th>Imputar</th><th>Impreso</th><th>Excel</th><th></th>
+    <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th>Imputar</th><th>Impreso</th><th>Excel</th><th>Mover a</th><th></th>
   </tr>`;
         const lista = registros.filter(f => {
           const mQ = [f.numero_factura, f.proveedor, f.nif, f.numero_interno, f.concepto].some(v => (v || '').toLowerCase().includes(q));
@@ -6688,7 +6717,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const estReal = f.imputado ? 'imputado' : (esVenc ? 'vencido' : (f.estado || 'pendiente'));
           return mQ && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_gastos_generales'));
         });
-        if (!lista.length) { bdy.innerHTML = emptyRow(19, 'No se encontraron facturas de gastos generales'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(20, 'No se encontraron facturas de gastos generales'); return; }
         bdy.innerHTML = lista.map(f => {
           const est = f.estado || 'pendiente';
           const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
@@ -6716,14 +6745,32 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       </td>
       <td>${celdaImpreso(f, 'facturas_gastos_generales')}</td>
       <td>${celdaExportado(f)}</td>
+            <td style="white-space:nowrap">
+        <button class="btn-toggle-pago pendiente" style="margin-bottom:4px"
+          onclick="moverFactura(${f.id},'facturas_gastos_generales','facturas_almacen')">
+          <i class="fa-solid fa-warehouse"></i> Almacén
+        </button>
+        <button class="btn-toggle-pago pendiente" style="margin-bottom:4px"
+          onclick="moverFactura(${f.id},'facturas_gastos_generales','facturas_obra')">
+          <i class="fa-solid fa-helmet-safety"></i> Obra
+        </button>
+        <button class="btn-toggle-pago pendiente" style="margin-bottom:4px"
+          onclick="moverFactura(${f.id},'facturas_gastos_generales','facturas_csg')">
+          <i class="fa-solid fa-building"></i> CSG
+        </button>
+        <button class="btn-toggle-pago" style="background:#f3e5f5;color:#6a1b9a;border:1.5px solid #d9b8e8"
+          onclick="moverFacturaAAlbaran(${f.id},'facturas_gastos_generales')">
+          <i class="fa-solid fa-file-signature"></i> Albarán
+        </button>
+      </td>
       <td><button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
     </tr>`;
         }).join('');
 
       } else if (tablaActual === 'proveedores') {
-        hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Nombre</th><th>NIF</th><th>Email</th><th>Teléfono</th><th>Domicilio</th><th></th></tr>`;
+        hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Nombre</th><th>NIF</th><th>Email</th><th>Teléfono</th><th>Domicilio</th><th>Destino</th><th></th></tr>`;
         const lista = registros.filter(f => [f.nombre, f.nif, f.email].some(v => (v || '').toLowerCase().includes(q)));
-        if (!lista.length) { bdy.innerHTML = emptyRow(6, 'No se encontraron proveedores'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(7, 'No se encontraron proveedores'); return; }
         bdy.innerHTML = lista.map(f => `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${f.id},'proveedores'))">
     <td>${celdaCheck(f.id)}</td>
     <td class="td-nombre"><strong>${f.nombre || '—'}</strong></td>
@@ -6731,6 +6778,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <td style="font-size:.82rem">${f.email || '—'}</td>
     <td style="font-size:.82rem">${f.telefono || '—'}</td>
     <td style="font-size:.82rem">${[f.domicilio, f.poblacion].filter(Boolean).join(', ') || '—'}</td>
+        <td>${f.destino
+            ? `<span class="badge-estado badge-pagado">${DESTINOS_PROVEEDOR[f.destino] || f.destino}</span>`
+            : '<span style="color:#ccc;font-size:.78rem">Clasificación</span>'}</td>
     <td><button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
   </tr>`).join('');
         // REVISADAS Y FACTURADAS (agregado de las 3 tablas de facturas)
@@ -7597,104 +7647,69 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     // MOVER FACTURA A OTRA TABLA
+    // Columnas que NO existen en todas las tablas de facturas.
+    // Al mover, se elimina cualquiera que no exista en la tabla destino.
+    const COLUMNAS_ESPECIFICAS_FACTURAS = {
+      facturas_almacen: ['revisado_cynthia', 'no_corresponde_cynthia', 'revisado_emilio'],
+      facturas_obra: ['revisado_angel', 'no_corresponde_angel', 'revisado_cynthia', 'no_corresponde_cynthia', 'revisado_emilio', 'revisado_paula', 'nombre_obra'],
+      facturas_csg: ['revisado_angel', 'no_corresponde_angel', 'revisado_emilio', 'revisado_paula', 'nombre_obra'],
+      facturas_gastos_generales: ['revisado_cynthia', 'no_corresponde_cynthia', 'revisado_emilio']
+    };
+
+    const TODAS_COLUMNAS_ESPECIFICAS = [...new Set([
+      ...Object.values(COLUMNAS_ESPECIFICAS_FACTURAS).flat(),
+      'revisado_juandavid'
+    ])];
+
+    const ETIQUETA_TABLA_FACTURAS = {
+      facturas_almacen: 'Almacén',
+      facturas_obra: 'Obra',
+      facturas_csg: 'CSG',
+      facturas_gastos_generales: 'Gastos Generales'
+    };
+
     let _moviendoFactura = false;
     async function moverFactura(id, origen, destino) {
       if (_moviendoFactura) return;
       _moviendoFactura = true;
       try {
-
-        // Obtener la factura
         const factura = await apiGet(origen, `id=eq.${id}`);
-
         if (!factura || !factura.length) {
           toast("Factura no encontrada", "err");
           return;
         }
 
-        // Copiar todos los datos
         const nueva = { ...factura[0] };
-
-        // Quitar el id
         delete nueva.id;
-
-
-        // Si pasa de Obra a Almacén
-        if (origen === 'facturas_obra' && destino === 'facturas_almacen') {
-          delete nueva.nombre_obra;
-          delete nueva.revisado_angel;
-          delete nueva.revisado_juandavid;
-          delete nueva.no_corresponde_angel;
-          delete nueva.revisado_paula; // 👈 añadir
-        }
-
-        // Si pasa de Almacén a Obra
-        if (origen === 'facturas_almacen' && destino === 'facturas_obra') {
-          if (!('nombre_obra' in nueva)) {
-            nueva.nombre_obra = '';
-          }
-        }
-
-        // Si pasa de Obra a CSG
-        if (origen === 'facturas_obra' && destino === 'facturas_csg') {
-          delete nueva.revisado_juandavid;
-          delete nueva.revisado_cynthia; // facturas_csg tampoco tiene esta columna
-          delete nueva.no_corresponde_cynthia;
-        }
-
-        // Si pasa de CSG a Obra
-        if (origen === 'facturas_csg' && destino === 'facturas_obra') {
-          if (!('nombre_obra' in nueva)) {
-            nueva.nombre_obra = '';
-          }
-        }
-
-        // Si pasa de Almacén a CSG
-        if (origen === 'facturas_almacen' && destino === 'facturas_csg') {
-          // facturas_csg no tiene columna de Cynthia
-          delete nueva.revisado_cynthia;
-          delete nueva.no_corresponde_cynthia;
-          if (!('nombre_obra' in nueva)) nueva.nombre_obra = '';
-        }
-
-        // Si pasa de CSG a Almacén
-        if (origen === 'facturas_csg' && destino === 'facturas_almacen') {
-          delete nueva.revisado_angel;
-          delete nueva.no_corresponde_angel;
-          delete nueva.nombre_obra;
-          delete nueva.revisado_paula; // 👈 añadir
-        }
-
-        // Quitar metadatos que no deben copiarse (los genera la BD)
         delete nueva.created_at;
         delete nueva.updated_at;
 
-        // Quitar metadatos que no deben copiarse (los genera la BD)
-        delete nueva.created_at;
-        delete nueva.updated_at;
+        // Quitamos todas las columnas que no existen en la tabla destino
+        const permitidas = COLUMNAS_ESPECIFICAS_FACTURAS[destino] || [];
+        TODAS_COLUMNAS_ESPECIFICAS.forEach(col => {
+          if (!permitidas.includes(col)) delete nueva[col];
+        });
+        // Si el destino sí tiene obra y venimos de una tabla que no la tenía, la dejamos vacía
+        if (permitidas.includes('nombre_obra') && !('nombre_obra' in nueva)) nueva.nombre_obra = '';
 
-        // 👇 comprobar que no exista ya esa factura en destino (excluyendo la propia factura que estamos moviendo)
+        // Comprobamos que no exista ya esa factura en destino
         const duplicado = await buscarFacturaDuplicada(
           nueva.numero_factura, nueva.nif, nueva.proveedor, nueva.fecha, parseFloat(nueva.total || 0), id
         );
         if (duplicado) {
-          toast('⚠️ Esta factura ya existe en el destino — no se ha movido para evitar duplicarla', 'err');
+          toast('⚠️ Esta factura ya existe en ' + (ETIQUETA_TABLA_FACTURAS[duplicado.tabla] || duplicado.tabla) + ' — no se ha movido para evitar duplicarla', 'err');
           return;
         }
 
-        // Insertar en la tabla destino
         await apiPost(destino, nueva);
         notificarRevisoresFactura(destino, nueva);
-
-        // Eliminar de la tabla origen
         await apiDelete(origen, id);
 
-        toast("Factura movida correctamente");
-
+        toast(`Factura movida a <strong>${ETIQUETA_TABLA_FACTURAS[destino] || destino}</strong>`);
         cargarDatos();
 
       } catch (e) {
         console.error("ERROR:", e);
-
         if (e instanceof Error) {
           alert(e.message);
         } else {
@@ -7931,7 +7946,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     async function buscarFacturaDuplicada(numFactura, nif, proveedor, fecha, total, idExcluir) {
-      const tablas = ['facturas_almacen', 'facturas_obra', 'facturas_csg'];
+      const tablas = ['facturas_almacen', 'facturas_obra', 'facturas_csg', 'facturas_gastos_generales'];
       const norm = s => (s || '').toLowerCase().trim();
 
       if (numFactura) {
@@ -8665,7 +8680,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             await apiPost('obras_estudio', { nombre });
           }
           await cargarObrasEstudioCache();
-                } else if (tabla === 'maquinaria') {
+        } else if (tabla === 'maquinaria') {
           const codigo = document.getElementById('f_maq_codigo').value.trim();
           const nombre = document.getElementById('f_maq_nombre').value.trim();
           if (!codigo || !nombre) { toast('Código y nombre son obligatorios', 'err'); return; }
@@ -8686,7 +8701,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             domicilio: document.getElementById('f_domicilio').value.trim() || null,
             poblacion: document.getElementById('f_poblacion').value.trim() || null,
             codigo_postal: document.getElementById('f_cp').value.trim() || null,
-            provincia: document.getElementById('f_provincia').value.trim() || null
+            provincia: document.getElementById('f_provincia').value.trim() || null,
+            destino: document.getElementById('f_destino').value || null
           };
           if (modalEditId) {
             await apiPatch('proveedores', modalEditId, payload);
@@ -8731,6 +8747,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             await apiPatch('facturas_gastos_generales', modalEditId, payload);
           } else {
             await apiPost('facturas_gastos_generales', payload);
+            if (window._pendienteOrigenId) {
+              await apiDelete('facturas_pendientes', window._pendienteOrigenId);
+              window._pendienteOrigenId = null;
+            }
+            window._prellenado = null;
           }
         }
 
@@ -10609,14 +10630,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
           // Puntos: solo se aplica la diferencia entre lo que sumaba/restaba
           // antes y lo que debería sumar/restar ahora
+
           const puntosAntes = (anterior && anterior.puntos_generados) || 0;
           const deltaPuntos = puntosNuevos - puntosAntes;
           if (deltaPuntos !== 0) {
-            const cliente = clientesDB.find(c => c.id === cliente_id);
-            if (cliente) {
-              const puntosFinales = Math.max(0, (cliente.puntos || 0) + deltaPuntos);
-              await apiPatch('clientes', cliente_id, { puntos: puntosFinales });
-              cliente.puntos = puntosFinales;
+            const puntosFinales = Math.max(0, (cliente.puntos || 0) + deltaPuntos);
+            await apiPatch('clientes', cliente_id, { puntos: puntosFinales });
+            if (cliente.email) {
+              await enviarEmailPuntos(cliente.email, cliente.nombre, puntosFinales, 'compra');
             }
           }
 
@@ -12573,6 +12594,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           document.getElementById("f_poblacion").value = f.poblacion || "";
           document.getElementById("f_cp").value = f.codigo_postal || "";
           document.getElementById("f_provincia").value = f.provincia || "";
+          document.getElementById("f_destino").value = f.destino || "";
         }, 100);
         return;
       }
@@ -12698,9 +12720,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
       const eR = f.imputado ? 'imputado' : (esVenc ? 'vencido' : est);
 
-      const otras = tabla === 'facturas_almacen' ? [['facturas_obra', 'Obra'], ['facturas_csg', 'CSG']]
-        : tabla === 'facturas_obra' ? [['facturas_almacen', 'Almacén'], ['facturas_csg', 'CSG']]
-          : [['facturas_almacen', 'Almacén'], ['facturas_obra', 'Obra']];
+      const otras = ['facturas_almacen', 'facturas_obra', 'facturas_csg', 'facturas_gastos_generales']
+        .filter(t => t !== tabla)
+        .map(t => [t, ETIQUETA_TABLA_FACTURAS[t]]);
 
       cont.innerHTML = `
     <button id="btnAccionEstadoModal" class="btn-toggle-pago ${eR}" data-es-venc="${esVenc ? '1' : '0'}" data-imputado="${f.imputado ? '1' : '0'}" onclick="toggleEstado(${f.id},'${est}','${tabla}')">
@@ -13200,6 +13222,17 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <div class="form-group"><label>Población</label><input type="text" id="f_poblacion" placeholder="Toledo"></div>
     <div class="form-group"><label>Código postal</label><input type="text" id="f_cp" placeholder="45001"></div>
     <div class="form-group span2"><label>Provincia</label><input type="text" id="f_provincia" placeholder="Toledo"></div>
+        <div class="form-group span2">
+      <label>Destino de sus facturas <span style="font-size:.72rem;color:#888">(a qué sección las manda FacturaSync automáticamente)</span></label>
+      <select id="f_destino">
+        <option value="">Sin destino fijo — va a Clasificación</option>
+        <option value="almacen">Facturas Almacén</option>
+        <option value="obra">Facturas Obra</option>
+        <option value="csg">Facturas CSG</option>
+        <option value="gastos_generales">Facturas Gastos Generales</option>
+      </select>
+      <p style="font-size:.72rem;color:#888;margin-top:4px">Si se deja vacío, la factura llega a la Bandeja de Clasificación para decidirla a mano.</p>
+    </div>
   </div>`;
         document.getElementById('modalNueva').classList.add('visible');
         setTimeout(() => setupMunicipioAC('f_poblacion', 'f_cp'), 50);
@@ -13231,11 +13264,22 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     </div>
     <div class="form-seccion" id="revisionModalWrap" style="display:none">Revisión</div>
     <div class="td-acciones" id="revisionChipsCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+        <div id="avisoRevisionIA" style="display:none"></div>
     ${htmlCampoArchivo()}
     ${htmlCamposExcel()}`;
         archivosFacturaSeleccionados = [];
         document.getElementById('modalNueva').classList.add('visible');
-        setTimeout(() => { setupProveedorAC('f_prov', 'f_nif'); ocultarPdfModal(); renderArchivosFacturaChips(); }, 50);
+        setTimeout(() => {
+          setupProveedorAC('f_prov', 'f_nif');
+          _aplicarPrellenado();
+          if (window._prellenado && window._prellenado.archivo_url) {
+            archivosFacturaSeleccionados = [{ url: window._prellenado.archivo_url, nombre: window._prellenado.proveedor || 'Factura' }];
+            mostrarPdfModal(window._prellenado.archivo_url, window._prellenado.proveedor || 'Factura');
+          } else {
+            ocultarPdfModal();
+          }
+          renderArchivosFacturaChips();
+        }, 50);
       } else if (tabla === 'ingresos') {
         document.getElementById('modalTitulo').textContent = 'Nuevo Ingreso';
         cont.innerHTML = `
@@ -13478,7 +13522,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     </div>`;
         document.getElementById('modalNueva').classList.add('visible');
       }
-    
+
     }
 
 

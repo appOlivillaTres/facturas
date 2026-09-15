@@ -8665,7 +8665,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             await apiPost('obras_estudio', { nombre });
           }
           await cargarObrasEstudioCache();
-        } else if (tabla === 'maquinaria') {
+                } else if (tabla === 'maquinaria') {
           const codigo = document.getElementById('f_maq_codigo').value.trim();
           const nombre = document.getElementById('f_maq_nombre').value.trim();
           if (!codigo || !nombre) { toast('Código y nombre son obligatorios', 'err'); return; }
@@ -8675,7 +8675,65 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           } else {
             await apiPost('maquinaria', payload);
           }
+        } else if (tabla === 'proveedores') {
+          const nombre = document.getElementById('f_nombre').value.trim();
+          if (!nombre) { toast('El nombre es obligatorio', 'err'); return; }
+          const payload = {
+            nombre,
+            nif: document.getElementById('f_nif').value.trim() || null,
+            telefono: document.getElementById('f_tel').value.trim() || null,
+            email: document.getElementById('f_email').value.trim() || null,
+            domicilio: document.getElementById('f_domicilio').value.trim() || null,
+            poblacion: document.getElementById('f_poblacion').value.trim() || null,
+            codigo_postal: document.getElementById('f_cp').value.trim() || null,
+            provincia: document.getElementById('f_provincia').value.trim() || null
+          };
+          if (modalEditId) {
+            await apiPatch('proveedores', modalEditId, payload);
+          } else {
+            await apiPost('proveedores', payload);
+          }
+          proveedoresDB = await apiGet('proveedores', 'order=nombre');
+
+        } else if (tabla === 'facturas_gastos_generales') {
+          const prov = document.getElementById('f_prov').value.trim();
+          const fecha = document.getElementById('f_fecha').value;
+          if (!prov || !fecha) { toast('Proveedor y fecha son obligatorios', 'err'); return; }
+          const nifCampo = document.getElementById('f_nif').value.trim() || null;
+          await asegurarProveedor(prov, nifCampo);
+
+          const payload = {
+            numero_interno: document.getElementById('f_num_interno').value.trim() || null,
+            numero_factura: document.getElementById('f_num').value.trim() || null,
+            fecha,
+            fecha_recibido: document.getElementById('f_fecha_recibido').value || null,
+            proveedor: prov,
+            nif: nifCampo,
+            concepto: document.getElementById('f_concepto').value.trim() || null,
+            total: parseFloat(document.getElementById('f_total').value || 0),
+            moneda: document.getElementById('f_moneda').value || 'EUR',
+            estado: document.getElementById('f_est').value,
+            fecha_vencimiento: document.getElementById('f_venc').value || null,
+            ...recogerCamposExcel()
+          };
+          if (archivosFacturaSeleccionados.length) {
+            payload.archivo_url = archivosFacturaSeleccionados[0].url;
+            payload.archivos_urls = archivosFacturaSeleccionados.map(a => a.url);
+          } else {
+            payload.archivo_url = null;
+            payload.archivos_urls = [];
+          }
+
+          if (modalEditId) {
+            const prevReg = registros.find(r => r.id === modalEditId);
+            const historialPrevio = (prevReg && prevReg.historial_ediciones) || [];
+            payload.historial_ediciones = [...historialPrevio, { persona: currentPersona, fecha: new Date().toISOString() }];
+            await apiPatch('facturas_gastos_generales', modalEditId, payload);
+          } else {
+            await apiPost('facturas_gastos_generales', payload);
+          }
         }
+
 
         toast('Guardado correctamente');
         cerrarModal('modalNueva');
@@ -13419,63 +13477,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <div class="form-group span2"><label>Archivo (PDF o imagen) <span style="font-size:.72rem;color:#888">(opcional)</span></label><input type="file" id="f_archivo_varios" accept="application/pdf,image/*"></div>
     </div>`;
         document.getElementById('modalNueva').classList.add('visible');
-      } else if (tabla === 'proveedores') {
-      const nombre = document.getElementById('f_nombre').value.trim();
-      if (!nombre) { toast('El nombre es obligatorio', 'err'); return; }
-      const payload = {
-        nombre,
-        nif: document.getElementById('f_nif').value.trim() || null,
-        telefono: document.getElementById('f_tel').value.trim() || null,
-        email: document.getElementById('f_email').value.trim() || null,
-        domicilio: document.getElementById('f_domicilio').value.trim() || null,
-        poblacion: document.getElementById('f_poblacion').value.trim() || null,
-        codigo_postal: document.getElementById('f_cp').value.trim() || null,
-        provincia: document.getElementById('f_provincia').value.trim() || null
-      };
-      if (modalEditId) {
-        await apiPatch('proveedores', modalEditId, payload);
-      } else {
-        await apiPost('proveedores', payload);
       }
-      proveedoresDB = await apiGet('proveedores', 'order=nombre');
-
-    } else if (tabla === 'facturas_gastos_generales') {
-      const prov = document.getElementById('f_prov').value.trim();
-      const fecha = document.getElementById('f_fecha').value;
-      if (!prov || !fecha) { toast('Proveedor y fecha son obligatorios', 'err'); return; }
-      const nifCampo = document.getElementById('f_nif').value.trim() || null;
-      await asegurarProveedor(prov, nifCampo);
-
-      const payload = {
-        numero_interno: document.getElementById('f_num_interno').value.trim() || null,
-        numero_factura: document.getElementById('f_num').value.trim() || null,
-        fecha,
-        fecha_recibido: document.getElementById('f_fecha_recibido').value || null,
-        proveedor: prov,
-        nif: nifCampo,
-        concepto: document.getElementById('f_concepto').value.trim() || null,
-        total: parseFloat(document.getElementById('f_total').value || 0),
-        moneda: document.getElementById('f_moneda').value || 'EUR',
-        estado: document.getElementById('f_est').value,
-        fecha_vencimiento: document.getElementById('f_venc').value || null,
-        ...recogerCamposExcel()
-      };
-      if (archivosFacturaSeleccionados.length) {
-        payload.archivo_url = archivosFacturaSeleccionados[0].url;
-        payload.archivos_urls = archivosFacturaSeleccionados.map(a => a.url);
-      } else {
-        payload.archivo_url = null;
-        payload.archivos_urls = [];
-      }
-
-      if (modalEditId) {
-        const prevReg = registros.find(r => r.id === modalEditId);
-        const historialPrevio = (prevReg && prevReg.historial_ediciones) || [];
-        payload.historial_ediciones = [...historialPrevio, { persona: currentPersona, fecha: new Date().toISOString() }];
-        await apiPatch('facturas_gastos_generales', modalEditId, payload);
-      } else {
-        await apiPost('facturas_gastos_generales', payload);
-      }
+    
     }
 
 

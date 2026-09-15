@@ -2117,7 +2117,8 @@
             class="fa-solid fa-helmet-safety"></i>Facturas Obra</button>
         <button class="btn-nav" onclick="cambiarSeccion('facturas_csg')"><i class="fa-solid fa-building"></i>Facturas
           CSG</button>
-
+        <button class="btn-nav" onclick="cambiarSeccion('facturas_gastos_generales')"><i
+            class="fa-solid fa-receipt"></i>Gastos Generales</button>
         <button class="btn-nav" onclick="cambiarSeccion('revisadas_facturadas')"><i
             class="fa-solid fa-clipboard-check"></i>Revisadas y Facturadas</button>
         <button class="btn-nav" onclick="cambiarSeccion('obras')"><i
@@ -2134,6 +2135,8 @@
             class="fa-solid fa-file-invoice-dollar"></i>Facturas Venta</button>
         <button class="btn-nav" onclick="cambiarSeccion('presupuestos_venta')"><i
             class="fa-solid fa-file-lines"></i>Presupuestos</button>
+        <button class="btn-nav" onclick="cambiarSeccion('proveedores')"><i
+            class="fa-solid fa-truck-field"></i>Proveedores</button>
         <button class="btn-nav" onclick="cambiarSeccion('clientes')"><i class="fa-solid fa-users"></i>Clientes</button>
         <button class="btn-nav" onclick="cambiarSeccion('inventario')"><i
             class="fa-solid fa-boxes-stacked"></i>Inventario</button>
@@ -3276,8 +3279,8 @@
 
     // Tablas que afectan a lo que se ve en pantalla ahora mismo
     const TABLAS_REALTIME = [
-      'facturas_pendientes', 'facturas_almacen', 'facturas_obra', 'facturas_csg',
-      'albaranes', 'clientes', 'inventario', 'proveedores', 'materiales_obra', 'citas',
+      'facturas_pendientes', 'facturas_almacen', 'facturas_obra', 'facturas_csg', 'facturas_gastos_generales',
+      'albaranes', 'proveedores', 'clientes', 'inventario', 'proveedores', 'materiales_obra', 'citas',
       'ingresos', 'varios', 'albaranes_venta', 'facturas_venta', 'maquinaria', 'consumo_interno', 'notificaciones_presupuestos', 'facturas_reparto_obras', 'presupuestos_venta', 'estudio_obras_envios'
     ];
 
@@ -3380,7 +3383,9 @@
       maquinaria: ['cynthia', 'emilio', 'jose'],
       consumo_interno: ['cynthia', 'emilio', 'jose'],
       estudio_obras: ['emilio', 'natalia'],
-      obras_estudio: ['emilio', 'natalia']
+      obras_estudio: ['emilio', 'natalia'],
+      facturas_gastos_generales: ['cynthia', 'emilio'],
+      proveedores: ['cynthia', 'emilio'],
     };
 
     // Personas con acceso EXCLUSIVO a una lista concreta de secciones
@@ -3423,9 +3428,9 @@
 
     // Todas las secciones que existen en el menú.
     const TODAS_LAS_SECCIONES = [
-      'clasificacion', 'facturas_almacen', 'facturas_obra', 'facturas_csg',
+      'clasificacion', 'facturas_almacen', 'facturas_obra', 'facturas_csg', 'facturas_gastos_generales',
       'revisadas_facturadas', 'obras', 'calendario_pagos', 'notificaciones_presupuestos',
-      'albaranes', 'albaranes_venta', 'facturas_venta', 'presupuestos_venta', 'clientes', 'inventario',
+      'albaranes', 'albaranes_venta', 'facturas_venta', 'presupuestos_venta', 'proveedores', 'clientes', 'inventario',
       'materiales_obra', 'ingresos', 'varios', 'maquinaria', 'consumo_interno', 'estudio_obras', 'obras_estudio'
     ];
 
@@ -3502,6 +3507,18 @@
         campos: ['nombre'], orden: 'nombre.asc',
         titulo: f => f.nombre || 'Obra en estudio',
         sub: f => ''
+      },
+      {
+        tabla: 'facturas_gastos_generales', seccion: 'facturas_gastos_generales', label: 'Gastos Generales', icon: 'fa-receipt',
+        campos: ['numero_factura', 'proveedor', 'nif', 'concepto', 'numero_interno'], orden: 'fecha.desc',
+        titulo: f => f.proveedor || f.numero_factura || 'Factura',
+        sub: f => `${f.numero_factura || 's/n'} — ${fmt(f.total)} — ${fmtF(f.fecha)}`
+      },
+      {
+        tabla: 'proveedores', seccion: 'proveedores', label: 'Proveedores', icon: 'fa-truck-field',
+        campos: ['nombre', 'nif', 'email'], orden: 'nombre.asc',
+        titulo: f => f.nombre || 'Proveedor',
+        sub: f => f.nif || f.email || ''
       },
     ];
 
@@ -3666,6 +3683,10 @@
         { campo: 'revisado_cynthia', nombre: 'Cynthia' },
         { campo: 'revisado_paula', nombre: 'Paula' }
       ],
+      facturas_gastos_generales: [
+        { campo: 'revisado_cynthia', nombre: 'Cynthia' },
+        { campo: 'revisado_emilio', nombre: 'Emilio' }
+      ],
       ingresos: [
         { campo: 'revisado_angel', nombre: 'Angel' },
         { campo: 'revisado_emilio', nombre: 'Emilio' }
@@ -3813,6 +3834,8 @@
       consumo_interno: ['Consumo Interno', 'fa-user-check', false],
       estudio_obras: ['Estudio de Obras', 'fa-magnifying-glass-dollar', false],
       obras_estudio: ['Obras en Estudio', 'fa-list-check', false],
+      facturas_gastos_generales: ['Facturas Gastos Generales', 'fa-receipt', true],
+      proveedores: ['Proveedores', 'fa-truck-field', false],
     };
 
     function aplicarPermisosMenu() {
@@ -4047,7 +4070,7 @@
       }
 
       // dependiendo de la seccion lo guardamos en una variable u otra
-      const esFacturas = sec === 'facturas_almacen' || sec === 'facturas_obra' || sec === 'facturas_csg';
+      const esFacturas = sec === 'facturas_almacen' || sec === 'facturas_obra' || sec === 'facturas_csg' || sec === 'facturas_gastos_generales';
       const esRevisadas = sec === 'revisadas_facturadas';
       const esObras = sec === 'obras';
       // si estamos en facturas, revisadas o materiales, le ponemos el botón de exportar, si no, ese boton se queda oculto
@@ -4097,7 +4120,8 @@
                   : sec === 'facturas_venta' ? 'Nueva factura'
                     : sec === 'estudio_obras' ? 'Nuevo envío'
                       : sec === 'obras_estudio' ? 'Nueva obra en estudio'
-                        : 'Añadir Nuevo';
+                        : sec === 'proveedores' ? 'Nuevo proveedor'
+                          : 'Añadir Nuevo';
 
       const sel = document.getElementById('filtroEstado');  // barra de busqueda
       const sp = document.getElementById('searchInput');
@@ -4172,7 +4196,9 @@
       } else if (sec === 'obras_estudio') {
         sel.innerHTML = `<option value="">Todas</option>`;
         sp.placeholder = 'Buscar obra en estudio...';
-
+      } else if (sec === 'proveedores') {
+        sel.innerHTML = `<option value="">Todos</option>`;
+        sp.placeholder = 'Buscar nombre, NIF o email...';
       } else {
         sel.innerHTML = `<option value="">Todos</option>`;
         sp.placeholder = sec === 'clientes' ? 'Buscar nombre, NIF o email...' : 'Buscar producto...';
@@ -5764,6 +5790,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           consumo_interno: 'select=*,consumo_interno_items(*),consumo_interno_items_exclusivos(*)&order=id.desc',
           estudio_obras: 'order=fecha_recordatorio.asc',
           obras_estudio: 'order=nombre',
+          facturas_gastos_generales: 'order=fecha.desc',
+          proveedores: 'order=nombre',
         };
         registros = await apiGetAll(tablaReal(tablaActual), orden[tablaActual] || '');
         inventarioDB = await apiGetAll('inventario', 'order=nombre');
@@ -5803,7 +5831,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           });
         }
 
-        if (tablaActual === 'facturas_almacen' || tablaActual === 'facturas_obra' || tablaActual === 'facturas_csg' || tablaActual === 'ingresos') {
+        if (tablaActual === 'facturas_almacen' || tablaActual === 'facturas_obra' || tablaActual === 'facturas_csg' || tablaActual === 'ingresos' || tablaActual === 'facturas_gastos_generales') {
           actualizarStats(); renderAlertas();
           comprobarFacturasVencidasSinRevisar();
         }
@@ -6646,7 +6674,65 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <td class="num-cell">${fmtN(f.total_retencion)}</td>
       </tr>`;
         }).join('');
+      } else if (tablaActual === 'facturas_gastos_generales') {
+        hdr.innerHTML = `<tr>
+    <th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th>
+    <th>Nº Int. Emp</th><th>Fecha</th><th>Recibido</th><th>Vencimiento</th><th>NIF</th><th>Proveedor</th>
+    <th>Nº Factura</th><th>Concepto</th>
+    <th class="num-cell">Base 1</th><th class="pct-cell">%IVA1</th><th class="num-cell">IVA1</th>
+    <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th>Imputar</th><th>Impreso</th><th>Excel</th><th></th>
+  </tr>`;
+        const lista = registros.filter(f => {
+          const mQ = [f.numero_factura, f.proveedor, f.nif, f.numero_interno, f.concepto].some(v => (v || '').toLowerCase().includes(q));
+          const esVenc = f.estado === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
+          const estReal = f.imputado ? 'imputado' : (esVenc ? 'vencido' : (f.estado || 'pendiente'));
+          return mQ && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_gastos_generales'));
+        });
+        if (!lista.length) { bdy.innerHTML = emptyRow(19, 'No se encontraron facturas de gastos generales'); return; }
+        bdy.innerHTML = lista.map(f => {
+          const est = f.estado || 'pendiente';
+          const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
+          const eR = f.imputado ? 'imputado' : (esVenc ? 'vencido' : est);
+          const claseFila = claseFilaVencimiento(f, est, esVenc, hoyD);
+          return `<tr data-id="${f.id}" class="${claseFila}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${f.id},'facturas_gastos_generales'))">
+      <td>${celdaCheck(f.id)}</td>
+      <td style="font-size:.78rem;color:#888">${nvl(f.numero_interno)}</td>
+      <td>${fmtF(f.fecha)}</td><td>${fmtF(f.fecha_recibido)}</td><td>${fmtF(f.fecha_vencimiento)}</td>
+      <td style="font-size:.78rem;color:#888">${f.nif || '—'}</td>
+      <td class="td-nombre">${f.proveedor || '—'}</td>
+      <td><strong>${f.numero_factura || '—'}</strong></td>
+      <td class="td-concepto" title="${f.concepto || ''}">${f.concepto || '—'}</td>
+      <td class="num-cell">${fmtN(f.base1)}</td>
+      <td class="pct-cell">${f.pct_iva1 != null ? f.pct_iva1 + '%' : '—'}</td>
+      <td class="num-cell">${fmtN(f.total_iva1)}</td>
+      <td class="td-total">${fmt(f.total, f.moneda)}</td>
+      <td><span class="badge-estado badge-${eR}">${eR.toUpperCase()}</span></td>
+      <td>${celdaArchivoFactura(f)}</td>
+      <td class="td-acciones">${celdaRevision(f, 'revisado_cynthia', 'facturas_gastos_generales', 'Cynthia')}${chipRevisado(f, 'revisado_emilio', 'facturas_gastos_generales', 'Emilio')}</td>
+      <td>
+        <button class="btn-toggle-pago ${f.imputado ? 'imputado' : 'pendiente'}" onclick="toggleImputado(${f.id},${f.imputado},'facturas_gastos_generales')">
+          ${f.imputado ? '<i class="fa-solid fa-rotate-left me-1"></i>Quitar' : '<i class="fa-solid fa-ban me-1"></i>Imputar'}
+        </button>
+      </td>
+      <td>${celdaImpreso(f, 'facturas_gastos_generales')}</td>
+      <td>${celdaExportado(f)}</td>
+      <td><button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
+    </tr>`;
+        }).join('');
 
+      } else if (tablaActual === 'proveedores') {
+        hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Nombre</th><th>NIF</th><th>Email</th><th>Teléfono</th><th>Domicilio</th><th></th></tr>`;
+        const lista = registros.filter(f => [f.nombre, f.nif, f.email].some(v => (v || '').toLowerCase().includes(q)));
+        if (!lista.length) { bdy.innerHTML = emptyRow(6, 'No se encontraron proveedores'); return; }
+        bdy.innerHTML = lista.map(f => `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditar(${f.id},'proveedores'))">
+    <td>${celdaCheck(f.id)}</td>
+    <td class="td-nombre"><strong>${f.nombre || '—'}</strong></td>
+    <td style="font-size:.8rem;color:#888">${f.nif || '—'}</td>
+    <td style="font-size:.82rem">${f.email || '—'}</td>
+    <td style="font-size:.82rem">${f.telefono || '—'}</td>
+    <td style="font-size:.82rem">${[f.domicilio, f.poblacion].filter(Boolean).join(', ') || '—'}</td>
+    <td><button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
+  </tr>`).join('');
         // REVISADAS Y FACTURADAS (agregado de las 3 tablas de facturas)
       } else if (tablaActual === 'revisadas_facturadas') {
         hdr.innerHTML = `<tr>
@@ -10173,13 +10259,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 
     function addLineaAlbaranVenta() {
-  lineasAlbaranVentaCount++;
-  const idx = lineasAlbaranVentaCount;
-  const div = document.createElement('div');
-  div.id = `lav_${idx}`;
-  div.className = 'linea-prod';
-  div.style.gridTemplateColumns = '1fr 150px 100px 80px 100px auto';
-  div.innerHTML = `
+      lineasAlbaranVentaCount++;
+      const idx = lineasAlbaranVentaCount;
+      const div = document.createElement('div');
+      div.id = `lav_${idx}`;
+      div.className = 'linea-prod';
+      div.style.gridTemplateColumns = '1fr 150px 100px 80px 100px auto';
+      div.innerHTML = `
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Producto</label>
       <input type="text" id="lav_prod_${idx}" list="dl_productos" placeholder="Escribe para buscar o crear nuevo..." oninput="actualizarUnidadLinea('lav',${idx}); autocompletarPrecioLinea(${idx})">
@@ -10214,19 +10300,19 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
       <i class="fa-solid fa-xmark"></i>
     </button>`;
-  document.getElementById('lineasAlbaranVenta').appendChild(div);
-}
+      document.getElementById('lineasAlbaranVenta').appendChild(div);
+    }
 
     let lineasAlbaranVentaExclusivoCount = 0;
 
     function addLineaAlbaranVentaExclusivo() {
-  lineasAlbaranVentaExclusivoCount++;
-  const idx = lineasAlbaranVentaExclusivoCount;
-  const div = document.createElement('div');
-  div.id = `lave_${idx}`;
-  div.className = 'linea-prod';
-  div.style.gridTemplateColumns = '1fr 90px 100px 80px 100px auto';
-  div.innerHTML = `
+      lineasAlbaranVentaExclusivoCount++;
+      const idx = lineasAlbaranVentaExclusivoCount;
+      const div = document.createElement('div');
+      div.id = `lave_${idx}`;
+      div.className = 'linea-prod';
+      div.style.gridTemplateColumns = '1fr 90px 100px 80px 100px auto';
+      div.innerHTML = `
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Producto</label>
       <input type="text" id="lave_prod_${idx}" list="dl_materiales_exclusivos" placeholder="Ej: Producto que no tenemos en stock..." oninput="recalcBaseDesdeLineasAlbaranVenta()">
@@ -10251,8 +10337,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
       <i class="fa-solid fa-xmark"></i>
     </button>`;
-  document.getElementById('lineasAlbaranVentaExclusivo').appendChild(div);
-}
+      document.getElementById('lineasAlbaranVentaExclusivo').appendChild(div);
+    }
 
     function _leerLineasAlbaranVentaExclusivo() {
       const lineas = [];
@@ -10271,34 +10357,34 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     // Suma el subtotal de todas las líneas y lo mete en la base imponible automáticamente
     function recalcBaseDesdeLineasAlbaranVenta() {
-  let base = 0;
-  document.querySelectorAll('[id^="lav_prod_"]').forEach(inp => {
-    const idx = inp.id.split('_')[2];
-    const cant = parseFloat(document.getElementById(`lav_cant_${idx}`)?.value || 0);
-    const precio = parseFloat(document.getElementById(`lav_precio_${idx}`)?.value || 0);
-    const dto = parseFloat(document.getElementById(`lav_dto_${idx}`)?.value || 0);
-    const subtotal = cant * precio;
-    const lineaTotal = subtotal - (subtotal * dto / 100);
-    const elLineaTotal = document.getElementById(`lav_lineatotal_${idx}`);
-    if (elLineaTotal) elLineaTotal.value = lineaTotal.toFixed(2);
-    base += lineaTotal;
-  });
-  document.querySelectorAll('[id^="lave_prod_"]').forEach(inp => {
-    const idx = inp.id.split('_')[2];
-    const cant = parseFloat(document.getElementById(`lave_cant_${idx}`)?.value || 0);
-    const precio = parseFloat(document.getElementById(`lave_precio_${idx}`)?.value || 0);
-    const dto = parseFloat(document.getElementById(`lave_dto_${idx}`)?.value || 0);
-    const subtotal = cant * precio;
-    const lineaTotal = subtotal - (subtotal * dto / 100);
-    const elLineaTotal = document.getElementById(`lave_lineatotal_${idx}`);
-    if (elLineaTotal) elLineaTotal.value = lineaTotal.toFixed(2);
-    base += lineaTotal;
-  });
-  const esDevolucion = document.getElementById('f_av_es_devolucion')?.checked;
-  if (esDevolucion) base = -base;
-  const baseInput = document.getElementById('f_av_base');
-  if (baseInput) { baseInput.value = base.toFixed(2); recalcTotalAlbaranVenta(); }
-}
+      let base = 0;
+      document.querySelectorAll('[id^="lav_prod_"]').forEach(inp => {
+        const idx = inp.id.split('_')[2];
+        const cant = parseFloat(document.getElementById(`lav_cant_${idx}`)?.value || 0);
+        const precio = parseFloat(document.getElementById(`lav_precio_${idx}`)?.value || 0);
+        const dto = parseFloat(document.getElementById(`lav_dto_${idx}`)?.value || 0);
+        const subtotal = cant * precio;
+        const lineaTotal = subtotal - (subtotal * dto / 100);
+        const elLineaTotal = document.getElementById(`lav_lineatotal_${idx}`);
+        if (elLineaTotal) elLineaTotal.value = lineaTotal.toFixed(2);
+        base += lineaTotal;
+      });
+      document.querySelectorAll('[id^="lave_prod_"]').forEach(inp => {
+        const idx = inp.id.split('_')[2];
+        const cant = parseFloat(document.getElementById(`lave_cant_${idx}`)?.value || 0);
+        const precio = parseFloat(document.getElementById(`lave_precio_${idx}`)?.value || 0);
+        const dto = parseFloat(document.getElementById(`lave_dto_${idx}`)?.value || 0);
+        const subtotal = cant * precio;
+        const lineaTotal = subtotal - (subtotal * dto / 100);
+        const elLineaTotal = document.getElementById(`lave_lineatotal_${idx}`);
+        if (elLineaTotal) elLineaTotal.value = lineaTotal.toFixed(2);
+        base += lineaTotal;
+      });
+      const esDevolucion = document.getElementById('f_av_es_devolucion')?.checked;
+      if (esDevolucion) base = -base;
+      const baseInput = document.getElementById('f_av_base');
+      if (baseInput) { baseInput.value = base.toFixed(2); recalcTotalAlbaranVenta(); }
+    }
 
     async function crearProductoRapidoDesdeLineaAlbaranVenta(idx) {
       const inp = document.getElementById(`lav_prod_${idx}`);
@@ -10669,26 +10755,26 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const ocultarPrecios = !!f.ocultar_precios;
 
       const filas = items.map(i => {
-  const precio = i.precio_unitario != null ? parseFloat(i.precio_unitario) : 0;
-  const cantidad = parseFloat(i.cantidad) || 0;
-  const subtotalBruto = precio * cantidad;
-  const dto = i.dto_pct != null ? parseFloat(i.dto_pct) : 0;
-  const total = i.importe_total != null ? parseFloat(i.importe_total) : (subtotalBruto - (subtotalBruto * dto / 100));
-  let unidadTxt;
-  if (i.unidad) {
-    unidadTxt = i.unidad === 'metros' ? 'm' : 'uds.';
-  } else {
-    const prodInv = inventarioDB.find(p => p.id == i.producto_id);
-    unidadTxt = prodInv ? unidadCorta(prodInv) : 'uds.';
-  }
-  if (ocultarPrecios) {
-    return `<tr>
+        const precio = i.precio_unitario != null ? parseFloat(i.precio_unitario) : 0;
+        const cantidad = parseFloat(i.cantidad) || 0;
+        const subtotalBruto = precio * cantidad;
+        const dto = i.dto_pct != null ? parseFloat(i.dto_pct) : 0;
+        const total = i.importe_total != null ? parseFloat(i.importe_total) : (subtotalBruto - (subtotalBruto * dto / 100));
+        let unidadTxt;
+        if (i.unidad) {
+          unidadTxt = i.unidad === 'metros' ? 'm' : 'uds.';
+        } else {
+          const prodInv = inventarioDB.find(p => p.id == i.producto_id);
+          unidadTxt = prodInv ? unidadCorta(prodInv) : 'uds.';
+        }
+        if (ocultarPrecios) {
+          return `<tr>
       <td>${i.producto_id || ''}</td>
       <td>${i.producto_nombre || ''}</td>
       <td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td>
     </tr>`;
-  }
-  return `<tr>
+        }
+        return `<tr>
       <td>${i.producto_id || ''}</td>
       <td>${i.producto_nombre || ''}</td>
       <td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td>
@@ -10697,7 +10783,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <td style="text-align:right">${dto ? dto + '%' : '—'}</td>
       <td style="text-align:right">${fmtN(total)}</td>
     </tr>`;
-}).join('');
+      }).join('');
 
 
       const domicilioCliente = cliente.domicilio || '';
@@ -10855,14 +10941,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     let lineasPresupuestoCount = 0;
 
-function addLineaPresupuesto() {
-  lineasPresupuestoCount++;
-  const idx = lineasPresupuestoCount;
-  const div = document.createElement('div');
-  div.id = `lp_${idx}`;
-  div.className = 'linea-prod';
-  div.style.gridTemplateColumns = '1fr 100px 100px 70px 100px auto';
-  div.innerHTML = `
+    function addLineaPresupuesto() {
+      lineasPresupuestoCount++;
+      const idx = lineasPresupuestoCount;
+      const div = document.createElement('div');
+      div.id = `lp_${idx}`;
+      div.className = 'linea-prod';
+      div.style.gridTemplateColumns = '1fr 100px 100px 70px 100px auto';
+      div.innerHTML = `
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Producto</label>
       <input type="text" id="lp_prod_${idx}" list="dl_productos" placeholder="Escribe para buscar o escribir libremente..." oninput="autocompletarPrecioLineaPresupuesto(${idx})">
@@ -10887,8 +10973,8 @@ function addLineaPresupuesto() {
       style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
       <i class="fa-solid fa-xmark"></i>
     </button>`;
-  document.getElementById('lineasPresupuesto').appendChild(div);
-}
+      document.getElementById('lineasPresupuesto').appendChild(div);
+    }
 
     function autocompletarPrecioLineaPresupuesto(idx) {
       const inpNombre = document.getElementById(`lp_prod_${idx}`);
@@ -10900,23 +10986,23 @@ function addLineaPresupuesto() {
     }
 
     function recalcBaseDesdePresupuesto() {
-  let base = 0;
-  document.querySelectorAll('[id^="lp_prod_"]').forEach(inp => {
-    const idx = inp.id.split('_')[2];
-    const cant = parseFloat(document.getElementById(`lp_cant_${idx}`)?.value || 0);
-    const precio = parseFloat(document.getElementById(`lp_precio_${idx}`)?.value || 0);
-    const dto = parseFloat(document.getElementById(`lp_dto_${idx}`)?.value || 0);
-    const subtotal = cant * precio;
-    const lineaTotal = subtotal - (subtotal * dto / 100);
-    const elLineaTotal = document.getElementById(`lp_lineatotal_${idx}`);
-    if (elLineaTotal) elLineaTotal.value = lineaTotal.toFixed(2);
-    base += lineaTotal;
-  });
-  const baseInput = document.getElementById('f_pr_base');
-  if (baseInput) { baseInput.value = base.toFixed(2); recalcTotalPresupuesto(); }
-  const elTotalImporte = document.getElementById('totalImportePresupuesto');
-  if (elTotalImporte) elTotalImporte.textContent = fmt(base);
-}
+      let base = 0;
+      document.querySelectorAll('[id^="lp_prod_"]').forEach(inp => {
+        const idx = inp.id.split('_')[2];
+        const cant = parseFloat(document.getElementById(`lp_cant_${idx}`)?.value || 0);
+        const precio = parseFloat(document.getElementById(`lp_precio_${idx}`)?.value || 0);
+        const dto = parseFloat(document.getElementById(`lp_dto_${idx}`)?.value || 0);
+        const subtotal = cant * precio;
+        const lineaTotal = subtotal - (subtotal * dto / 100);
+        const elLineaTotal = document.getElementById(`lp_lineatotal_${idx}`);
+        if (elLineaTotal) elLineaTotal.value = lineaTotal.toFixed(2);
+        base += lineaTotal;
+      });
+      const baseInput = document.getElementById('f_pr_base');
+      if (baseInput) { baseInput.value = base.toFixed(2); recalcTotalPresupuesto(); }
+      const elTotalImporte = document.getElementById('totalImportePresupuesto');
+      if (elTotalImporte) elTotalImporte.textContent = fmt(base);
+    }
 
     function recalcTotalPresupuesto() {
       const base = parseFloat(document.getElementById('f_pr_base')?.value || 0);
@@ -12415,7 +12501,25 @@ function addLineaPresupuesto() {
           document.getElementById("f_maq_precio").value = f.precio_dia != null ? f.precio_dia : 0;
         }, 100);
         return;
-      } if (tabla == "obras_estudio") {
+
+      } if (tabla == "proveedores") {
+        abrirModalNuevo("proveedores");
+        setTimeout(() => {
+          document.getElementById("modalTitulo").textContent = "Editar proveedor";
+          document.getElementById("btnGuardar").innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i>Guardar cambios';
+          document.getElementById("f_nombre").value = f.nombre || "";
+          document.getElementById("f_nif").value = f.nif || "";
+          document.getElementById("f_tel").value = f.telefono || "";
+          document.getElementById("f_email").value = f.email || "";
+          document.getElementById("f_domicilio").value = f.domicilio || "";
+          document.getElementById("f_poblacion").value = f.poblacion || "";
+          document.getElementById("f_cp").value = f.codigo_postal || "";
+          document.getElementById("f_provincia").value = f.provincia || "";
+        }, 100);
+        return;
+      }
+
+      if (tabla == "obras_estudio") {
         abrirModalNuevo("obras_estudio");
         setTimeout(() => {
           document.getElementById("modalTitulo").textContent = "Editar obra en estudio";
@@ -12429,7 +12533,8 @@ function addLineaPresupuesto() {
       setTimeout(() => {
         document.getElementById('modalTitulo').textContent =
           tabla === 'facturas_obra' ? 'Editar Factura de Obra' :
-            tabla === 'facturas_csg' ? 'Editar Factura CSG' : 'Editar Factura de Almacén';
+            tabla === 'facturas_csg' ? 'Editar Factura CSG' :
+              tabla === 'facturas_gastos_generales' ? 'Editar Factura de Gastos Generales' : 'Editar Factura de Almacén';
         const btn = document.getElementById('btnGuardar');
         if (btn) btn.innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i>Guardar cambios';
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = (v ?? ''); };
@@ -13025,6 +13130,54 @@ function addLineaPresupuesto() {
           }
           renderArchivosFacturaChips();
         }, 50);
+
+      } else if (tabla === 'proveedores') {
+        document.getElementById('modalTitulo').textContent = 'Nuevo Proveedor';
+        cont.innerHTML = `<div class="form-grid-2">
+    <div class="form-group span2"><label>Nombre *</label><input type="text" id="f_nombre" placeholder="Nombre del proveedor"></div>
+    <div class="form-group"><label>NIF</label><input type="text" id="f_nif" placeholder="B12345678"></div>
+    <div class="form-group"><label>Teléfono</label><input type="text" id="f_tel" placeholder="925123456"></div>
+    <div class="form-group span2"><label>Email</label><input type="email" id="f_email" placeholder="correo@proveedor.com"></div>
+    <div class="form-group span2"><label>Domicilio</label><input type="text" id="f_domicilio" placeholder="Calle, número..."></div>
+    <div class="form-group"><label>Población</label><input type="text" id="f_poblacion" placeholder="Toledo"></div>
+    <div class="form-group"><label>Código postal</label><input type="text" id="f_cp" placeholder="45001"></div>
+    <div class="form-group span2"><label>Provincia</label><input type="text" id="f_provincia" placeholder="Toledo"></div>
+  </div>`;
+        document.getElementById('modalNueva').classList.add('visible');
+        setTimeout(() => setupMunicipioAC('f_poblacion', 'f_cp'), 50);
+
+      } else if (tabla === 'facturas_gastos_generales') {
+        document.getElementById('modalTitulo').textContent = 'Nueva Factura de Gastos Generales';
+        cont.innerHTML = `
+    <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">Datos principales</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Nº Interno Empresa</label><input type="text" id="f_num_interno" placeholder="Ej: 2026-001"></div>
+      <div class="form-group"><label>Nº Factura</label><input type="text" id="f_num" placeholder="FG-2026-001"></div>
+      <div class="form-group"><label>Fecha *</label><input type="date" id="f_fecha" value="${hoy()}"></div>
+      <div class="form-group"><label>Fecha de recepción</label><input type="date" id="f_fecha_recibido" value="${hoy()}"></div>
+      <div class="form-group span2 ac-wrap">
+        <label>Proveedor *</label>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="text" id="f_prov" placeholder="Escribe el nombre para buscar..." autocomplete="off">
+          <button type="button" class="btn-add-linea" style="padding:6px 10px;font-size:.8rem" onclick="crearProveedorRapido()">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </div>
+      </div>
+      <div class="form-group ac-wrap"><label>NIF</label><input type="text" id="f_nif" placeholder="Se rellena al elegir proveedor"></div>
+      <div class="form-group span3"><label>Concepto</label><input type="text" id="f_concepto" placeholder="Ej: Suministro eléctrico, seguro, gestoría..."></div>
+      <div class="form-group"><label>Total *</label><input type="number" id="f_total" value="0" step="0.01" min="0"></div>
+      <div class="form-group"><label>Moneda</label><select id="f_moneda"><option value="EUR">€ Euro</option><option value="USD">$ Dólar</option></select></div>
+      <div class="form-group"><label>Vencimiento</label><input type="date" id="f_venc"></div>
+      <div class="form-group"><label>Estado</label><select id="f_est"><option value="pendiente">Pendiente</option><option value="pagado">Pagada</option></select></div>
+    </div>
+    <div class="form-seccion" id="revisionModalWrap" style="display:none">Revisión</div>
+    <div class="td-acciones" id="revisionChipsCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+    ${htmlCampoArchivo()}
+    ${htmlCamposExcel()}`;
+        archivosFacturaSeleccionados = [];
+        document.getElementById('modalNueva').classList.add('visible');
+        setTimeout(() => { setupProveedorAC('f_prov', 'f_nif'); ocultarPdfModal(); renderArchivosFacturaChips(); }, 50);
       } else if (tabla === 'ingresos') {
         document.getElementById('modalTitulo').textContent = 'Nuevo Ingreso';
         cont.innerHTML = `
@@ -13266,6 +13419,62 @@ function addLineaPresupuesto() {
       <div class="form-group span2"><label>Archivo (PDF o imagen) <span style="font-size:.72rem;color:#888">(opcional)</span></label><input type="file" id="f_archivo_varios" accept="application/pdf,image/*"></div>
     </div>`;
         document.getElementById('modalNueva').classList.add('visible');
+      } else if (tabla === 'proveedores') {
+      const nombre = document.getElementById('f_nombre').value.trim();
+      if (!nombre) { toast('El nombre es obligatorio', 'err'); return; }
+      const payload = {
+        nombre,
+        nif: document.getElementById('f_nif').value.trim() || null,
+        telefono: document.getElementById('f_tel').value.trim() || null,
+        email: document.getElementById('f_email').value.trim() || null,
+        domicilio: document.getElementById('f_domicilio').value.trim() || null,
+        poblacion: document.getElementById('f_poblacion').value.trim() || null,
+        codigo_postal: document.getElementById('f_cp').value.trim() || null,
+        provincia: document.getElementById('f_provincia').value.trim() || null
+      };
+      if (modalEditId) {
+        await apiPatch('proveedores', modalEditId, payload);
+      } else {
+        await apiPost('proveedores', payload);
+      }
+      proveedoresDB = await apiGet('proveedores', 'order=nombre');
+
+    } else if (tabla === 'facturas_gastos_generales') {
+      const prov = document.getElementById('f_prov').value.trim();
+      const fecha = document.getElementById('f_fecha').value;
+      if (!prov || !fecha) { toast('Proveedor y fecha son obligatorios', 'err'); return; }
+      const nifCampo = document.getElementById('f_nif').value.trim() || null;
+      await asegurarProveedor(prov, nifCampo);
+
+      const payload = {
+        numero_interno: document.getElementById('f_num_interno').value.trim() || null,
+        numero_factura: document.getElementById('f_num').value.trim() || null,
+        fecha,
+        fecha_recibido: document.getElementById('f_fecha_recibido').value || null,
+        proveedor: prov,
+        nif: nifCampo,
+        concepto: document.getElementById('f_concepto').value.trim() || null,
+        total: parseFloat(document.getElementById('f_total').value || 0),
+        moneda: document.getElementById('f_moneda').value || 'EUR',
+        estado: document.getElementById('f_est').value,
+        fecha_vencimiento: document.getElementById('f_venc').value || null,
+        ...recogerCamposExcel()
+      };
+      if (archivosFacturaSeleccionados.length) {
+        payload.archivo_url = archivosFacturaSeleccionados[0].url;
+        payload.archivos_urls = archivosFacturaSeleccionados.map(a => a.url);
+      } else {
+        payload.archivo_url = null;
+        payload.archivos_urls = [];
+      }
+
+      if (modalEditId) {
+        const prevReg = registros.find(r => r.id === modalEditId);
+        const historialPrevio = (prevReg && prevReg.historial_ediciones) || [];
+        payload.historial_ediciones = [...historialPrevio, { persona: currentPersona, fecha: new Date().toISOString() }];
+        await apiPatch('facturas_gastos_generales', modalEditId, payload);
+      } else {
+        await apiPost('facturas_gastos_generales', payload);
       }
     }
 
@@ -14043,13 +14252,13 @@ function addLineaPresupuesto() {
     }
 
     function addLineaConsumoInterno() {
-  lineasConsumoInternoCount++;
-  const idx = lineasConsumoInternoCount;
-  const div = document.createElement('div');
-  div.id = `ci_${idx}`;
-  div.className = 'linea-prod';
-  div.style.gridTemplateColumns = '1fr 90px 100px 100px auto';
-  div.innerHTML = `
+      lineasConsumoInternoCount++;
+      const idx = lineasConsumoInternoCount;
+      const div = document.createElement('div');
+      div.id = `ci_${idx}`;
+      div.className = 'linea-prod';
+      div.style.gridTemplateColumns = '1fr 90px 100px 100px auto';
+      div.innerHTML = `
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Producto</label>
       <input type="text" id="ci_prod_${idx}" list="dl_productos" placeholder="Escribe para buscar..." oninput="autocompletarPrecioLineaCI(${idx})">
@@ -14070,8 +14279,8 @@ function addLineaPresupuesto() {
       style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
       <i class="fa-solid fa-xmark"></i>
     </button>`;
-  document.getElementById('lineasConsumoInterno').appendChild(div);
-}
+      document.getElementById('lineasConsumoInterno').appendChild(div);
+    }
 
     function autocompletarPrecioLineaCI(idx) {
       const inpNombre = document.getElementById(`ci_prod_${idx}`);
@@ -14082,33 +14291,33 @@ function addLineaPresupuesto() {
     }
 
     function recalcTotalCI() {
-  let total = 0;
-  let totalUnidades = 0;
-  document.querySelectorAll('[id^="ci_prod_"]').forEach(inp => {
-    const idx = inp.id.split('_')[2];
-    const cant = parseFloat(document.getElementById(`ci_cant_${idx}`)?.value || 0);
-    const precio = parseFloat(document.getElementById(`ci_precio_${idx}`)?.value || 0);
-    const lineaTotal = cant * precio;
-    const elLineaTotal = document.getElementById(`ci_lineatotal_${idx}`);
-    if (elLineaTotal) elLineaTotal.value = lineaTotal.toFixed(2);
-    total += lineaTotal;
-    totalUnidades += cant;
-  });
-  document.querySelectorAll('[id^="cie_prod_"]').forEach(inp => {
-    const idx = inp.id.split('_')[2];
-    const cant = parseFloat(document.getElementById(`cie_cant_${idx}`)?.value || 0);
-    const precio = parseFloat(document.getElementById(`cie_precio_${idx}`)?.value || 0);
-    const lineaTotal = cant * precio;
-    const elLineaTotal = document.getElementById(`cie_lineatotal_${idx}`);
-    if (elLineaTotal) elLineaTotal.value = lineaTotal.toFixed(2);
-    total += lineaTotal;
-    totalUnidades += cant;
-  });
-  const esDevolucion = document.getElementById('ci_es_devolucion')?.checked;
-  document.getElementById('ci_total').value = (esDevolucion ? -total : total).toFixed(2);
-  const elUnidades = document.getElementById('ci_total_unidades');
-  if (elUnidades) elUnidades.textContent = fmtStock(totalUnidades);
-}
+      let total = 0;
+      let totalUnidades = 0;
+      document.querySelectorAll('[id^="ci_prod_"]').forEach(inp => {
+        const idx = inp.id.split('_')[2];
+        const cant = parseFloat(document.getElementById(`ci_cant_${idx}`)?.value || 0);
+        const precio = parseFloat(document.getElementById(`ci_precio_${idx}`)?.value || 0);
+        const lineaTotal = cant * precio;
+        const elLineaTotal = document.getElementById(`ci_lineatotal_${idx}`);
+        if (elLineaTotal) elLineaTotal.value = lineaTotal.toFixed(2);
+        total += lineaTotal;
+        totalUnidades += cant;
+      });
+      document.querySelectorAll('[id^="cie_prod_"]').forEach(inp => {
+        const idx = inp.id.split('_')[2];
+        const cant = parseFloat(document.getElementById(`cie_cant_${idx}`)?.value || 0);
+        const precio = parseFloat(document.getElementById(`cie_precio_${idx}`)?.value || 0);
+        const lineaTotal = cant * precio;
+        const elLineaTotal = document.getElementById(`cie_lineatotal_${idx}`);
+        if (elLineaTotal) elLineaTotal.value = lineaTotal.toFixed(2);
+        total += lineaTotal;
+        totalUnidades += cant;
+      });
+      const esDevolucion = document.getElementById('ci_es_devolucion')?.checked;
+      document.getElementById('ci_total').value = (esDevolucion ? -total : total).toFixed(2);
+      const elUnidades = document.getElementById('ci_total_unidades');
+      if (elUnidades) elUnidades.textContent = fmtStock(totalUnidades);
+    }
 
     async function guardarConsumoInterno() {
       const empleado = document.getElementById('ci_empleado').value.trim();
@@ -15158,7 +15367,7 @@ function addLineaPresupuesto() {
     }
 
     async function comprobarFacturasVencidasSinRevisar() {
-      if (tablaActual !== 'facturas_almacen' && tablaActual !== 'facturas_obra' && tablaActual !== 'facturas_csg' && tablaActual !== 'ingresos') return;
+      if (tablaActual !== 'facturas_almacen' && tablaActual !== 'facturas_obra' && tablaActual !== 'facturas_csg' && tablaActual !== 'ingresos' && tablaActual !== 'facturas_gastos_generales') return;
       const hoyD = new Date(); hoyD.setHours(0, 0, 0, 0);
       const revisores = REVISORES[tablaActual] || [];
       if (!revisores.length) return;
@@ -15373,26 +15582,26 @@ function addLineaPresupuesto() {
       const ocultarPrecios = !!f.ocultar_precios;
 
       const filas = items.map(i => {
-  const precio = i.precio_unitario != null ? parseFloat(i.precio_unitario) : 0;
-  const cantidad = parseFloat(i.cantidad) || 0;
-  const subtotalBruto = precio * cantidad;
-  const dto = i.dto_pct != null ? parseFloat(i.dto_pct) : 0;
-  const total = i.importe_total != null ? parseFloat(i.importe_total) : (subtotalBruto - (subtotalBruto * dto / 100));
-  let unidadTxt;
-  if (i.unidad) {
-    unidadTxt = i.unidad === 'metros' ? 'm' : 'uds.';
-  } else {
-    const prodInv = inventarioDB.find(p => p.id == i.producto_id);
-    unidadTxt = prodInv ? unidadCorta(prodInv) : 'uds.';
-  }
-  if (ocultarPrecios) {
-    return `<tr>
+        const precio = i.precio_unitario != null ? parseFloat(i.precio_unitario) : 0;
+        const cantidad = parseFloat(i.cantidad) || 0;
+        const subtotalBruto = precio * cantidad;
+        const dto = i.dto_pct != null ? parseFloat(i.dto_pct) : 0;
+        const total = i.importe_total != null ? parseFloat(i.importe_total) : (subtotalBruto - (subtotalBruto * dto / 100));
+        let unidadTxt;
+        if (i.unidad) {
+          unidadTxt = i.unidad === 'metros' ? 'm' : 'uds.';
+        } else {
+          const prodInv = inventarioDB.find(p => p.id == i.producto_id);
+          unidadTxt = prodInv ? unidadCorta(prodInv) : 'uds.';
+        }
+        if (ocultarPrecios) {
+          return `<tr>
       <td>${i.producto_id || ''}</td>
       <td>${i.producto_nombre || ''}</td>
       <td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td>
     </tr>`;
-  }
-  return `<tr>
+        }
+        return `<tr>
       <td>${i.producto_id || ''}</td>
       <td>${i.producto_nombre || ''}</td>
       <td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td>
@@ -15401,7 +15610,7 @@ function addLineaPresupuesto() {
       <td style="text-align:right">${dto ? dto + '%' : '—'}</td>
       <td style="text-align:right">${fmtN(total)}</td>
     </tr>`;
-}).join('');
+      }).join('');
 
       const domicilioCliente = cliente.domicilio || '';
       const poblacionCliente = [cliente.codigo_postal, cliente.poblacion].filter(Boolean).join('   ');
@@ -16915,13 +17124,13 @@ function addLineaPresupuesto() {
     let lineasConsumoInternoExclusivoCount = 0;
 
     function addLineaConsumoInternoExclusivo() {
-  lineasConsumoInternoExclusivoCount++;
-  const idx = lineasConsumoInternoExclusivoCount;
-  const div = document.createElement('div');
-  div.id = `cie_${idx}`;
-  div.className = 'linea-prod';
-  div.style.gridTemplateColumns = '1fr 90px 100px 100px auto';
-  div.innerHTML = `
+      lineasConsumoInternoExclusivoCount++;
+      const idx = lineasConsumoInternoExclusivoCount;
+      const div = document.createElement('div');
+      div.id = `cie_${idx}`;
+      div.className = 'linea-prod';
+      div.style.gridTemplateColumns = '1fr 90px 100px 100px auto';
+      div.innerHTML = `
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Producto</label>
       <input type="text" id="cie_prod_${idx}" list="dl_materiales_exclusivos"
@@ -16943,8 +17152,8 @@ function addLineaPresupuesto() {
       style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
       <i class="fa-solid fa-xmark"></i>
     </button>`;
-  document.getElementById('lineasConsumoInternoExclusivo').appendChild(div);
-}
+      document.getElementById('lineasConsumoInternoExclusivo').appendChild(div);
+    }
   </script>
 
 

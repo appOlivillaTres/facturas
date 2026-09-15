@@ -3100,6 +3100,15 @@
         <span style="font-size:.85rem;color:#888;font-weight:600">Total de unidades:</span>
         <span id="ci_total_unidades" style="font-size:1.3rem;font-weight:700;color:#b53987">0</span>
       </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;padding-top:10px;border-top:1.5px solid #ede5f5">
+        <span style="font-size:.85rem;color:#888;font-weight:600">Total de unidades:</span>
+        <span id="ci_total_unidades" style="font-size:1.3rem;font-weight:700;color:#b53987">0</span>
+      </div>
+      <div class="form-group" style="margin-top:10px">
+        <label>Observaciones</label>
+        <input type="text" id="ci_notas" placeholder="Observaciones opcionales">
+      </div>
+      <div class="modal-btns">
       <div class="modal-btns">
         <button class="btn-cancelar" onclick="cerrarModal('modalConsumoInterno')">Cancelar</button>
         <button class="btn-guardar" onclick="guardarConsumoInterno()"><i
@@ -13759,7 +13768,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <td style="text-align:right">${fmt(i.importe_total)}</td>
     </tr>`).join('');
 
-      const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+            const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
   <style>
     body{font-family:'Courier New',monospace;color:#111;padding:16px;max-width:320px;margin:0 auto;font-size:.85rem}
     h2{text-align:center;font-size:1rem;margin:0 0 4px}
@@ -13768,6 +13777,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     th,td{padding:4px 2px;font-size:.8rem;text-align:left}
     th{border-bottom:1px solid #333}
     .total{font-weight:700;font-size:1rem;text-align:right;margin-top:10px;border-top:1px dashed #333;padding-top:8px}
+    .observaciones{margin-top:10px;padding-top:8px;border-top:1px dashed #333;font-size:.8rem}
     .btn-imprimir{display:block;margin:16px auto 0;padding:8px 16px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer}
     @media print{.btn-imprimir{display:none}}
   </style></head><body>
@@ -13780,6 +13790,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <tbody>${filas || '<tr><td colspan="4">Sin productos</td></tr>'}</tbody>
   </table>
   <div class="total">TOTAL: ${fmt(f.total)}</div>
+  ${f.notas ? `<div class="observaciones"><b>OBSERVACIONES:</b><br>${f.notas}</div>` : ''}
   <button class="btn-imprimir" onclick="window.print()">Imprimir</button>
   </body></html>`;
       const w = window.open('', '_blank');
@@ -13944,9 +13955,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     async function guardarConsumoInterno() {
-      const empleado = document.getElementById('ci_empleado').value.trim();
-      const fecha = document.getElementById('ci_fecha').value;
-      const esDevolucion = document.getElementById('ci_es_devolucion')?.checked || false;
+  const empleado = document.getElementById('ci_empleado').value.trim();
+  const fecha = document.getElementById('ci_fecha').value;
+  const esDevolucion = document.getElementById('ci_es_devolucion')?.checked || false;
+  const notas = document.getElementById('ci_notas').value.trim() || null;   // 👈 nuevo
       if (!empleado || !fecha) { toast('Indica quién se lo lleva y la fecha', 'err'); return; }
 
       const lineas = [];
@@ -13992,13 +14004,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           }
 
           await apiPatch('consumo_interno', consumoInternoEditId, {
-            empleado, fecha, total,
+            empleado, fecha, total, notas,
             cliente_id: clienteConsumoSelId || null
           });
           headerId = consumoInternoEditId;
         } else {
           const [header] = await apiPost('consumo_interno', {
-            empleado, fecha, total,
+            empleado, fecha, total, notas,
             cliente_id: clienteConsumoSelId || null,
             creado_por: currentPersona
           });
@@ -14694,6 +14706,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById('ci_cliente_id').value = reg?.cliente_id || '';
       clienteConsumoSelId = reg?.cliente_id || null;
       document.getElementById('ci_fecha').value = reg?.fecha || hoy();
+      document.getElementById('ci_notas').value = reg?.notas || '';
       document.getElementById('ci_es_devolucion').checked = reg ? parseFloat(reg.total || 0) < 0 : false;
       document.getElementById('lineasConsumoInterno').innerHTML = '';
       lineasConsumoInternoCount = 0;

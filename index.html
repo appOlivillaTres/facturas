@@ -10173,13 +10173,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 
     function addLineaAlbaranVenta() {
-      lineasAlbaranVentaCount++;
-      const idx = lineasAlbaranVentaCount;
-      const div = document.createElement('div');
-      div.id = `lav_${idx}`;
-      div.className = 'linea-prod';
-      div.style.gridTemplateColumns = '1fr 150px 100px 80px auto'; // 👈 más ancho para cantidad, algo menos para precio/dto
-      div.innerHTML = `
+  lineasAlbaranVentaCount++;
+  const idx = lineasAlbaranVentaCount;
+  const div = document.createElement('div');
+  div.id = `lav_${idx}`;
+  div.className = 'linea-prod';
+  div.style.gridTemplateColumns = '1fr 150px 100px 80px 100px auto';
+  div.innerHTML = `
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Producto</label>
       <input type="text" id="lav_prod_${idx}" list="dl_productos" placeholder="Escribe para buscar o crear nuevo..." oninput="actualizarUnidadLinea('lav',${idx}); autocompletarPrecioLinea(${idx})">
@@ -10206,23 +10206,27 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <label style="font-size:.75rem">Dto. %</label>
       <input type="number" id="lav_dto_${idx}" step="0.01" min="0" max="100" value="0" style="text-align:right;width:100%" oninput="recalcBaseDesdeLineasAlbaranVenta()">
     </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Total (€)</label>
+      <input type="number" id="lav_lineatotal_${idx}" step="0.01" readonly style="background:#f7f0f5;font-weight:600;text-align:right;width:100%" value="0.00">
+    </div>
     <button type="button" onclick="document.getElementById('lav_${idx}').remove(); recalcBaseDesdeLineasAlbaranVenta();"
       style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
       <i class="fa-solid fa-xmark"></i>
     </button>`;
-      document.getElementById('lineasAlbaranVenta').appendChild(div);
-    }
+  document.getElementById('lineasAlbaranVenta').appendChild(div);
+}
 
     let lineasAlbaranVentaExclusivoCount = 0;
 
     function addLineaAlbaranVentaExclusivo() {
-      lineasAlbaranVentaExclusivoCount++;
-      const idx = lineasAlbaranVentaExclusivoCount;
-      const div = document.createElement('div');
-      div.id = `lave_${idx}`;
-      div.className = 'linea-prod';
-      div.style.gridTemplateColumns = '1fr 90px 100px 80px auto';
-      div.innerHTML = `
+  lineasAlbaranVentaExclusivoCount++;
+  const idx = lineasAlbaranVentaExclusivoCount;
+  const div = document.createElement('div');
+  div.id = `lave_${idx}`;
+  div.className = 'linea-prod';
+  div.style.gridTemplateColumns = '1fr 90px 100px 80px 100px auto';
+  div.innerHTML = `
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Producto</label>
       <input type="text" id="lave_prod_${idx}" list="dl_materiales_exclusivos" placeholder="Ej: Producto que no tenemos en stock..." oninput="recalcBaseDesdeLineasAlbaranVenta()">
@@ -10239,12 +10243,16 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <label style="font-size:.75rem">Dto. %</label>
       <input type="number" id="lave_dto_${idx}" step="0.01" min="0" max="100" value="0" style="text-align:right;width:100%" oninput="recalcBaseDesdeLineasAlbaranVenta()">
     </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Total (€)</label>
+      <input type="number" id="lave_lineatotal_${idx}" step="0.01" readonly style="background:#f7f0f5;font-weight:600;text-align:right;width:100%" value="0.00">
+    </div>
     <button type="button" onclick="document.getElementById('lave_${idx}').remove(); recalcBaseDesdeLineasAlbaranVenta();"
       style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
       <i class="fa-solid fa-xmark"></i>
     </button>`;
-      document.getElementById('lineasAlbaranVentaExclusivo').appendChild(div);
-    }
+  document.getElementById('lineasAlbaranVentaExclusivo').appendChild(div);
+}
 
     function _leerLineasAlbaranVentaExclusivo() {
       const lineas = [];
@@ -10263,28 +10271,34 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     // Suma el subtotal de todas las líneas y lo mete en la base imponible automáticamente
     function recalcBaseDesdeLineasAlbaranVenta() {
-      let base = 0;
-      document.querySelectorAll('[id^="lav_prod_"]').forEach(inp => {
-        const idx = inp.id.split('_')[2];
-        const cant = parseFloat(document.getElementById(`lav_cant_${idx}`)?.value || 0);
-        const precio = parseFloat(document.getElementById(`lav_precio_${idx}`)?.value || 0);
-        const dto = parseFloat(document.getElementById(`lav_dto_${idx}`)?.value || 0);
-        const subtotal = cant * precio;
-        base += subtotal - (subtotal * dto / 100);
-      });
-      document.querySelectorAll('[id^="lave_prod_"]').forEach(inp => {
-        const idx = inp.id.split('_')[2];
-        const cant = parseFloat(document.getElementById(`lave_cant_${idx}`)?.value || 0);
-        const precio = parseFloat(document.getElementById(`lave_precio_${idx}`)?.value || 0);
-        const dto = parseFloat(document.getElementById(`lave_dto_${idx}`)?.value || 0);
-        const subtotal = cant * precio;
-        base += subtotal - (subtotal * dto / 100);
-      });
-      const esDevolucion = document.getElementById('f_av_es_devolucion')?.checked;
-      if (esDevolucion) base = -base;
-      const baseInput = document.getElementById('f_av_base');
-      if (baseInput) { baseInput.value = base.toFixed(2); recalcTotalAlbaranVenta(); }
-    }
+  let base = 0;
+  document.querySelectorAll('[id^="lav_prod_"]').forEach(inp => {
+    const idx = inp.id.split('_')[2];
+    const cant = parseFloat(document.getElementById(`lav_cant_${idx}`)?.value || 0);
+    const precio = parseFloat(document.getElementById(`lav_precio_${idx}`)?.value || 0);
+    const dto = parseFloat(document.getElementById(`lav_dto_${idx}`)?.value || 0);
+    const subtotal = cant * precio;
+    const lineaTotal = subtotal - (subtotal * dto / 100);
+    const elLineaTotal = document.getElementById(`lav_lineatotal_${idx}`);
+    if (elLineaTotal) elLineaTotal.value = lineaTotal.toFixed(2);
+    base += lineaTotal;
+  });
+  document.querySelectorAll('[id^="lave_prod_"]').forEach(inp => {
+    const idx = inp.id.split('_')[2];
+    const cant = parseFloat(document.getElementById(`lave_cant_${idx}`)?.value || 0);
+    const precio = parseFloat(document.getElementById(`lave_precio_${idx}`)?.value || 0);
+    const dto = parseFloat(document.getElementById(`lave_dto_${idx}`)?.value || 0);
+    const subtotal = cant * precio;
+    const lineaTotal = subtotal - (subtotal * dto / 100);
+    const elLineaTotal = document.getElementById(`lave_lineatotal_${idx}`);
+    if (elLineaTotal) elLineaTotal.value = lineaTotal.toFixed(2);
+    base += lineaTotal;
+  });
+  const esDevolucion = document.getElementById('f_av_es_devolucion')?.checked;
+  if (esDevolucion) base = -base;
+  const baseInput = document.getElementById('f_av_base');
+  if (baseInput) { baseInput.value = base.toFixed(2); recalcTotalAlbaranVenta(); }
+}
 
     async function crearProductoRapidoDesdeLineaAlbaranVenta(idx) {
       const inp = document.getElementById(`lav_prod_${idx}`);
@@ -10655,32 +10669,35 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const ocultarPrecios = !!f.ocultar_precios;
 
       const filas = items.map(i => {
-        const precio = i.precio_unitario != null ? parseFloat(i.precio_unitario) : 0;
-        const subtotal = i.importe_total != null ? parseFloat(i.importe_total) : (precio * (parseFloat(i.cantidad) || 0));
-        let unidadTxt;
-        if (i.unidad) {
-          unidadTxt = i.unidad === 'metros' ? 'm' : 'uds.';
-        } else {
-          const prodInv = inventarioDB.find(p => p.id == i.producto_id);
-          unidadTxt = prodInv ? unidadCorta(prodInv) : 'uds.';
-        }
-        if (ocultarPrecios) {
-          return `<tr>
+  const precio = i.precio_unitario != null ? parseFloat(i.precio_unitario) : 0;
+  const cantidad = parseFloat(i.cantidad) || 0;
+  const subtotalBruto = precio * cantidad;
+  const dto = i.dto_pct != null ? parseFloat(i.dto_pct) : 0;
+  const total = i.importe_total != null ? parseFloat(i.importe_total) : (subtotalBruto - (subtotalBruto * dto / 100));
+  let unidadTxt;
+  if (i.unidad) {
+    unidadTxt = i.unidad === 'metros' ? 'm' : 'uds.';
+  } else {
+    const prodInv = inventarioDB.find(p => p.id == i.producto_id);
+    unidadTxt = prodInv ? unidadCorta(prodInv) : 'uds.';
+  }
+  if (ocultarPrecios) {
+    return `<tr>
       <td>${i.producto_id || ''}</td>
       <td>${i.producto_nombre || ''}</td>
       <td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td>
     </tr>`;
-        }
-        return `<tr>
+  }
+  return `<tr>
       <td>${i.producto_id || ''}</td>
       <td>${i.producto_nombre || ''}</td>
       <td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td>
       <td style="text-align:right">${fmtN(precio)}</td>
-      <td style="text-align:right">${fmtN(subtotal)}</td>
-      <td style="text-align:right">—</td>
-      <td style="text-align:right">${fmtN(subtotal)}</td>
+      <td style="text-align:right">${fmtN(subtotalBruto)}</td>
+      <td style="text-align:right">${dto ? dto + '%' : '—'}</td>
+      <td style="text-align:right">${fmtN(total)}</td>
     </tr>`;
-      }).join('');
+}).join('');
 
 
       const domicilioCliente = cliente.domicilio || '';
@@ -14019,13 +14036,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     function addLineaConsumoInterno() {
-      lineasConsumoInternoCount++;
-      const idx = lineasConsumoInternoCount;
-      const div = document.createElement('div');
-      div.id = `ci_${idx}`;
-      div.className = 'linea-prod';
-      div.style.gridTemplateColumns = '1fr 100px 100px auto';
-      div.innerHTML = `
+  lineasConsumoInternoCount++;
+  const idx = lineasConsumoInternoCount;
+  const div = document.createElement('div');
+  div.id = `ci_${idx}`;
+  div.className = 'linea-prod';
+  div.style.gridTemplateColumns = '1fr 90px 100px 100px auto';
+  div.innerHTML = `
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Producto</label>
       <input type="text" id="ci_prod_${idx}" list="dl_productos" placeholder="Escribe para buscar..." oninput="autocompletarPrecioLineaCI(${idx})">
@@ -14038,12 +14055,16 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <label style="font-size:.75rem">Precio Ud. (€)</label>
       <input type="number" id="ci_precio_${idx}" step="0.01" min="0" value="0" oninput="recalcTotalCI()">
     </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Total (€)</label>
+      <input type="number" id="ci_lineatotal_${idx}" step="0.01" readonly style="background:#f7f0f5;font-weight:600;text-align:right" value="0.00">
+    </div>
     <button type="button" onclick="document.getElementById('ci_${idx}').remove(); recalcTotalCI();"
       style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
       <i class="fa-solid fa-xmark"></i>
     </button>`;
-      document.getElementById('lineasConsumoInterno').appendChild(div);
-    }
+  document.getElementById('lineasConsumoInterno').appendChild(div);
+}
 
     function autocompletarPrecioLineaCI(idx) {
       const inpNombre = document.getElementById(`ci_prod_${idx}`);
@@ -14054,27 +14075,33 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     function recalcTotalCI() {
-      let total = 0;
-      let totalUnidades = 0;
-      document.querySelectorAll('[id^="ci_prod_"]').forEach(inp => {
-        const idx = inp.id.split('_')[2];
-        const cant = parseFloat(document.getElementById(`ci_cant_${idx}`)?.value || 0);
-        const precio = parseFloat(document.getElementById(`ci_precio_${idx}`)?.value || 0);
-        total += cant * precio;
-        totalUnidades += cant;
-      });
-      document.querySelectorAll('[id^="cie_prod_"]').forEach(inp => {
-        const idx = inp.id.split('_')[2];
-        const cant = parseFloat(document.getElementById(`cie_cant_${idx}`)?.value || 0);
-        const precio = parseFloat(document.getElementById(`cie_precio_${idx}`)?.value || 0);
-        total += cant * precio;
-        totalUnidades += cant;
-      });
-      const esDevolucion = document.getElementById('ci_es_devolucion')?.checked;
-      document.getElementById('ci_total').value = (esDevolucion ? -total : total).toFixed(2);
-      const elUnidades = document.getElementById('ci_total_unidades');
-      if (elUnidades) elUnidades.textContent = fmtStock(totalUnidades);
-    }
+  let total = 0;
+  let totalUnidades = 0;
+  document.querySelectorAll('[id^="ci_prod_"]').forEach(inp => {
+    const idx = inp.id.split('_')[2];
+    const cant = parseFloat(document.getElementById(`ci_cant_${idx}`)?.value || 0);
+    const precio = parseFloat(document.getElementById(`ci_precio_${idx}`)?.value || 0);
+    const lineaTotal = cant * precio;
+    const elLineaTotal = document.getElementById(`ci_lineatotal_${idx}`);
+    if (elLineaTotal) elLineaTotal.value = lineaTotal.toFixed(2);
+    total += lineaTotal;
+    totalUnidades += cant;
+  });
+  document.querySelectorAll('[id^="cie_prod_"]').forEach(inp => {
+    const idx = inp.id.split('_')[2];
+    const cant = parseFloat(document.getElementById(`cie_cant_${idx}`)?.value || 0);
+    const precio = parseFloat(document.getElementById(`cie_precio_${idx}`)?.value || 0);
+    const lineaTotal = cant * precio;
+    const elLineaTotal = document.getElementById(`cie_lineatotal_${idx}`);
+    if (elLineaTotal) elLineaTotal.value = lineaTotal.toFixed(2);
+    total += lineaTotal;
+    totalUnidades += cant;
+  });
+  const esDevolucion = document.getElementById('ci_es_devolucion')?.checked;
+  document.getElementById('ci_total').value = (esDevolucion ? -total : total).toFixed(2);
+  const elUnidades = document.getElementById('ci_total_unidades');
+  if (elUnidades) elUnidades.textContent = fmtStock(totalUnidades);
+}
 
     async function guardarConsumoInterno() {
       const empleado = document.getElementById('ci_empleado').value.trim();
@@ -15339,13 +15366,35 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const ocultarPrecios = !!f.ocultar_precios;
 
       const filas = items.map(i => {
-        const precio = i.precio_unitario != null ? parseFloat(i.precio_unitario) : 0;
-        const subtotal = i.importe_total != null ? parseFloat(i.importe_total) : (precio * (parseFloat(i.cantidad) || 0));
-        const unidadTxt = i.unidad === 'metros' ? 'm' : 'uds.';
-        return ocultarPrecios
-          ? `<tr><td>${i.producto_id || ''}</td><td>${i.producto_nombre || ''}</td><td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td></tr>`
-          : `<tr><td>${i.producto_id || ''}</td><td>${i.producto_nombre || ''}</td><td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td><td style="text-align:right">${fmtN(precio)}</td><td style="text-align:right">${fmtN(subtotal)}</td><td style="text-align:right">—</td><td style="text-align:right">${fmtN(subtotal)}</td></tr>`;
-      }).join('');
+  const precio = i.precio_unitario != null ? parseFloat(i.precio_unitario) : 0;
+  const cantidad = parseFloat(i.cantidad) || 0;
+  const subtotalBruto = precio * cantidad;
+  const dto = i.dto_pct != null ? parseFloat(i.dto_pct) : 0;
+  const total = i.importe_total != null ? parseFloat(i.importe_total) : (subtotalBruto - (subtotalBruto * dto / 100));
+  let unidadTxt;
+  if (i.unidad) {
+    unidadTxt = i.unidad === 'metros' ? 'm' : 'uds.';
+  } else {
+    const prodInv = inventarioDB.find(p => p.id == i.producto_id);
+    unidadTxt = prodInv ? unidadCorta(prodInv) : 'uds.';
+  }
+  if (ocultarPrecios) {
+    return `<tr>
+      <td>${i.producto_id || ''}</td>
+      <td>${i.producto_nombre || ''}</td>
+      <td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td>
+    </tr>`;
+  }
+  return `<tr>
+      <td>${i.producto_id || ''}</td>
+      <td>${i.producto_nombre || ''}</td>
+      <td style="text-align:right">${fmtStock(i.cantidad)} ${unidadTxt}</td>
+      <td style="text-align:right">${fmtN(precio)}</td>
+      <td style="text-align:right">${fmtN(subtotalBruto)}</td>
+      <td style="text-align:right">${dto ? dto + '%' : '—'}</td>
+      <td style="text-align:right">${fmtN(total)}</td>
+    </tr>`;
+}).join('');
 
       const domicilioCliente = cliente.domicilio || '';
       const poblacionCliente = [cliente.codigo_postal, cliente.poblacion].filter(Boolean).join('   ');
@@ -16859,32 +16908,36 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     let lineasConsumoInternoExclusivoCount = 0;
 
     function addLineaConsumoInternoExclusivo() {
-      lineasConsumoInternoExclusivoCount++;
-      const idx = lineasConsumoInternoExclusivoCount;
-      const div = document.createElement('div');
-      div.id = `cie_${idx}`;
-      div.className = 'linea-prod';
-      div.style.gridTemplateColumns = '1fr 100px 100px auto';
-      div.innerHTML = `
-      <div class="form-group" style="margin:0">
-        <label style="font-size:.75rem">Producto</label>
-        <input type="text" id="cie_prod_${idx}" list="dl_materiales_exclusivos"
-          placeholder="Ej: Producto que no tenemos en stock...">
-      </div>
-      <div class="form-group" style="margin:0">
-        <label style="font-size:.75rem">Cantidad</label>
-        <input type="number" id="cie_cant_${idx}" value="1" min="0.01" step="0.01" oninput="recalcTotalCI()">
-      </div>
-      <div class="form-group" style="margin:0">
-        <label style="font-size:.75rem">Precio Ud. (€)</label>
-        <input type="number" id="cie_precio_${idx}" step="0.01" min="0" value="0" oninput="recalcTotalCI()">
-      </div>
-      <button type="button" onclick="document.getElementById('cie_${idx}').remove(); recalcTotalCI();"
-        style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
-        <i class="fa-solid fa-xmark"></i>
-      </button>`;
-      document.getElementById('lineasConsumoInternoExclusivo').appendChild(div);
-    }
+  lineasConsumoInternoExclusivoCount++;
+  const idx = lineasConsumoInternoExclusivoCount;
+  const div = document.createElement('div');
+  div.id = `cie_${idx}`;
+  div.className = 'linea-prod';
+  div.style.gridTemplateColumns = '1fr 90px 100px 100px auto';
+  div.innerHTML = `
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Producto</label>
+      <input type="text" id="cie_prod_${idx}" list="dl_materiales_exclusivos"
+        placeholder="Ej: Producto que no tenemos en stock...">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Cantidad</label>
+      <input type="number" id="cie_cant_${idx}" value="1" min="0.01" step="0.01" oninput="recalcTotalCI()">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Precio Ud. (€)</label>
+      <input type="number" id="cie_precio_${idx}" step="0.01" min="0" value="0" oninput="recalcTotalCI()">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Total (€)</label>
+      <input type="number" id="cie_lineatotal_${idx}" step="0.01" readonly style="background:#f7f0f5;font-weight:600;text-align:right" value="0.00">
+    </div>
+    <button type="button" onclick="document.getElementById('cie_${idx}').remove(); recalcTotalCI();"
+      style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
+      <i class="fa-solid fa-xmark"></i>
+    </button>`;
+  document.getElementById('lineasConsumoInternoExclusivo').appendChild(div);
+}
   </script>
 
 

@@ -13222,7 +13222,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <div class="form-group"><label>Población</label><input type="text" id="f_poblacion" placeholder="Toledo"></div>
     <div class="form-group"><label>Código postal</label><input type="text" id="f_cp" placeholder="45001"></div>
     <div class="form-group span2"><label>Provincia</label><input type="text" id="f_provincia" placeholder="Toledo"></div>
-        <div class="form-group span2">
+    <div class="form-group span2">
       <label>Destino de sus facturas <span style="font-size:.72rem;color:#888">(a qué sección las manda FacturaSync automáticamente)</span></label>
       <select id="f_destino">
         <option value="">Sin destino fijo — va a Clasificación</option>
@@ -13231,7 +13231,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <option value="csg">Facturas CSG</option>
         <option value="gastos_generales">Facturas Gastos Generales</option>
       </select>
-      <p style="font-size:.72rem;color:#888;margin-top:4px">Si se deja vacío, la factura llega a la Bandeja de Clasificación para decidirla a mano.</p>
+      <p style="font-size:.72rem;color:#888;margin-top:4px">Si se deja vacío, la factura llega a la Bandeja de Clasificación para decidirla a mano. CSG también se detecta automáticamente por NIF/nombre aunque no se ponga aquí.</p>
     </div>
   </div>`;
         document.getElementById('modalNueva').classList.add('visible');

@@ -3050,19 +3050,21 @@
     </div>
   </div>
 
-
   <div class="modal-overlay" id="modalConsumoInterno">
     <div class="modal-box-sm">
       <h3><i class="fa-solid fa-user-check" style="color:#b53987"></i>Consumo Interno</h3>
+
       <div class="form-group ac-wrap">
         <label>Cliente *</label>
         <input type="text" id="ci_empleado" placeholder="Escribe el nombre para buscar en Clientes...">
         <input type="hidden" id="ci_cliente_id">
       </div>
+
       <div class="form-group">
         <label>Fecha *</label>
         <input type="date" id="ci_fecha">
       </div>
+
       <div class="form-group"
         style="display:flex;align-items:center;gap:8px;background:#fff3e0;border:1.5px solid #f0c060;border-radius:8px;padding:10px 14px;margin-bottom:4px">
         <input type="checkbox" id="ci_es_devolucion" onchange="recalcTotalCI()" style="width:auto">
@@ -3071,12 +3073,10 @@
           negativo)
         </label>
       </div>
+
       <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">¿Qué se lleva?</div>
-      <div class="form-group" style="margin:0">
-        <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
-        <input type="text" id="ci_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
-          style="border-color:#2d7a4f;font-weight:600">
-      </div>
+
+      <!-- Se mantiene solo la opción de escáner con cámara (más completa) -->
       <div class="form-group" style="margin:0">
         <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
         <div style="display:flex;gap:6px">
@@ -3088,35 +3088,54 @@
           </button>
         </div>
       </div>
+
       <div id="lineasConsumoInterno"></div>
+
       <button type="button" class="btn-add-linea" onclick="addLineaConsumoInterno()">
         <i class="fa-solid fa-plus me-1"></i>Añadir producto
       </button>
-            <div class="form-group" style="margin-top:12px;padding-top:12px;border-top:1.5px solid #ede5f5">
+
+      <div class="form-seccion">Material exclusivo <span style="font-weight:400;font-size:.75rem;color:#888">(no
+          descuenta del inventario)</span></div>
+      <p style="font-size:.78rem;color:#888;margin-top:-8px"><i class="fa-solid fa-info-circle me-1"></i>Para productos
+        que no tenemos en el inventario general.</p>
+
+      <div id="lineasConsumoInternoExclusivo"></div>
+
+      <button type="button" class="btn-add-linea" onclick="addLineaConsumoInternoExclusivo()">
+        <i class="fa-solid fa-plus me-1"></i>Añadir material exclusivo
+      </button>
+
+      <!-- Corregido el anidamiento del total -->
+      <div class="form-group" style="margin-top:12px;padding-top:12px;border-top:1.5px solid #ede5f5">
         <label style="font-weight:600">Total (€)</label>
         <input type="number" id="ci_total" readonly style="background:#f7f0f5;font-weight:700;max-width:200px">
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;padding-top:10px;border-top:1.5px solid #ede5f5">
+
+      <div
+        style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;padding-top:10px;border-top:1.5px solid #ede5f5">
         <span style="font-size:.85rem;color:#888;font-weight:600">Total de unidades:</span>
         <span id="ci_total_unidades" style="font-size:1.3rem;font-weight:700;color:#b53987">0</span>
       </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;padding-top:10px;border-top:1.5px solid #ede5f5">
-        <span style="font-size:.85rem;color:#888;font-weight:600">Total de unidades:</span>
-        <span id="ci_total_unidades" style="font-size:1.3rem;font-weight:700;color:#b53987">0</span>
-      </div>
+
       <div class="form-group" style="margin-top:10px">
         <label>Observaciones</label>
         <input type="text" id="ci_notas" placeholder="Observaciones opcionales">
       </div>
-      <div class="modal-btns">
+
+      <!-- Botones del modal corregidos -->
       <div class="modal-btns">
         <button class="btn-cancelar" onclick="cerrarModal('modalConsumoInterno')">Cancelar</button>
-        <button class="btn-guardar" onclick="guardarConsumoInterno()"><i
-            class="fa-solid fa-floppy-disk me-1"></i>Guardar</button>
+        <button class="btn-guardar" onclick="guardarConsumoInterno()">
+          <i class="fa-solid fa-floppy-disk me-1"></i>Guardar
+        </button>
       </div>
-    </div>
-  </div>
+    </div> <!-- Cierre de modal-box-sm -->
+  </div> <!-- Cierre de modalConsumoInterno -->
+
   <div class="toast-wrap" id="toastWrap"></div>
+
+  <!-- Datalists -->
   <datalist id="dl_productos"></datalist>
   <datalist id="dl_materiales_exclusivos"></datalist>
   <datalist id="dl_obras"></datalist>
@@ -3125,10 +3144,10 @@
   <datalist id="dl_fases_estudio"></datalist>
   <datalist id="dl_obras_estudio"></datalist>
   <datalist id="dl_proveedores_envio"></datalist>
+
   <div class="barra-scroll-fija" id="barraScrollFija">
     <div id="barraScrollFijaInner"></div>
   </div>
-
 
   <script>
 
@@ -5735,14 +5754,14 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           facturas_csg: 'order=fecha.desc',
           albaranes: 'order=fecha.desc', clientes: 'order=nombre', inventario: 'order=nombre',
           materiales_obra: 'select=*,materiales_obra_items(*),materiales_exclusivos_obra_items(*),materiales_obra_maquinaria_items(*)&order=fecha.desc,id.desc',
-          albaranes_venta: 'select=*,albaranes_venta_items(*)&order=fecha.desc',
+          albaranes_venta: 'select=*,albaranes_venta_items(*),albaranes_venta_items_exclusivos(*)&order=fecha.desc',
           facturas_venta: 'select=*,facturas_venta_albaranes(*)&order=fecha.desc',
           presupuestos_venta: 'select=*,presupuestos_venta_items(*)&order=fecha.desc',
           obras: 'order=nombre', notificaciones_presupuestos: 'order=fecha_recordatorio.asc',
           ingresos: 'order=fecha.desc',
           varios: 'order=fecha_recibido.desc',
           maquinaria: 'order=codigo',
-          consumo_interno: 'select=*,consumo_interno_items(*)&order=id.desc',
+          consumo_interno: 'select=*,consumo_interno_items(*),consumo_interno_items_exclusivos(*)&order=id.desc',
           estudio_obras: 'order=fecha_recordatorio.asc',
           obras_estudio: 'order=nombre',
         };
@@ -8846,8 +8865,12 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     let materialesExclusivosDB = [];
     async function cargarMaterialesExclusivosCache() {
-      const items = await apiGetAll('materiales_exclusivos_obra_items', 'select=producto_nombre');
-      materialesExclusivosDB = [...new Set(items.map(i => i.producto_nombre).filter(Boolean))].sort();
+      const [itemsMO, itemsCI, itemsAV] = await Promise.all([
+        apiGetAll('materiales_exclusivos_obra_items', 'select=producto_nombre'),
+        apiGetAll('consumo_interno_items_exclusivos', 'select=producto_nombre'),
+        apiGetAll('albaranes_venta_items_exclusivos', 'select=producto_nombre')
+      ]);
+      materialesExclusivosDB = [...new Set([...itemsMO, ...itemsCI, ...itemsAV].map(i => i.producto_nombre).filter(Boolean))].sort();
       const dl = document.getElementById('dl_materiales_exclusivos');
       if (dl) dl.innerHTML = materialesExclusivosDB.map(n => `<option value="${n.replace(/"/g, '&quot;')}"></option>`).join('');
     }
@@ -10190,6 +10213,54 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById('lineasAlbaranVenta').appendChild(div);
     }
 
+    let lineasAlbaranVentaExclusivoCount = 0;
+
+    function addLineaAlbaranVentaExclusivo() {
+      lineasAlbaranVentaExclusivoCount++;
+      const idx = lineasAlbaranVentaExclusivoCount;
+      const div = document.createElement('div');
+      div.id = `lave_${idx}`;
+      div.className = 'linea-prod';
+      div.style.gridTemplateColumns = '1fr 90px 100px 80px auto';
+      div.innerHTML = `
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Producto</label>
+      <input type="text" id="lave_prod_${idx}" list="dl_materiales_exclusivos" placeholder="Ej: Producto que no tenemos en stock..." oninput="recalcBaseDesdeLineasAlbaranVenta()">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Cantidad</label>
+      <input type="number" id="lave_cant_${idx}" value="1" min="0.01" step="0.01" style="width:100%" oninput="recalcBaseDesdeLineasAlbaranVenta()">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Precio Ud. (€)</label>
+      <input type="number" id="lave_precio_${idx}" step="0.01" min="0" value="0" style="text-align:right;width:100%" oninput="recalcBaseDesdeLineasAlbaranVenta()">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Dto. %</label>
+      <input type="number" id="lave_dto_${idx}" step="0.01" min="0" max="100" value="0" style="text-align:right;width:100%" oninput="recalcBaseDesdeLineasAlbaranVenta()">
+    </div>
+    <button type="button" onclick="document.getElementById('lave_${idx}').remove(); recalcBaseDesdeLineasAlbaranVenta();"
+      style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
+      <i class="fa-solid fa-xmark"></i>
+    </button>`;
+      document.getElementById('lineasAlbaranVentaExclusivo').appendChild(div);
+    }
+
+    function _leerLineasAlbaranVentaExclusivo() {
+      const lineas = [];
+      for (const inp of document.querySelectorAll('[id^="lave_prod_"]')) {
+        const nombre = inp.value.trim();
+        if (!nombre) continue;
+        const idx = inp.id.split('_')[2];
+        const cant = parseFloat(document.getElementById(`lave_cant_${idx}`)?.value || 0);
+        const precio = parseFloat(document.getElementById(`lave_precio_${idx}`)?.value || 0);
+        const dto = parseFloat(document.getElementById(`lave_dto_${idx}`)?.value || 0);
+        if (cant <= 0) continue;
+        lineas.push({ nombre, cantidad: cant, precio, dto, idx });
+      }
+      return lineas;
+    }
+
     // Suma el subtotal de todas las líneas y lo mete en la base imponible automáticamente
     function recalcBaseDesdeLineasAlbaranVenta() {
       let base = 0;
@@ -10199,7 +10270,15 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const precio = parseFloat(document.getElementById(`lav_precio_${idx}`)?.value || 0);
         const dto = parseFloat(document.getElementById(`lav_dto_${idx}`)?.value || 0);
         const subtotal = cant * precio;
-        base += subtotal - (subtotal * dto / 100); // 👈 descuento por línea, no global
+        base += subtotal - (subtotal * dto / 100);
+      });
+      document.querySelectorAll('[id^="lave_prod_"]').forEach(inp => {
+        const idx = inp.id.split('_')[2];
+        const cant = parseFloat(document.getElementById(`lave_cant_${idx}`)?.value || 0);
+        const precio = parseFloat(document.getElementById(`lave_precio_${idx}`)?.value || 0);
+        const dto = parseFloat(document.getElementById(`lave_dto_${idx}`)?.value || 0);
+        const subtotal = cant * precio;
+        base += subtotal - (subtotal * dto / 100);
       });
       const esDevolucion = document.getElementById('f_av_es_devolucion')?.checked;
       if (esDevolucion) base = -base;
@@ -10258,7 +10337,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       const nif = document.getElementById('f_av_nif').value.trim() || null;
       const cliente_id = clienteVentaSelId;
       const esDevolucion = document.getElementById('f_av_es_devolucion')?.checked || false;
-      const base_imponible = parseFloat(document.getElementById('f_av_base').value || 0); // ya con descuentos y signo si es devolución
+      const base_imponible = parseFloat(document.getElementById('f_av_base').value || 0);
       const pct_iva = parseFloat(document.getElementById('f_av_pct_iva').value || 0);
       const importe_iva = +(base_imponible * pct_iva / 100).toFixed(2);
       const total = +(base_imponible + importe_iva).toFixed(2);
@@ -10272,8 +10351,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       if (esDevolucion && total > 0) { toast('En una devolución el total debe salir en negativo — revisa las líneas', 'err'); return; }
       if (!esDevolucion && total < 0) { toast('El total no puede ser negativo salvo que marques "Es una devolución"', 'err'); return; }
 
-      const lineasInput = _leerLineasAlbaranVenta();
-      if (!lineasInput.length) { toast('Añade al menos un producto', 'err'); return; }
+      const lineasInput = _leerLineasAlbaranVenta();          // 👈 ESTA LÍNEA FALTABA
+      const lineasExclusivasInput = _leerLineasAlbaranVentaExclusivo();
+      if (!lineasInput.length && !lineasExclusivasInput.length) { toast('Añade al menos un producto', 'err'); return; }
 
       // Efecto sobre el stock que produce una línea: en una venta normal se
       // descuenta (negativo), en una devolución se repone (positivo).
@@ -10308,7 +10388,12 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           importe_total: importeConDto
         });
       }
-
+      const lineasExclusivasFinales = lineasExclusivasInput.map(l => {
+        const subtotal = l.cantidad * l.precio;
+        let importeConDto = +(subtotal - (subtotal * l.dto / 100)).toFixed(2);
+        if (esDevolucion) importeConDto = -importeConDto;
+        return { producto_nombre: l.nombre, cantidad: l.cantidad, precio_unitario: l.precio, dto_pct: l.dto, importe_total: importeConDto };
+      });
       const puntosBase = calcularPuntosPorTotal(Math.abs(total));
       const puntosNuevos = conPuntos ? (esDevolucion ? -puntosBase : puntosBase) : 0;
       const btnsWrap = document.querySelector('#modalNueva .modal-btns');
@@ -10380,6 +10465,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           // Reemplazar las líneas del detalle (solo son filas informativas,
           // no afectan de nuevo al stock: el stock ya se ajustó arriba por delta)
           for (const it of itemsAntiguos) await apiDelete('albaranes_venta_items', it.id);
+          const itemsExclAntiguos = (anterior && anterior.albaranes_venta_items_exclusivos) || [];
+          for (const it of itemsExclAntiguos) await apiDelete('albaranes_venta_items_exclusivos', it.id);
 
           await apiPatch('albaranes_venta', modalEditId, headerPayload);
           headerId = modalEditId;
@@ -10388,6 +10475,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             albaran_venta_id: headerId, producto_id: l.producto_id, producto_nombre: l.producto_nombre,
             cantidad: l.cantidad, precio_unitario: l.precio_unitario, unidad: l.unidad, importe_total: l.importe_total
           })));
+          if (lineasExclusivasFinales.length) {
+            await apiPost('albaranes_venta_items_exclusivos', lineasExclusivasFinales.map(l => ({ ...l, albaran_venta_id: headerId })));
+          }
 
           toast(deltaPuntos === 0
             ? (esDevolucion ? 'Devolución actualizada (sin cambios en stock ni puntos)' : 'Albarán actualizado (sin cambios en stock ni puntos)')
@@ -10404,6 +10494,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             albaran_venta_id: headerId, producto_id: l.producto_id, producto_nombre: l.producto_nombre,
             cantidad: l.cantidad, precio_unitario: l.precio_unitario, importe_total: l.importe_total
           })));
+          if (lineasExclusivasFinales.length) {
+            await apiPost('albaranes_venta_items_exclusivos', lineasExclusivasFinales.map(l => ({ ...l, albaran_venta_id: headerId })));
+          }
 
           for (const l of lineasFinales) {
             const prod = inventarioDB.find(p => p.id == l.producto_id);
@@ -10499,6 +10592,21 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         } else {
           addLineaAlbaranVenta();
         }
+        document.getElementById('lineasAlbaranVentaExclusivo').innerHTML = '';
+        lineasAlbaranVentaExclusivoCount = 0;
+        const itemsExcl = f.albaranes_venta_items_exclusivos || [];
+        if (itemsExcl.length) {
+          itemsExcl.forEach(item => {
+            addLineaAlbaranVentaExclusivo();
+            document.getElementById(`lave_prod_${lineasAlbaranVentaExclusivoCount}`).value = item.producto_nombre || '';
+            document.getElementById(`lave_cant_${lineasAlbaranVentaExclusivoCount}`).value = item.cantidad;
+            document.getElementById(`lave_precio_${lineasAlbaranVentaExclusivoCount}`).value = item.precio_unitario || 0;
+            document.getElementById(`lave_dto_${lineasAlbaranVentaExclusivoCount}`).value = item.dto_pct || 0;
+          });
+          recalcBaseDesdeLineasAlbaranVenta();
+        } else {
+          addLineaAlbaranVentaExclusivo();
+        }
         activarInputEscaner('lav_scan', escanearLineaAlbaranVenta);
         document.getElementById('lav_scan')?.focus();
       }, 60);
@@ -10537,12 +10645,12 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     async function imprimirAlbaranVenta(id) {
       let f = registros.find(r => r.id === id);
       if (!f) {
-        const items = await apiGet('albaranes_venta', `id=eq.${id}&select=*,albaranes_venta_items(*)`);
+        const items = await apiGet('albaranes_venta', `id=eq.${id}&select=*,albaranes_venta_items(*),albaranes_venta_items_exclusivos(*)`);
         f = items && items[0];
       }
       if (!f) { toast('No se ha encontrado el albarán', 'err'); return; }
       const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
-      const items = f.albaranes_venta_items || [];
+      const items = [...(f.albaranes_venta_items || []), ...(f.albaranes_venta_items_exclusivos || [])];
 
       const ocultarPrecios = !!f.ocultar_precios;
 
@@ -12500,6 +12608,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 </div>
       <div id="lineasAlbaranVenta"></div>
       <button type="button" class="btn-add-linea" onclick="addLineaAlbaranVenta()"><i class="fa-solid fa-plus me-1"></i>Añadir producto</button>
+      <div class="form-seccion">Material exclusivo <span style="font-weight:400;font-size:.75rem;color:#888">(no descuenta del inventario)</span></div>
+      <p style="font-size:.78rem;color:#888;margin-top:-8px"><i class="fa-solid fa-info-circle me-1"></i>Para productos que no tenemos en stock.</p>
+      <div id="lineasAlbaranVentaExclusivo"></div>
+      <button type="button" class="btn-add-linea" onclick="addLineaAlbaranVentaExclusivo()"><i class="fa-solid fa-plus me-1"></i>Añadir material exclusivo</button>
       <div class="form-grid" style="margin-top:14px;padding-top:12px;border-top:1.5px solid #ede5f5">
   <div class="form-group"><label>Base imponible (€)</label><input type="number" id="f_av_base" step="0.01" readonly style="background:#f7f0f5;font-weight:700"></div>
   <div class="form-group"><label>% IVA</label><input type="number" id="f_av_pct_iva" step="0.01" value="21" oninput="recalcTotalAlbaranVenta()"></div>
@@ -12519,6 +12631,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           activarInputEscaner('lav_scan', escanearLineaAlbaranVenta);
           document.getElementById('lav_scan')?.focus();
           addLineaAlbaranVenta();
+          lineasAlbaranVentaExclusivoCount = 0;         // 👈 nuevo
+          document.getElementById('lineasAlbaranVentaExclusivo').innerHTML = ''; // 👈 nuevo
+          addLineaAlbaranVentaExclusivo();              // 👈 nuevo
           ocultarPdfModal();
 
           document.querySelector('#modalNueva .modal-btns').innerHTML = `
@@ -13754,11 +13869,11 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     async function imprimirConsumoInterno(id) {
       let f = registros.find(r => r.id === id);
       if (!f) {
-        const items = await apiGet('consumo_interno', `id=eq.${id}&select=*,consumo_interno_items(*)`);
+        const items = await apiGet('consumo_interno', `id=eq.${id}&select=*,consumo_interno_items(*),consumo_interno_items_exclusivos(*)`);
         f = items && items[0];
       }
       if (!f) { toast('No se ha encontrado el registro', 'err'); return; }
-      const items = f.consumo_interno_items || [];
+      const items = [...(f.consumo_interno_items || []), ...(f.consumo_interno_items_exclusivos || [])];
 
       const filas = items.map(i => `
     <tr>
@@ -13768,7 +13883,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <td style="text-align:right">${fmt(i.importe_total)}</td>
     </tr>`).join('');
 
-            const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+      const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
   <style>
     body{font-family:'Courier New',monospace;color:#111;padding:16px;max-width:320px;margin:0 auto;font-size:.85rem}
     h2{text-align:center;font-size:1rem;margin:0 0 4px}
@@ -13948,6 +14063,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         total += cant * precio;
         totalUnidades += cant;
       });
+      document.querySelectorAll('[id^="cie_prod_"]').forEach(inp => {
+        const idx = inp.id.split('_')[2];
+        const cant = parseFloat(document.getElementById(`cie_cant_${idx}`)?.value || 0);
+        const precio = parseFloat(document.getElementById(`cie_precio_${idx}`)?.value || 0);
+        total += cant * precio;
+        totalUnidades += cant;
+      });
       const esDevolucion = document.getElementById('ci_es_devolucion')?.checked;
       document.getElementById('ci_total').value = (esDevolucion ? -total : total).toFixed(2);
       const elUnidades = document.getElementById('ci_total_unidades');
@@ -13955,10 +14077,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     async function guardarConsumoInterno() {
-  const empleado = document.getElementById('ci_empleado').value.trim();
-  const fecha = document.getElementById('ci_fecha').value;
-  const esDevolucion = document.getElementById('ci_es_devolucion')?.checked || false;
-  const notas = document.getElementById('ci_notas').value.trim() || null;   // 👈 nuevo
+      const empleado = document.getElementById('ci_empleado').value.trim();
+      const fecha = document.getElementById('ci_fecha').value;
+      const esDevolucion = document.getElementById('ci_es_devolucion')?.checked || false;
+      const notas = document.getElementById('ci_notas').value.trim() || null;
       if (!empleado || !fecha) { toast('Indica quién se lo lleva y la fecha', 'err'); return; }
 
       const lineas = [];
@@ -13975,14 +14097,27 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const importe = +(cant * precio).toFixed(2);
         lineas.push({ producto_id: prod.id, producto_nombre: nombre, cantidad: cant, precio_unitario: precio, importe_total: esDevolucion ? -importe : importe });
       });
+
+      const lineasExclusivas = [];
+      document.querySelectorAll('[id^="cie_prod_"]').forEach(inp => {
+        const nombre = inp.value.trim();
+        if (!nombre) return;
+        const idx = inp.id.split('_')[2];
+        const cant = parseFloat(document.getElementById(`cie_cant_${idx}`)?.value || 0);
+        const precio = parseFloat(document.getElementById(`cie_precio_${idx}`)?.value || 0);
+        if (cant <= 0) { toast(`Cantidad inválida en material exclusivo "${nombre}"`, 'err'); ok = false; return; }
+        const importe = +(cant * precio).toFixed(2);
+        lineasExclusivas.push({ producto_nombre: nombre, cantidad: cant, precio_unitario: precio, importe_total: esDevolucion ? -importe : importe });
+      });
+
       if (!ok) return;
-      if (!lineas.length) { toast('Añade al menos un producto', 'err'); return; }
+      if (esDevolucion && lineasExclusivas.length) { toast('Una devolución solo puede llevar productos del inventario general', 'err'); return; }
+      if (!lineas.length && !lineasExclusivas.length) { toast('Añade al menos un producto', 'err'); return; }
 
       const total = parseFloat(document.getElementById('ci_total').value || 0);
       if (esDevolucion && total > 0) { toast('En una devolución el total debe salir en negativo — revisa las líneas', 'err'); return; }
       if (!esDevolucion && total < 0) { toast('El total no puede ser negativo salvo que marques "Es una devolución"', 'err'); return; }
 
-      // Efecto sobre el stock: salida normal descuenta, devolución repone.
       const efectoStock = (cant, devol) => devol ? Math.abs(cant) : -Math.abs(cant);
 
       try {
@@ -14002,6 +14137,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             }
             await apiDelete('consumo_interno_items', a.id);
           }
+
+          const antiguasExcl = await apiGet('consumo_interno_items_exclusivos', `consumo_interno_id=eq.${consumoInternoEditId}`);
+          for (const a of antiguasExcl) await apiDelete('consumo_interno_items_exclusivos', a.id);
 
           await apiPatch('consumo_interno', consumoInternoEditId, {
             empleado, fecha, total, notas,
@@ -14025,16 +14163,27 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           if (nuevoStock < 0) avisosStockNegativoCI.push(`${l.producto_nombre} (quedará en ${fmtStock(nuevoStock)} ${unidadCorta(prod)})`);
         }
 
-        await apiPost('consumo_interno_items', lineas.map(l => ({
-          consumo_interno_id: headerId,
-          producto_id: l.producto_id, producto_nombre: l.producto_nombre,
-          cantidad: l.cantidad, precio_unitario: l.precio_unitario, importe_total: l.importe_total
-        })));
-        for (const l of lineas) {
-          const prod = inventarioDB.find(p => p.id == l.producto_id);
-          const nuevoStock = Number(prod.stock) + efectoStock(l.cantidad, esDevolucion);
-          await apiPatch('inventario', l.producto_id, { stock: nuevoStock });
-          prod.stock = nuevoStock;
+        if (lineas.length) {
+          await apiPost('consumo_interno_items', lineas.map(l => ({
+            consumo_interno_id: headerId,
+            producto_id: l.producto_id, producto_nombre: l.producto_nombre,
+            cantidad: l.cantidad, precio_unitario: l.precio_unitario, importe_total: l.importe_total
+          })));
+          for (const l of lineas) {
+            const prod = inventarioDB.find(p => p.id == l.producto_id);
+            const nuevoStock = Number(prod.stock) + efectoStock(l.cantidad, esDevolucion);
+            await apiPatch('inventario', l.producto_id, { stock: nuevoStock });
+            prod.stock = nuevoStock;
+          }
+        }
+
+        if (lineasExclusivas.length) {
+          await apiPost('consumo_interno_items_exclusivos', lineasExclusivas.map(l => ({
+            consumo_interno_id: headerId,
+            producto_nombre: l.producto_nombre, cantidad: l.cantidad,
+            precio_unitario: l.precio_unitario, importe_total: l.importe_total
+          })));
+          cargarMaterialesExclusivosCache();
         }
 
         toast(consumoInternoEditId
@@ -14058,13 +14207,21 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       if (!reg) return;
       const esDevolucion = parseFloat(reg.total || 0) < 0;
       const items = reg.consumo_interno_items || [];
+      const itemsExcl = reg.consumo_interno_items_exclusivos || [];
       document.getElementById('modalDetalleTitulo').innerHTML =
         `<i class="fa-solid fa-user-check" style="color:#b53987"></i>Consumo — ${reg.empleado || '—'}${esDevolucion ? ' <span class="badge-estado badge-vencido" style="margin-left:6px"><i class="fa-solid fa-rotate-left"></i> DEVOLUCIÓN</span>' : ''}`;
-      document.getElementById('modalDetalleContenido').innerHTML = !items.length
-        ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin productos registrados</p>`
-        : `<table class="mini-table"><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Total</th></tr></thead><tbody>
-      ${items.map(i => `<tr><td>${i.producto_nombre || '—'}</td><td>${i.cantidad}</td><td>${fmt(i.precio_unitario)}</td><td><strong>${fmt(i.importe_total)}</strong></td></tr>`).join('')}
+      const tablaNormal = !items.length ? '' : `
+    <table class="mini-table"><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Total</th></tr></thead><tbody>
+    ${items.map(i => `<tr><td>${i.producto_nombre || '—'}</td><td>${i.cantidad}</td><td>${fmt(i.precio_unitario)}</td><td><strong>${fmt(i.importe_total)}</strong></td></tr>`).join('')}
     </tbody></table>`;
+      const tablaExcl = !itemsExcl.length ? '' : `
+    <div class="form-seccion">Material exclusivo</div>
+    <table class="mini-table"><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Total</th></tr></thead><tbody>
+    ${itemsExcl.map(i => `<tr><td>${i.producto_nombre || '—'}</td><td>${i.cantidad}</td><td>${fmt(i.precio_unitario)}</td><td><strong>${fmt(i.importe_total)}</strong></td></tr>`).join('')}
+    </tbody></table>`;
+      document.getElementById('modalDetalleContenido').innerHTML = (!items.length && !itemsExcl.length)
+        ? `<p style="text-align:center;color:#aaa;padding:2rem">Sin productos registrados</p>`
+        : `${tablaNormal}${tablaExcl}`;
       document.getElementById('modalDetalle').classList.add('visible');
     }
     let clienteConsumoSelId = null;
@@ -14698,7 +14855,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     let consumoInternoEditId = null; // 👈 nueva variable
 
-    function abrirModalConsumoInterno(id) { // 👈 acepta id opcional
+    function abrirModalConsumoInterno(id) {
       consumoInternoEditId = id || null;
       const reg = id ? registros.find(r => r.id === id) : null;
 
@@ -14710,6 +14867,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById('ci_es_devolucion').checked = reg ? parseFloat(reg.total || 0) < 0 : false;
       document.getElementById('lineasConsumoInterno').innerHTML = '';
       lineasConsumoInternoCount = 0;
+      document.getElementById('lineasConsumoInternoExclusivo').innerHTML = '';
+      lineasConsumoInternoExclusivoCount = 0;
 
       const items = reg?.consumo_interno_items || [];
       if (items.length) {
@@ -14719,19 +14878,28 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           document.getElementById(`ci_cant_${lineasConsumoInternoCount}`).value = Math.abs(item.cantidad);
           document.getElementById(`ci_precio_${lineasConsumoInternoCount}`).value = Math.abs(item.precio_unitario || 0);
         });
-        recalcTotalCI();
       } else {
         addLineaConsumoInterno();
       }
 
-      // Título y texto del botón, según sea alta o edición
+      const itemsExcl = reg?.consumo_interno_items_exclusivos || [];
+      if (itemsExcl.length) {
+        itemsExcl.forEach(item => {
+          addLineaConsumoInternoExclusivo();
+          document.getElementById(`cie_prod_${lineasConsumoInternoExclusivoCount}`).value = item.producto_nombre || '';
+          document.getElementById(`cie_cant_${lineasConsumoInternoExclusivoCount}`).value = Math.abs(item.cantidad);
+          document.getElementById(`cie_precio_${lineasConsumoInternoExclusivoCount}`).value = Math.abs(item.precio_unitario || 0);
+        });
+      } else {
+        addLineaConsumoInternoExclusivo();
+      }
+      recalcTotalCI();
+
       document.querySelector('#modalConsumoInterno h3').innerHTML =
         `<i class="fa-solid fa-user-check" style="color:#b53987"></i>${id ? 'Editar Consumo Interno' : 'Registrar Consumo Interno'}`;
       document.querySelector('#modalConsumoInterno .btn-guardar').innerHTML =
         `<i class="fa-solid fa-floppy-disk me-1"></i>${id ? 'Guardar cambios' : 'Guardar'}`;
 
-      document.getElementById('modalConsumoInterno').classList.add('visible');
-      setTimeout(() => setupClienteConsumoAC('ci_empleado', 'ci_cliente_id'), 50);
       document.getElementById('modalConsumoInterno').classList.add('visible');
       setTimeout(() => setupClienteConsumoAC('ci_empleado', 'ci_cliente_id'), 50);
       setTimeout(() => {
@@ -15162,12 +15330,12 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     async function _generarHtmlAlbaranVenta(id) {
       let f = registros.find(r => r.id === id);
       if (!f) {
-        const items = await apiGet('albaranes_venta', `id=eq.${id}&select=*,albaranes_venta_items(*)`);
+        const items = await apiGet('albaranes_venta', `id=eq.${id}&select=*,albaranes_venta_items(*),albaranes_venta_items_exclusivos(*)`);
         f = items && items[0];
       }
       if (!f) throw new Error('Albarán no encontrado');
       const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
-      const items = f.albaranes_venta_items || [];
+      const items = [...(f.albaranes_venta_items || []), ...(f.albaranes_venta_items_exclusivos || [])];
       const ocultarPrecios = !!f.ocultar_precios;
 
       const filas = items.map(i => {
@@ -16672,7 +16840,68 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         toast(!actual ? 'Marcado como respondido' : 'Vuelto a marcar como pendiente');
       } catch (e) { toast('Error: ' + e.message, 'err'); }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    let lineasConsumoInternoExclusivoCount = 0;
+
+    function addLineaConsumoInternoExclusivo() {
+      lineasConsumoInternoExclusivoCount++;
+      const idx = lineasConsumoInternoExclusivoCount;
+      const div = document.createElement('div');
+      div.id = `cie_${idx}`;
+      div.className = 'linea-prod';
+      div.style.gridTemplateColumns = '1fr 100px 100px auto';
+      div.innerHTML = `
+      <div class="form-group" style="margin:0">
+        <label style="font-size:.75rem">Producto</label>
+        <input type="text" id="cie_prod_${idx}" list="dl_materiales_exclusivos"
+          placeholder="Ej: Producto que no tenemos en stock...">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label style="font-size:.75rem">Cantidad</label>
+        <input type="number" id="cie_cant_${idx}" value="1" min="0.01" step="0.01" oninput="recalcTotalCI()">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label style="font-size:.75rem">Precio Ud. (€)</label>
+        <input type="number" id="cie_precio_${idx}" step="0.01" min="0" value="0" oninput="recalcTotalCI()">
+      </div>
+      <button type="button" onclick="document.getElementById('cie_${idx}').remove(); recalcTotalCI();"
+        style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
+        <i class="fa-solid fa-xmark"></i>
+      </button>`;
+      document.getElementById('lineasConsumoInternoExclusivo').appendChild(div);
+    }
   </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </body>
 
 

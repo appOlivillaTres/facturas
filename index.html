@@ -7075,7 +7075,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
         // INVENTARIO
       } else if (tablaActual === 'inventario') {
-                hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Producto</th><th>Stock</th><th>Cód. Barras</th><th>Pts/unidad</th><th class="num-cell">Costo</th><th class="num-cell">Venta</th><th class="num-cell">Margen</th><th class="num-cell">Descuento</th><th></th></tr>`;
+                hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Producto</th><th>Stock</th><th>Pts/unidad</th><th class="num-cell">Costo</th><th class="num-cell">Venta</th><th class="num-cell">Margen</th><th class="num-cell">Descuento</th><th>Cód. Barras</th><th></th></tr>`;
         const lista = registros.filter(p => (p.nombre || '').toLowerCase().includes(q));
         if (!lista.length) { bdy.innerHTML = emptyRow(7, 'No se encontraron productos'); return; }
         bdy.innerHTML = lista.map(p => {

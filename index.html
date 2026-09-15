@@ -6124,24 +6124,62 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       return '—';
     }
 
+        let filtroSoloCaducidad = false;
+
     async function abrirHistorialMovimientos() {
       const cfg = TIPO_HISTORIAL_POR_SECCION[tablaActual];
       if (!cfg) return;
+      filtroSoloCaducidad = false;
       try {
         const registrosHist = await apiGetAll('historial_movimientos', `tipo=eq.${cfg.tipo}&order=fecha.desc`);
-        document.getElementById('modalDetalleTitulo').innerHTML =
-          `<i class="fa-solid fa-clock-rotate-left" style="color:#b53987"></i>${cfg.titulo}`;
-        document.getElementById('modalDetalleContenido').innerHTML = !registrosHist.length
-          ? `<p style="text-align:center;color:#aaa;padding:2rem">Todavía no hay movimientos registrados</p>`
-          : `<table class="mini-table"><thead><tr><th>Fecha</th><th>Quién</th><th>Detalle</th></tr></thead><tbody>
-        ${registrosHist.map(h => `<tr>
-          <td style="font-size:.78rem;white-space:nowrap">${h.fecha ? new Date(h.fecha).toLocaleString('es-ES') : '—'}</td>
-          <td><strong>${NOMBRES_PERSONAS[h.persona] || h.persona}</strong></td>
-          <td style="font-size:.82rem">${formatearDetalleHistorial(cfg.tipo, h.detalle)}</td>
-        </tr>`).join('')}
-      </tbody></table>`;
+        window._historialActual = registrosHist;
+        window._historialTipo = cfg.tipo;
+        window._historialTitulo = cfg.titulo;
+        renderModalHistorial();
         document.getElementById('modalDetalle').classList.add('visible');
       } catch (e) { toast('Error al cargar el historial: ' + e.message, 'err'); }
+    }
+
+    function toggleFiltroSoloCaducidad(marcado) {
+      filtroSoloCaducidad = marcado;
+      renderModalHistorial();
+    }
+
+    function renderModalHistorial() {
+      const registrosHist = window._historialActual || [];
+      const tipo = window._historialTipo;
+      const esInventario = tipo === 'inventario';
+
+      const bajasCaducidad = registrosHist.filter(h => h.detalle && h.detalle.accion === 'caducidad');
+      const totalUnidadesCaducadas = bajasCaducidad.reduce((s, h) => s + (parseFloat(h.detalle.cantidad) || 0), 0);
+      const conValor = bajasCaducidad.filter(h => h.detalle.valor_perdido != null);
+      const totalValorPerdido = conValor.reduce((s, h) => s + (parseFloat(h.detalle.valor_perdido) || 0), 0);
+      const sinValor = bajasCaducidad.length - conValor.length;
+
+      const resumenCaducidad = (esInventario && bajasCaducidad.length) ? `
+        <div class="stats-grid" style="margin-bottom:14px">
+          <div class="stat naranja"><div class="slabel">Bajas por caducidad</div><div class="sval">${bajasCaducidad.length}</div></div>
+          <div class="stat naranja"><div class="slabel">Unidades caducadas</div><div class="sval">${fmtStock(totalUnidadesCaducadas)}</div></div>
+          <div class="stat rojo"><div class="slabel">Valor perdido</div><div class="sval">${fmt(totalValorPerdido)}${sinValor ? ` <span style="font-size:.65rem;color:#c47a00;font-weight:400">(+${sinValor} sin coste registrado)</span>` : ''}</div></div>
+        </div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;cursor:pointer;margin-bottom:10px">
+          <input type="checkbox" ${filtroSoloCaducidad ? 'checked' : ''} onchange="toggleFiltroSoloCaducidad(this.checked)">
+          Mostrar solo bajas por caducidad
+        </label>` : '';
+
+      const lista = filtroSoloCaducidad ? bajasCaducidad : registrosHist;
+
+      document.getElementById('modalDetalleTitulo').innerHTML =
+        `<i class="fa-solid fa-clock-rotate-left" style="color:#b53987"></i>${window._historialTitulo}`;
+      document.getElementById('modalDetalleContenido').innerHTML = resumenCaducidad + (!lista.length
+        ? `<p style="text-align:center;color:#aaa;padding:2rem">${filtroSoloCaducidad ? 'Sin bajas por caducidad todavía' : 'Todavía no hay movimientos registrados'}</p>`
+        : `<table class="mini-table"><thead><tr><th>Fecha</th><th>Quién</th><th>Detalle</th></tr></thead><tbody>
+        ${lista.map(h => `<tr>
+          <td style="font-size:.78rem;white-space:nowrap">${h.fecha ? new Date(h.fecha).toLocaleString('es-ES') : '—'}</td>
+          <td><strong>${NOMBRES_PERSONAS[h.persona] || h.persona}</strong></td>
+          <td style="font-size:.82rem">${formatearDetalleHistorial(tipo, h.detalle)}</td>
+        </tr>`).join('')}
+      </tbody></table>`);
     }
 
 

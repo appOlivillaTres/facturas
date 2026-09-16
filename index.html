@@ -2808,12 +2808,7 @@
         <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">Productos comprados</div>
         <p style="font-size:.78rem;color:#888;margin-top:-8px"><i class="fa-solid fa-info-circle me-1"></i>Cada producto
           descuenta stock y suma sus puntos al cliente automáticamente.</p>
-        <div class="form-group" style="margin:0">
-          <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear
-            producto</label>
-          <input type="text" id="lc_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
-            style="border-color:#2d7a4f;font-weight:600">
-        </div>
+
         <div class="form-group" style="margin:0">
           <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear
             producto</label>
@@ -3325,8 +3320,10 @@
     let _refrescoPendiente = null;  // Crea una variable vacia para guardar el temporizador de refresco, para que no se ejecute varias veces seguidas si llegan varios cambios en poco tiempo.
 
     // Primero mira si hay un modal abierto, y si lo hay, no hace nada (para no romper lo que se está editando en ese momento).
-    function hayModalAbierto() {
-      return ['modalNueva', 'modalMaterialObra', 'modalDetalle', 'modalExportar', 'modalExportarMateriales', 'modalCita', 'modalPuntos', 'modalEvento', 'modalCobros', 'modalTipoAlbaranVenta', 'modalConsumoInterno', 'modalTipoVenta']
+        function hayModalAbierto() {
+      return ['modalNueva', 'modalMaterialObra', 'modalDetalle', 'modalExportar', 'modalExportarMateriales',
+        'modalCita', 'modalPuntos', 'modalEvento', 'modalCobros', 'modalTipoAlbaranVenta', 'modalTipoVenta',
+        'modalConsumoInterno', 'modalAltaAlquiler', 'modalBajaAlquiler', 'modalSalidaMaquina', 'modalDevolverMaquina']
         .some(id => document.getElementById(id)?.classList.contains('visible'));
     }
 
@@ -4646,10 +4643,6 @@
       toast(`El tipo "${tipo}" estará disponible próximamente`, 'ok');
     }
 
-    function hayModalAbierto() {
-      return ['modalNueva', 'modalMaterialObra', 'modalDetalle', 'modalExportar', 'modalExportarMateriales', 'modalCita', 'modalPuntos', 'modalEvento', 'modalCobros', 'modalTipoAlbaranVenta', 'modalAltaAlquiler', 'modalBajaAlquiler', 'modalSalidaMaquina', 'modalDevolverMaquina']
-        .some(id => document.getElementById(id)?.classList.contains('visible'));
-    }
 
     async function guardarEventoCalendario() {   // se guarda el evento 
       if (!['angel', 'emilio'].includes(currentPersona)) return;
@@ -6018,17 +6011,33 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 
     // ESTADOS
-    function actualizarStats() {
+        function actualizarStats() {
       const hoyD = new Date(); hoyD.setHours(0, 0, 0, 0);
       const pend = registros.filter(f => f.estado === 'pendiente' && !f.imputado);
       const venc = pend.filter(f => f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD);
-      const pagado = registros.filter(f => f.estado === 'pagado').reduce((s, f) => s + parseFloat(f.total || 0), 0);
-      const porPag = pend.reduce((s, f) => s + parseFloat(f.total || 0), 0);
+
+      function sumarPorMoneda(lista) {
+        const sumas = {};
+        lista.forEach(f => {
+          const m = f.moneda || 'EUR';
+          sumas[m] = (sumas[m] || 0) + parseFloat(f.total || 0);
+        });
+        return sumas;
+      }
+      function formatearSumas(sumas) {
+        const entradas = Object.entries(sumas);
+        if (!entradas.length) return fmt(0);
+        return entradas.map(([m, v]) => fmt(v, m)).join(' + ');
+      }
+
+      const pagadoPorMoneda = sumarPorMoneda(registros.filter(f => f.estado === 'pagado'));
+      const porPagarPorMoneda = sumarPorMoneda(pend);
+
       document.getElementById('sTot').textContent = registros.length;
       document.getElementById('sPend').textContent = pend.length;
       document.getElementById('sVenc').textContent = venc.length;
-      document.getElementById('sCobrado').textContent = fmt(pagado);
-      document.getElementById('sPagar').textContent = fmt(porPag);
+      document.getElementById('sCobrado').textContent = formatearSumas(pagadoPorMoneda);
+      document.getElementById('sPagar').textContent = formatearSumas(porPagarPorMoneda);
     }
 
     function mensajeVencimiento(dias) {
@@ -10795,6 +10804,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           // Puntos: solo se aplica la diferencia entre lo que sumaba/restaba
           // antes y lo que debería sumar/restar ahora
 
+          const cliente = clientesDB.find(c => c.id === cliente_id); 
           const puntosAntes = (anterior && anterior.puntos_generados) || 0;
           const deltaPuntos = puntosNuevos - puntosAntes;
           if (deltaPuntos !== 0) {
@@ -12964,11 +12974,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       </div>
       <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">Productos que se lleva / se devuelven</div>
       <p style="font-size:.78rem;color:#888;margin-top:-8px"><i class="fa-solid fa-info-circle me-1"></i>Cada producto descuenta stock automáticamente.</p>
-      <div class="form-group" style="margin:0 0 10px">
-  <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
-  <input type="text" id="lav_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
-    style="border-color:#2d7a4f;font-weight:600">
-</div>
+
 <div class="form-group" style="margin:0 0 10px">
   <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
   <div style="display:flex;gap:6px">
@@ -13145,10 +13151,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <div id="avisoProductosRegistrados" style="margin-bottom:8px"></div>
       <p style="font-size:.78rem;color:#888;margin-bottom:10px"><i class="fa-solid fa-arrow-trend-up me-1" style="color:#2d7a4f"></i>Al guardar, la cantidad se <strong>sumará al stock</strong> del producto.</p>
       <div class="form-group" style="margin:0 0 10px">
-  <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
-  <input type="text" id="lfa_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
-    style="border-color:#2d7a4f;font-weight:600">
-    <div class="form-group" style="margin:0 0 10px">
+  <div class="form-group" style="margin:0 0 10px">
   <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
   <div style="display:flex;gap:6px">
     <input type="text" id="lfa_scan" placeholder="Escanea aquí con el lector..." autocomplete="off" style="border-color:#2d7a4f;font-weight:600;flex:1">
@@ -14445,22 +14448,6 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     let lineasConsumoInternoCount = 0;
 
-    function abrirModalConsumoInterno() {
-      document.getElementById('ci_empleado').value = '';
-      document.getElementById('ci_cliente_id').value = '';
-      clienteConsumoSelId = null;
-      document.getElementById('ci_fecha').value = hoy();
-      document.getElementById('ci_total').value = '';
-      document.getElementById('lineasConsumoInterno').innerHTML = '';
-      lineasConsumoInternoCount = 0;
-      addLineaConsumoInterno();
-      document.getElementById('modalConsumoInterno').classList.add('visible');
-      setTimeout(() => setupClienteConsumoAC('ci_empleado', 'ci_cliente_id'), 50);
-      setTimeout(() => {
-        activarInputEscaner('ci_scan', escanearLineaConsumoInterno);
-        document.getElementById('ci_scan')?.focus();
-      }, 60);
-    }
 
     function addLineaConsumoInterno() {
       lineasConsumoInternoCount++;

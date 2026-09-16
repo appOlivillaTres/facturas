@@ -8843,18 +8843,33 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const prov = document.getElementById('f_prov').value.trim();
           const fecha = document.getElementById('f_fecha').value;
           if (!prov || !fecha) { toast('Proveedor y fecha son obligatorios', 'err'); return; }
+          const numFactura = document.getElementById('f_num').value.trim();
           const nifCampo = document.getElementById('f_nif').value.trim() || null;
           await asegurarProveedor(prov, nifCampo);
 
+          const totalCampo = parseFloat(document.getElementById('f_total').value || 0);
+          const duplicado = await buscarFacturaDuplicada(numFactura, nifCampo, prov, fecha, totalCampo, modalEditId);
+          if (duplicado) {
+            await registrarDuplicado(duplicado, {
+              numero_factura: numFactura,
+              nif: nifCampo,
+              proveedor: prov,
+              total: totalCampo,
+              archivo_url: (archivosFacturaSeleccionados[0] && archivosFacturaSeleccionados[0].url) || null
+            }, 'manual');
+            toast(`⚠️ Ya existe una factura igual en ${ETIQUETA_TABLA_FACTURAS[duplicado.tabla] || duplicado.tabla} — no se ha guardado para evitar duplicarla`, 'err');
+            return;
+          }
+
           const payload = {
             numero_interno: document.getElementById('f_num_interno').value.trim() || null,
-            numero_factura: document.getElementById('f_num').value.trim() || null,
+            numero_factura: numFactura || null,
             fecha,
             fecha_recibido: document.getElementById('f_fecha_recibido').value || null,
             proveedor: prov,
             nif: nifCampo,
             concepto: document.getElementById('f_concepto').value.trim() || null,
-            total: parseFloat(document.getElementById('f_total').value || 0),
+            total: totalCampo,
             moneda: document.getElementById('f_moneda').value || 'EUR',
             estado: document.getElementById('f_est').value,
             fecha_vencimiento: document.getElementById('f_venc').value || null,
@@ -8874,7 +8889,19 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             payload.historial_ediciones = [...historialPrevio, { persona: currentPersona, fecha: new Date().toISOString() }];
             await apiPatch('facturas_gastos_generales', modalEditId, payload);
           } else {
-            await apiPost('facturas_gastos_generales', payload);
+            try {
+              await apiPost('facturas_gastos_generales', payload);
+            } catch (e) {
+              if (esErrorDuplicado(e.message)) {
+                await registrarDuplicado(duplicado, {
+                  numero_factura: numFactura, nif: nifCampo, proveedor: prov,
+                  total: totalCampo, archivo_url: payload.archivo_url
+                }, 'manual');
+                toast('⚠️ Esta factura se acaba de guardar justo ahora (por otra persona o proceso) — no se ha duplicado', 'err');
+                return;
+              }
+              throw e;
+            }
             if (window._pendienteOrigenId) {
               await apiDelete('facturas_pendientes', window._pendienteOrigenId);
               window._pendienteOrigenId = null;
@@ -9175,6 +9202,24 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         inventarioDB.push(nuevo);
         actualizarDatalistProductos();
         actualizarUnidadLinea('lc', idx);
+        toast(`Producto "${nombre}" añadido al inventario (${unidad === 'metros' ? 'por metros' : 'por unidades'})`, 'ok');
+      } catch (e) {
+        toast(`No se pudo crear el producto "${nombre}": ` + e.message, 'err');
+      }
+    }
+
+        async function crearProductoRapidoDesdeLineaCI(idx) {
+      const inp = document.getElementById(`ci_prod_${idx}`);
+      if (!inp) return;
+      const nombre = inp.value.trim();
+      if (!nombre) { toast('Escribe primero el nombre del producto', 'err'); return; }
+      if (buscarProductoPorNombre(nombre)) { toast(`"${nombre}" ya existe en el inventario`, 'err'); return; }
+      const unidad = document.getElementById(`ci_unidadnueva_${idx}`)?.value || 'unidades';
+      try {
+        const [nuevo] = await apiPost('inventario', { nombre, stock: 0, unidad, puntos_por_unidad: 0 });
+        inventarioDB.push(nuevo);
+        actualizarDatalistProductos();
+        actualizarUnidadLinea('ci', idx);
         toast(`Producto "${nombre}" añadido al inventario (${unidad === 'metros' ? 'por metros' : 'por unidades'})`, 'ok');
       } catch (e) {
         toast(`No se pudo crear el producto "${nombre}": ` + e.message, 'err');
@@ -11440,7 +11485,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     .iva-tabla th,.iva-tabla td{border:none;padding:4px 10px}
     .total-box{border:1.5px solid #333;border-radius:10px;padding:14px 24px;font-weight:700;display:flex;justify-content:space-between;gap:20px;align-items:center;min-width:220px}
     .btn-imprimir{position:fixed;top:16px;right:16px}
-    @media print{.btn-imprimir{display:none}}
+    @media print{ .btn-imprimir, .btn-enviar-email{display:none} }
   @media print{ .btn-imprimir, .btn-enviar-email{display:none} }
     </style></head><body>
   <div class="cabecera">
@@ -12076,7 +12121,26 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 <img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=https%3A%2F%2Fg.page%2Fr%2FCdcSctJhgIijEBM%2Freview" style="width:65px;height:65px">    <div style="font-size:.6rem;color:#666;margin-top:2px">Danos tu opinión</div>
   </div>
   <button class="btn-imprimir" onclick="window.print()" style="padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
-  </body></html>`;
+<button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'alta_alquiler')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
+<script>
+  function enviarDesdeVentanaImpresion(btn, id, tipo) {
+    if (!window.opener) {
+      alert('Abre este documento desde el panel para poder enviarlo por email.');
+      return;
+    }
+    const email = prompt('Introduce el email del destinatario:');
+    if (!email) return;
+    const mensaje = prompt('Mensaje opcional (déjalo en blanco si no quieres añadir nada):') || '';
+
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    window.opener.enviarDocumentoPorEmailDirecto(tipo, id, email, mensaje)
+      .then(() => { alert('Documento enviado a ' + email); btn.textContent = textoOriginal; btn.disabled = false; })
+      .catch(e => { alert('Error al enviar: ' + e.message); btn.textContent = textoOriginal; btn.disabled = false; });
+  }
+<\/script></body></html>`;
       const w = window.open('', '_blank');
       w.document.write(html);
       w.document.close();
@@ -12472,7 +12536,26 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 <img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=https%3A%2F%2Fg.page%2Fr%2FCdcSctJhgIijEBM%2Freview" style="width:65px;height:65px">    <div style="font-size:.6rem;color:#666;margin-top:2px">Danos tu opinión</div>
   </div>
   <button class="btn-imprimir" onclick="window.print()" style="padding:10px 20px;background:#c0392b;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
-  </body></html>`;
+<button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'baja_alquiler')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
+<script>
+  function enviarDesdeVentanaImpresion(btn, id, tipo) {
+    if (!window.opener) {
+      alert('Abre este documento desde el panel para poder enviarlo por email.');
+      return;
+    }
+    const email = prompt('Introduce el email del destinatario:');
+    if (!email) return;
+    const mensaje = prompt('Mensaje opcional (déjalo en blanco si no quieres añadir nada):') || '';
+
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    window.opener.enviarDocumentoPorEmailDirecto(tipo, id, email, mensaje)
+      .then(() => { alert('Documento enviado a ' + email); btn.textContent = textoOriginal; btn.disabled = false; })
+      .catch(e => { alert('Error al enviar: ' + e.message); btn.textContent = textoOriginal; btn.disabled = false; });
+  }
+<\/script></body></html>`;
       const w = window.open('', '_blank');
       w.document.write(html);
       w.document.close();
@@ -13431,9 +13514,13 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     </div>
     <div class="form-seccion" id="revisionModalWrap" style="display:none">Revisión</div>
     <div class="td-acciones" id="revisionChipsCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
-        <div id="avisoRevisionIA" style="display:none"></div>
+    <div class="form-seccion">Acciones</div>
+    <div id="avisoRevisionIA" style="display:none"></div>
+    <div class="td-acciones" id="accionesModalCont" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
     ${htmlCampoArchivo()}
-    ${htmlCamposExcel()}`;
+    ${htmlCamposExcel()}
+    <div class="form-seccion">Historial de ediciones</div>
+    <div id="historialEdicionesWrap" style="margin-bottom:14px"><span style="font-size:.78rem;color:#aaa"><i class="fa-solid fa-circle-info me-1"></i>Se registrará automáticamente al guardar cambios</span></div>`;
         archivosFacturaSeleccionados = [];
         document.getElementById('modalNueva').classList.add('visible');
         setTimeout(() => {
@@ -13498,15 +13585,17 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         cont.innerHTML = `<div class="form-grid-2">
   <div class="form-group"><label>Nº Albarán</label><input type="text" id="f_num" placeholder="ALB-2026-001"></div>
   <div class="form-group"><label>Fecha *</label><input type="date" id="f_fecha" value="${hoy()}"></div>
-  <div class="form-group span2 ac-wrap">
-    <label>Proveedor / Empresa *</label>
-    <div style="display:flex;gap:6px;align-items:center">
-      <input type="text" id="f_empresa" placeholder="Escribe el nombre para buscar..." style="flex:1">
-      <button type="button" class="btn-add-linea" style="padding:6px 10px;font-size:.8rem" onclick="crearProveedorRapido('f_empresa','f_nif')">
-        <i class="fa-solid fa-plus"></i>
-      </button>
-    </div>
+
+<div class="form-group span2 ac-wrap">
+  <label>Proveedor / Empresa *</label>
+  <div style="display:flex;gap:6px;align-items:center">
+    <input type="text" id="f_empresa" placeholder="Escribe el nombre para buscar..." style="flex:1">
+    <button type="button" title="Añadir proveedor nuevo" onclick="crearProveedorRapido('f_empresa','f_nif')"
+      style="background:#2d7a4f;border:none;color:#fff;border-radius:6px;width:38px;height:38px;flex-shrink:0;cursor:pointer">
+      <i class="fa-solid fa-plus"></i>
+    </button>
   </div>
+</div>
   <div class="form-group span2 ac-wrap">
     <label>NIF <span style="font-size:.72rem;color:#b53987">(se rellena automáticamente)</span></label>
     <input type="text" id="f_nif" placeholder="Se rellena al elegir proveedor">
@@ -14466,15 +14555,25 @@ async function crearProveedorRapido(inputNombreId, inputNifId) {
       const div = document.createElement('div');
       div.id = `ci_${idx}`;
       div.className = 'linea-prod';
-      div.style.gridTemplateColumns = '1fr 90px 100px 100px auto';
+      div.style.gridTemplateColumns = '1fr 152px 100px 100px auto';
       div.innerHTML = `
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Producto</label>
-      <input type="text" id="ci_prod_${idx}" list="dl_productos" placeholder="Escribe para buscar..." oninput="autocompletarPrecioLineaCI(${idx})">
+      <input type="text" id="ci_prod_${idx}" list="dl_productos" placeholder="Escribe para buscar o crear nuevo..." oninput="actualizarUnidadLinea('ci',${idx}); autocompletarPrecioLineaCI(${idx})">
     </div>
     <div class="form-group" style="margin:0">
-      <label style="font-size:.75rem">Cantidad</label>
-      <input type="number" id="ci_cant_${idx}" value="1" min="0.01" step="0.01" oninput="recalcTotalCI()">
+      <label style="font-size:.75rem">Cantidad <span id="ci_uni_${idx}" style="color:#b53987;font-weight:600"></span></label>
+      <div style="display:flex;gap:4px;align-items:center">
+        <input type="number" id="ci_cant_${idx}" value="1" min="0.01" step="0.01" style="text-align:center;width:100%" oninput="recalcTotalCI()">
+        <select id="ci_unidadnueva_${idx}" title="Unidad (solo si el producto es nuevo)" style="width:62px;font-size:.72rem;padding:4px;border:1.5px solid #ddd;border-radius:6px">
+          <option value="unidades">uds.</option>
+          <option value="metros">m</option>
+        </select>
+        <button type="button" title="Añadir como producto nuevo al inventario" onclick="crearProductoRapidoDesdeLineaCI(${idx})"
+          style="background:#2d7a4f;border:none;color:#fff;border-radius:6px;width:30px;height:30px;flex-shrink:0;cursor:pointer">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
     </div>
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Precio Ud. (€)</label>
@@ -14537,18 +14636,31 @@ async function crearProveedorRapido(inputNombreId, inputNifId) {
 
       const lineas = [];
       let ok = true;
-      document.querySelectorAll('[id^="ci_prod_"]').forEach(inp => {
+      for (const inp of document.querySelectorAll('[id^="ci_prod_"]')) {
         const nombre = inp.value.trim();
-        if (!nombre) return;
+        if (!nombre) continue;
         const idx = inp.id.split('_')[2];
         const cant = parseFloat(document.getElementById(`ci_cant_${idx}`)?.value || 0);
         const precio = parseFloat(document.getElementById(`ci_precio_${idx}`)?.value || 0);
-        if (cant <= 0) { toast(`Cantidad inválida en "${nombre}"`, 'err'); ok = false; return; }
-        const prod = buscarProductoPorNombre(nombre);
-        if (!prod) { toast(`"${nombre}" no existe en el inventario`, 'err'); ok = false; return; }
+        if (cant <= 0) { toast(`Cantidad inválida en "${nombre}"`, 'err'); ok = false; continue; }
+
+        let prod = buscarProductoPorNombre(nombre);
+        const unidadSeleccionada = document.getElementById(`ci_unidadnueva_${idx}`)?.value || 'unidades';
+        if (!prod) {
+          try {
+            const [nuevo] = await apiPost('inventario', { nombre, stock: 0, unidad: unidadSeleccionada, puntos_por_unidad: 0 });
+            inventarioDB.push(nuevo);
+            actualizarDatalistProductos();
+            prod = nuevo;
+            toast(`Producto "${nombre}" creado en el inventario`, 'ok');
+          } catch (e) {
+            toast(`No se pudo crear el producto "${nombre}": ` + e.message, 'err');
+            ok = false; continue;
+          }
+        }
         const importe = +(cant * precio).toFixed(2);
         lineas.push({ producto_id: prod.id, producto_nombre: nombre, cantidad: cant, precio_unitario: precio, importe_total: esDevolucion ? -importe : importe });
-      });
+      }
 
       const lineasExclusivas = [];
       document.querySelectorAll('[id^="cie_prod_"]').forEach(inp => {
@@ -15336,6 +15448,7 @@ function setupClienteConsumoAC(inputNombreId, inputIdId) {
           document.getElementById(`ci_prod_${lineasConsumoInternoCount}`).value = item.producto_nombre || '';
           document.getElementById(`ci_cant_${lineasConsumoInternoCount}`).value = Math.abs(item.cantidad);
           document.getElementById(`ci_precio_${lineasConsumoInternoCount}`).value = Math.abs(item.precio_unitario || 0);
+          actualizarUnidadLinea('ci', lineasConsumoInternoCount);
         });
       } else {
         addLineaConsumoInterno();
@@ -17132,6 +17245,15 @@ function setupClienteFacturaAC(inputNombreId, inputNifId, inputIdId) {
         payloadExtra = {
           tipo: 'enviar_factura_venta', numero_factura: f?.numero_factura || '', cliente_nombre:
             f?.cliente_nombre || ''
+        };
+      } else if (tipo === 'alta_alquiler' || tipo === 'baja_alquiler') {
+        const [reg] = await apiGet('alquileres', `id=eq.${id}`);
+        html = tipo === 'alta_alquiler' ? await _generarHtmlAltaAlquiler(id) : await _generarHtmlBajaAlquiler(id);
+        nombreArchivo = `${tipo === 'alta_alquiler' ? 'alta' : 'baja'}_alquiler_${reg?.numero_albaran || id}.pdf`;
+        payloadExtra = {
+          tipo: tipo === 'alta_alquiler' ? 'enviar_alta_alquiler' : 'enviar_baja_alquiler',
+          numero_albaran: reg?.numero_albaran || '',
+          cliente_nombre: reg?.cliente_nombre || ''
         };
       } else {
         throw new Error('Tipo de documento no soportado');

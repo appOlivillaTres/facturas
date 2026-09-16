@@ -13500,7 +13500,12 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   <div class="form-group"><label>Fecha *</label><input type="date" id="f_fecha" value="${hoy()}"></div>
   <div class="form-group span2 ac-wrap">
     <label>Proveedor / Empresa *</label>
-    <input type="text" id="f_empresa" placeholder="Escribe el nombre para buscar...">
+    <div style="display:flex;gap:6px;align-items:center">
+      <input type="text" id="f_empresa" placeholder="Escribe el nombre para buscar..." style="flex:1">
+      <button type="button" class="btn-add-linea" style="padding:6px 10px;font-size:.8rem" onclick="crearProveedorRapido('f_empresa','f_nif')">
+        <i class="fa-solid fa-plus"></i>
+      </button>
+    </div>
   </div>
   <div class="form-group span2 ac-wrap">
     <label>NIF <span style="font-size:.72rem;color:#b53987">(se rellena automáticamente)</span></label>
@@ -13777,20 +13782,26 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 
 
-    async function crearProveedorRapido() {
-      const nombre = document.getElementById('f_prov').value.trim();
-      if (!nombre) { toast('Introduce un nombre de proveedor', 'err'); return; }
-      const nif = document.getElementById('f_nif').value.trim() || null;
-      try {
-        await apiPost('proveedores', { nombre, nif });
-        toast('Proveedor creado correctamente');
-        proveedoresDB = await apiGet('proveedores', 'order=nombre');
-        const prov = proveedoresDB.find(p => p.nombre === nombre);
-        if (prov) document.getElementById('f_nif').value = prov.nif || '';
-      } catch (e) {
-        toast('Error creando proveedor: ' + e.message, 'err');
-      }
-    }
+// DESPUÉS:
+async function crearProveedorRapido(inputNombreId, inputNifId) {
+  inputNombreId = inputNombreId || 'f_prov';
+  inputNifId = inputNifId || 'f_nif';
+  const inpN = document.getElementById(inputNombreId);
+  const inpF = document.getElementById(inputNifId);
+  if (!inpN) return;
+  const nombre = inpN.value.trim();
+  if (!nombre) { toast('Introduce un nombre de proveedor', 'err'); return; }
+  const nif = inpF ? (inpF.value.trim() || null) : null;
+  try {
+    await apiPost('proveedores', { nombre, nif });
+    toast('Proveedor creado correctamente');
+    proveedoresDB = await apiGet('proveedores', 'order=nombre');
+    const prov = proveedoresDB.find(p => p.nombre === nombre);
+    if (prov && inpF) inpF.value = prov.nif || '';
+  } catch (e) {
+    toast('Error creando proveedor: ' + e.message, 'err');
+  }
+}
 
 
 
@@ -14667,49 +14678,56 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
     let clienteConsumoSelId = null;
 
-    function setupClienteConsumoAC(inputNombreId, inputIdId) {
-      const inpN = document.getElementById(inputNombreId);
-      const inpId = document.getElementById(inputIdId);
-      if (!inpN || !inpId) return;
+// DESPUÉS:
+function setupClienteConsumoAC(inputNombreId, inputIdId) {
+  const inpN = document.getElementById(inputNombreId);
+  const inpId = document.getElementById(inputIdId);
+  if (!inpN || !inpId) return;
 
-      inpN.parentElement.style.position = 'relative';
-      const lista = _crearLista('ac_consumo_' + inputNombreId, inpN.parentElement);
+  inpN.parentElement.style.position = 'relative';
+  const lista = _crearLista('ac_consumo_' + inputNombreId, inpN.parentElement);
 
-      function filtrar(q) {
-        return clientesDB.filter(c => (c.nombre || '').toLowerCase().includes(q)).slice(0, 10);
-      }
-      function seleccionar(c) {
-        inpN.value = c.nombre || '';
-        inpId.value = c.id;
-        clienteConsumoSelId = c.id;
-        lista.style.display = 'none';
-        if (c.aviso_albaran) {
-          alert(c.aviso_albaran);
-        }
-      }
-      function render(items) {
-        if (!items.length) { lista.style.display = 'none'; return; }
-        lista.innerHTML = items.map(c =>
-          `<div class="ac-item" data-id="${c.id}">
-        <span class="ac-nombre">${c.nombre || '—'}</span>
-        <span class="ac-nif">${c.nif || 'Sin NIF'}</span>
-      </div>`).join('');
-        lista.style.display = 'block';
-        lista.querySelectorAll('.ac-item').forEach(el => {
-          el.addEventListener('mousedown', e => {
-            e.preventDefault();
-            const c = clientesDB.find(x => x.id == el.dataset.id);
-            if (c) seleccionar(c);
-          });
-        });
-      }
-      inpN.addEventListener('input', () => {
-        inpId.value = ''; clienteConsumoSelId = null;
-        render(filtrar(inpN.value.toLowerCase().trim()));
-      });
-      inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim())); });
-      inpN.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
+  function filtrar(q) {
+    return clientesDB.filter(c => (c.nombre || '').toLowerCase().includes(q)).slice(0, 10);
+  }
+  function seleccionar(c) {
+    inpN.value = c.nombre || '';
+    inpId.value = c.id;
+    clienteConsumoSelId = c.id;
+    lista.style.display = 'none';
+    if (c.aviso_albaran) {
+      alert(c.aviso_albaran);
     }
+  }
+  function render(items, textoEscrito) {
+    if (!items.length) {
+      lista.innerHTML = `<div class="ac-item" style="color:#2d7a4f;font-weight:600" onmousedown="event.preventDefault(); abrirModalClienteRapido('${textoEscrito.replace(/'/g, "\\'")}', {inputNombre:'${inputNombreId}', inputNif:'', inputId:'${inputIdId}', setSelId: v => clienteConsumoSelId = v})">
+        <i class="fa-solid fa-plus me-1"></i>Añadir "${textoEscrito}" como cliente nuevo
+      </div>`;
+      lista.style.display = textoEscrito ? 'block' : 'none';
+      return;
+    }
+    lista.innerHTML = items.map(c =>
+      `<div class="ac-item" data-id="${c.id}">
+    <span class="ac-nombre">${c.nombre || '—'}</span>
+    <span class="ac-nif">${c.nif || 'Sin NIF'}</span>
+  </div>`).join('');
+    lista.style.display = 'block';
+    lista.querySelectorAll('.ac-item').forEach(el => {
+      el.addEventListener('mousedown', e => {
+        e.preventDefault();
+        const c = clientesDB.find(x => x.id == el.dataset.id);
+        if (c) seleccionar(c);
+      });
+    });
+  }
+  inpN.addEventListener('input', () => {
+    inpId.value = ''; clienteConsumoSelId = null;
+    render(filtrar(inpN.value.toLowerCase().trim()), inpN.value.trim());
+  });
+  inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim()), inpN.value.trim()); });
+  inpN.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
+}
 
     async function verVentasYConsumosCliente(clienteId, nombre) {
       try {
@@ -16183,39 +16201,45 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     let fvAlbaranesCliente = [];   // albaranes sin facturar del cliente seleccionado
     let fvEditId = null;
 
-    function setupClienteFacturaAC(inputNombreId, inputNifId, inputIdId) {
-      const inpN = document.getElementById(inputNombreId);
-      const inpF = document.getElementById(inputNifId);
-      const inpId = document.getElementById(inputIdId);
-      if (!inpN || !inpF || !inpId) return;
-      inpN.parentElement.style.position = 'relative';
-      const lista = _crearLista('ac_fv_' + inputNombreId, inpN.parentElement);
+function setupClienteFacturaAC(inputNombreId, inputNifId, inputIdId) {
+  const inpN = document.getElementById(inputNombreId);
+  const inpF = document.getElementById(inputNifId);
+  const inpId = document.getElementById(inputIdId);
+  if (!inpN || !inpF || !inpId) return;
+  inpN.parentElement.style.position = 'relative';
+  const lista = _crearLista('ac_fv_' + inputNombreId, inpN.parentElement);
 
-      function filtrar(q) {
-        return clientesDB.filter(c => (c.nombre || '').toLowerCase().includes(q) || (c.nif || '').toLowerCase().includes(q)).slice(0, 10);
-      }
-      async function seleccionar(c) {
-        inpN.value = c.nombre || ''; inpF.value = c.nif || ''; inpId.value = c.id;
-        fvClienteSelId = c.id;
-        lista.style.display = 'none';
-        await cargarAlbaranesSinFacturarCliente(c.id);
-      }
-      function render(items) {
-        if (!items.length) { lista.style.display = 'none'; return; }
-        lista.innerHTML = items.map(c => `<div class="ac-item" data-id="${c.id}"><span class="ac-nombre">${c.nombre || '—'}</span><span class="ac-nif">${c.nif || 'Sin NIF'}</span></div>`).join('');
-        lista.style.display = 'block';
-        lista.querySelectorAll('.ac-item').forEach(el => {
-          el.addEventListener('mousedown', e => {
-            e.preventDefault();
-            const c = clientesDB.find(x => x.id == el.dataset.id);
-            if (c) seleccionar(c);
-          });
-        });
-      }
-      inpN.addEventListener('input', () => { inpId.value = ''; fvClienteSelId = null; render(filtrar(inpN.value.toLowerCase().trim())); });
-      inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim())); });
-      inpN.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
+  function filtrar(q) {
+    return clientesDB.filter(c => (c.nombre || '').toLowerCase().includes(q) || (c.nif || '').toLowerCase().includes(q)).slice(0, 10);
+  }
+  async function seleccionar(c) {
+    inpN.value = c.nombre || ''; inpF.value = c.nif || ''; inpId.value = c.id;
+    fvClienteSelId = c.id;
+    lista.style.display = 'none';
+    await cargarAlbaranesSinFacturarCliente(c.id);
+  }
+  function render(items, textoEscrito) {
+    if (!items.length) {
+      lista.innerHTML = `<div class="ac-item" style="color:#2d7a4f;font-weight:600" onmousedown="event.preventDefault(); abrirModalClienteRapido('${textoEscrito.replace(/'/g, "\\'")}', {inputNombre:'${inputNombreId}', inputNif:'${inputNifId}', inputId:'${inputIdId}', setSelId: v => { fvClienteSelId = v; cargarAlbaranesSinFacturarCliente(v); }})">
+        <i class="fa-solid fa-plus me-1"></i>Añadir "${textoEscrito}" como cliente nuevo
+      </div>`;
+      lista.style.display = textoEscrito ? 'block' : 'none';
+      return;
     }
+    lista.innerHTML = items.map(c => `<div class="ac-item" data-id="${c.id}"><span class="ac-nombre">${c.nombre || '—'}</span><span class="ac-nif">${c.nif || 'Sin NIF'}</span></div>`).join('');
+    lista.style.display = 'block';
+    lista.querySelectorAll('.ac-item').forEach(el => {
+      el.addEventListener('mousedown', e => {
+        e.preventDefault();
+        const c = clientesDB.find(x => x.id == el.dataset.id);
+        if (c) seleccionar(c);
+      });
+    });
+  }
+  inpN.addEventListener('input', () => { inpId.value = ''; fvClienteSelId = null; render(filtrar(inpN.value.toLowerCase().trim()), inpN.value.trim()); });
+  inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim()), inpN.value.trim()); });
+  inpN.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
+}
 
     async function cargarAlbaranesSinFacturarCliente(clienteId, marcarKeys) {
       const cont = document.getElementById('fvAlbaranesLista');

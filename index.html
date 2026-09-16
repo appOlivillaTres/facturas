@@ -535,17 +535,53 @@
     }
 
 
-    #modalAuditoria {
+
+    .auditoria-tabla {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+        #modalAuditoria {
       display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
     }
 
     #modalAuditoria.visible {
       display: flex;
     }
 
-    .auditoria-tabla {
+    #modalAuditoria .modal-content {
+      background: #fff;
+      border-radius: 14px;
+      padding: 1.75rem;
       width: 100%;
-      border-collapse: collapse;
+      max-width: 1100px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 8px 32px rgba(74, 59, 104, .2);
+    }
+
+    #modalAuditoria .modal-header {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    #modalAuditoria #auditoriaContenedor {
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .auditoria-tabla thead th {
+      position: sticky;
+      top: 0;
+      z-index: 5;
     }
 
     .auditoria-tabla th {
@@ -8023,13 +8059,44 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     // AUDITORÍA GENERAL DEL SISTEMA
     // =========================================================
 
+        function obtenerReferenciaRegistro(tabla, registro) {
+      if (!registro) return null;
+      switch (tabla) {
+        case 'facturas_almacen':
+        case 'facturas_obra':
+        case 'facturas_csg':
+        case 'facturas_gastos_generales':
+          return registro.numero_factura || registro.numero_interno || null;
+        case 'ingresos':
+          return registro.numero_ingreso || registro.numero_interno || null;
+        case 'albaranes':
+        case 'albaranes_venta':
+          return registro.numero_albaran || null;
+        case 'facturas_venta':
+          return registro.numero_factura || null;
+        case 'presupuestos_venta':
+          return registro.numero_presupuesto || null;
+        case 'clientes':
+        case 'proveedores':
+        case 'obras':
+        case 'obras_estudio':
+        case 'inventario':
+          return registro.nombre || null;
+        case 'maquinaria':
+          return registro.codigo || registro.nombre || null;
+        default:
+          return null;
+      }
+    }
+
     async function registrarAuditoria({
       accion,
       tabla,
       registroId = null,
       descripcion = '',
       cambios = null,
-      seccion = null
+      seccion = null,
+      referencia = null
     }) {
 
       try {
@@ -8042,7 +8109,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           registro_id: registroId,
           descripcion,
           cambios,
-          seccion: seccion || tablaActual || null
+          seccion: seccion || tablaActual || null,
+          referencia
         };
 
         await apiPost('auditoria', datos);
@@ -8060,6 +8128,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       }
 
     }
+    
     function obtenerCambiosAuditoria(antes, despues, camposIgnorar = []) {
 
       const cambios = {};
@@ -8161,48 +8230,20 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       return String(valor);
     }
 
-    async function auditarEdicion(
-      tabla,
-      registroAntes,
-      registroDespues,
-      camposIgnorar = []
-    ) {
-
-      if (!registroAntes || !registroDespues) {
-        return;
-      }
-
-      const cambios = obtenerCambiosAuditoria(
-        registroAntes,
-        registroDespues,
-        camposIgnorar
-      );
-
-      if (!Object.keys(cambios).length) {
-        return;
-      }
-
-      await registrarAuditoria({
-
-        accion: 'editar',
-
-        tabla,
-
-        registroId:
-          registroDespues.id ??
-          registroAntes.id ??
-          null,
-
-        descripcion:
-          descripcionCambiosAuditoria(cambios),
-
-        cambios,
-
-        seccion: tablaActual
-
-      });
-
-    }
+async function auditarEdicion(tabla, registroAntes, registroDespues, camposIgnorar = []) {
+  if (!registroAntes || !registroDespues) return;
+  const cambios = obtenerCambiosAuditoria(registroAntes, registroDespues, camposIgnorar);
+  if (!Object.keys(cambios).length) return;
+  await registrarAuditoria({
+    accion: 'editar',
+    tabla,
+    registroId: registroDespues.id ?? registroAntes.id ?? null,
+    descripcion: descripcionCambiosAuditoria(cambios),
+    cambios,
+    seccion: tablaActual,
+    referencia: obtenerReferenciaRegistro(tabla, registroDespues)   // 👈 nuevo
+  });
+}
 
     function formatearDetalleHistorial(tipo, d) {
       if (!d) return '—';
@@ -8306,6 +8347,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         }
 
         await apiPatch(tabla, id, { [campo]: !actual });
+        const regAntesAuditoria = registros.find(r => r.id === id && (r.origen ? r.origen === tabla : true));
         await registrarAuditoria({
 
           accion: !actual
@@ -8326,7 +8368,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             }
           },
 
-          seccion: tablaActual
+          seccion: tablaActual,
+
+          referencia: obtenerReferenciaRegistro(tabla, regAntesAuditoria)
 
         });
 
@@ -20171,10 +20215,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 
                 <td>
-                  #${dashboardEscape(
-            a.registro_id ||
-            '—'
-          )}
+                  ${a.referencia
+            ? dashboardEscape(a.referencia)
+            : '#' + dashboardEscape(a.registro_id || '—')}
                 </td>
 
 
@@ -20264,6 +20307,54 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         ]
       );
     }
+
+    function obtenerReferenciaRegistro(tabla, registro) {
+  if (!registro) return null;
+  switch (tabla) {
+    case 'facturas_almacen':
+    case 'facturas_obra':
+    case 'facturas_csg':
+    case 'facturas_gastos_generales':
+      return registro.numero_factura || registro.numero_interno || null;
+    case 'ingresos':
+      return registro.numero_ingreso || registro.numero_interno || null;
+    case 'albaranes':
+    case 'albaranes_venta':
+      return registro.numero_albaran || null;
+    case 'facturas_venta':
+      return registro.numero_factura || null;
+    case 'presupuestos_venta':
+      return registro.numero_presupuesto || null;
+    case 'clientes':
+    case 'proveedores':
+    case 'obras':
+    case 'obras_estudio':
+    case 'inventario':
+      return registro.nombre || null;
+    case 'maquinaria':
+      return registro.codigo || registro.nombre || null;
+    default:
+      return null;
+  }
+}
+
+async function registrarAuditoria({
+  accion, tabla, registroId = null, descripcion = '',
+  cambios = null, seccion = null, referencia = null   // 👈 nuevo
+}) {
+  try {
+    const datos = {
+      fecha: new Date().toISOString(),
+      persona: currentPersona || 'desconocido',
+      accion, tabla, registro_id: registroId, descripcion, cambios,
+      seccion: seccion || tablaActual || null,
+      referencia   // 👈 nuevo
+    };
+    await apiPost('auditoria', datos);
+  } catch (e) {
+    console.error('No se pudo registrar la auditoría:', e);
+  }
+}
   </script>
 
 

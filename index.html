@@ -12111,9 +12111,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     table{width:100%;border-collapse:collapse;margin-top:10px}
     th,td{border-bottom:1px solid #ccc;padding:6px;text-align:left;font-size:.7rem}
     th{background:#f7f0f5;font-weight:500}
-    .condiciones{font-size:.62rem;line-height:1.5;margin-top:20px;color:#333}
-    .condiciones h4{font-size:.75rem;margin-bottom:6px}
-    .pie{display:flex;justify-content:space-between;gap:16px;margin-top:20px;align-items:flex-start}
+    .condiciones{font-size:.5rem;line-height:1.3;margin-top:14px;color:#333;text-align:justify}
+    .condiciones h4{font-size:.68rem;margin-bottom:6px;text-align:left}
+    .pie{display:flex;justify-content:space-between;gap:16px;margin-top:14px;align-items:flex-start}
     .iva-tabla{border:1.5px solid #333;border-radius:10px;padding:10px 14px;font-size:.7rem}
     .iva-tabla table{margin:0}
     .iva-tabla th,.iva-tabla td{border:none;padding:4px 10px}
@@ -12539,19 +12539,19 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
       const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Albarán de baja de alquiler ${f.numero_albaran || ''}</title>
   <style>
-    body{font-family:Arial,sans-serif;color:#222;padding:36px;font-size:.72rem}
-    .cabecera{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
+    body{font-family:Arial,sans-serif;color:#222;padding:36px;font-size:.66rem;text-align:justify}
+    .cabecera{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;text-align:left}
     .cabecera img{height:80px}
-    .caja{border:1.5px solid #333;border-radius:10px;padding:12px 16px;margin-bottom:6px}
+    .caja{border:1.5px solid #333;border-radius:10px;padding:12px 16px;margin-bottom:6px;text-align:left}
     .datos-cliente h3{margin:0 0 6px;font-size:.85rem}
     .doc-info{display:flex;gap:10px;margin-top:14px}
     .doc-info div{border:1.5px solid #333;border-radius:8px;padding:8px 14px;text-align:center;font-size:.78rem}
     .doc-info div b{display:block;font-size:.85rem;margin-top:2px}
     h1{font-size:1.4rem;margin:18px 0 10px}
     table{width:100%;border-collapse:collapse;margin-top:10px}
-    th,td{border-bottom:1px solid #ccc;padding:6px;text-align:left;font-size:.7rem}
+    th,td{border-bottom:1px solid #ccc;padding:6px;text-align:left;font-size:.66rem}
     th{background:#f7f0f5;font-weight:500}
-    .pie{display:flex;justify-content:space-between;gap:16px;margin-top:20px;align-items:flex-start}
+    .pie{display:flex;justify-content:space-between;gap:16px;margin-top:14px;align-items:flex-start}
     .iva-tabla{border:1.5px solid #333;border-radius:10px;padding:10px 14px;font-size:.7rem}
     .iva-tabla table{margin:0}
     .iva-tabla th,.iva-tabla td{border:none;padding:4px 10px}
@@ -14058,9 +14058,9 @@ async function crearProveedorRapido(inputNombreId, inputNifId) {
     table{width:100%;border-collapse:collapse;margin-top:10px}
     th,td{border-bottom:1px solid #ccc;padding:6px;text-align:left;font-size:.7rem}
     th{background:#f7f0f5;font-weight:500}
-    .condiciones{font-size:.62rem;line-height:1.5;margin-top:20px;color:#333}
-    .condiciones h4{font-size:.75rem;margin-bottom:6px}
-    .pie{display:flex;justify-content:space-between;gap:16px;margin-top:20px;align-items:flex-start}
+    .condiciones{font-size:.5rem;line-height:1.3;margin-top:14px;color:#333;text-align:justify}
+    .condiciones h4{font-size:.68rem;margin-bottom:6px;text-align:left}
+    .pie{display:flex;justify-content:space-between;gap:16px;margin-top:14px;align-items:flex-start}
 .iva-tabla{box-shadow: inset 0 0 0 1.5px #333; border-radius:10px; padding:10px 14px; font-size:.75rem}
     .iva-tabla table{margin:0}
     .iva-tabla th,.iva-tabla td{border:none;padding:4px 10px}
@@ -14171,19 +14171,19 @@ async function crearProveedorRapido(inputNombreId, inputNifId) {
       return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Albarán de baja de alquiler ${f.numero_albaran || ''}</title>
   <style>
     html,body{background:#fff}
-    body{font-family:Arial,sans-serif;padding:36px;font-size:.75rem;color:#000}
-    .cabecera{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
+    body{font-family:Arial,sans-serif;padding:36px;font-size:.68rem;color:#000;text-align:justify}
+    .cabecera{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;text-align:left}
     .cabecera img{height:100px;width:auto;max-width:220px;object-fit:contain;display:block}
-.caja{box-shadow: inset 0 0 0 1.5px #333; border-radius:10px; padding:12px 16px; margin-bottom:6px}
+.caja{box-shadow: inset 0 0 0 1.5px #333; border-radius:10px; padding:12px 16px; margin-bottom:6px;text-align:left}
     .datos-cliente h3{margin:0 0 6px;font-size:.85rem}
     .doc-info{display:flex;gap:10px;margin-top:14px}
 .doc-info div{box-shadow: inset 0 0 0 1.5px #333; border-radius:8px; padding:8px 14px; text-align:center; font-size:.78rem}
     .doc-info div b{display:block;font-size:.85rem;margin-top:2px}
     h1{font-size:1.4rem;margin:18px 0 10px}
     table{width:100%;border-collapse:collapse;margin-top:10px}
-    th,td{border-bottom:1px solid #ccc;padding:6px;text-align:left;font-size:.7rem}
+    th,td{border-bottom:1px solid #ccc;padding:6px;text-align:left;font-size:.66rem}
     th{background:#f7f0f5;font-weight:500}
-    .pie{display:flex;justify-content:space-between;gap:16px;margin-top:20px;align-items:flex-start}
+    .pie{display:flex;justify-content:space-between;gap:16px;margin-top:14px;align-items:flex-start}
 .iva-tabla{box-shadow: inset 0 0 0 1.5px #333; border-radius:10px; padding:10px 14px; font-size:.75rem}
     .iva-tabla table{margin:0}
     .iva-tabla th,.iva-tabla td{border:none;padding:4px 10px}

@@ -156,381 +156,453 @@
       margin-top: 8px;
       display: none;
     }
+
     /* =========================================================
    DASHBOARD
    ========================================================= */
 
-#dashboardWrap {
+    #dashboardWrap {
+      width: 100%;
+      margin-top: 4px;
+      padding-bottom: 30px;
+    }
+
+    .dashboard-saludo {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .dashboard-saludo h2 {
+      margin: 0;
+      font-size: 1.35rem;
+      color: #35284f;
+    }
+
+    .dashboard-saludo p {
+      margin: 4px 0 0;
+      color: #888;
+      font-size: .85rem;
+    }
+
+    .dashboard-refresh {
+      border: 1px solid #ddd;
+      background: white;
+      color: #35284f;
+      border-radius: 8px;
+      padding: 8px 13px;
+      cursor: pointer;
+      font-size: .82rem;
+    }
+
+    .dashboard-refresh:hover {
+      background: #f7f0f5;
+    }
+
+
+    /* TARJETAS */
+
+    .dashboard-cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .dashboard-card {
+      background: white;
+      border: 1px solid #eee;
+      border-radius: 13px;
+      padding: 17px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: .15s ease;
+      box-shadow: 0 2px 8px rgba(53, 40, 79, .05);
+    }
+
+    .dashboard-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(53, 40, 79, .10);
+    }
+
+    .dashboard-card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+    }
+
+    .dashboard-card-danger .dashboard-card-icon {
+      background: #fde8e8;
+      color: #c62828;
+    }
+
+    .dashboard-card-warning .dashboard-card-icon {
+      background: #fff3df;
+      color: #c47a00;
+    }
+
+    .dashboard-card-review .dashboard-card-icon {
+      background: #eee8f7;
+      color: #6a4c93;
+    }
+
+    .dashboard-card-stock .dashboard-card-icon {
+      background: #fce8f4;
+      color: #b53987;
+    }
+
+    .dashboard-card-obras .dashboard-card-icon {
+      background: #e8eef8;
+      color: #435b8a;
+    }
+
+    .dashboard-card-machinery .dashboard-card-icon {
+      background: #edf0f2;
+      color: #59656d;
+    }
+
+    .dashboard-card-title {
+      font-size: .78rem;
+      color: #777;
+    }
+
+    .dashboard-card-value {
+      font-size: 1.65rem;
+      line-height: 1.2;
+      font-weight: 700;
+      color: #35284f;
+      margin-top: 2px;
+    }
+
+    .dashboard-card-sub {
+      font-size: .7rem;
+      color: #aaa;
+      margin-top: 2px;
+    }
+
+
+    
+
+    /* PANELES */
+
+    .dashboard-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .dashboard-panel {
+      background: white;
+      border: 1px solid #eee;
+      border-radius: 13px;
+      box-shadow: 0 2px 8px rgba(53, 40, 79, .05);
+      overflow: hidden;
+    }
+
+    .dashboard-panel-full {
+      margin-bottom: 10px;
+    }
+
+    .dashboard-panel-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dashboard-panel-header>div {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: #35284f;
+      font-size: .9rem;
+    }
+
+    .dashboard-panel-header>div i {
+      color: #b53987;
+    }
+
+    .dashboard-panel-header button {
+      border: 0;
+      background: transparent;
+      color: #b53987;
+      cursor: pointer;
+      font-size: .75rem;
+    }
+
+    .dashboard-panel-header button:hover {
+      text-decoration: underline;
+    }
+
+
+    /* LISTAS */
+
+    .dashboard-list {
+      padding: 4px 16px;
+    }
+
+    .dashboard-list-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: .82rem;
+    }
+
+    .dashboard-list-row:last-child {
+      border-bottom: 0;
+    }
+
+    .dashboard-list-row span {
+      color: #555;
+    }
+
+    .dashboard-list-row strong {
+      color: #35284f;
+    }
+
+    .dashboard-red {
+      color: #d33b3b !important;
+    }
+
+    .dashboard-orange {
+      color: #c47a00 !important;
+    }
+
+    .dashboard-purple {
+      color: #7a55a8 !important;
+    }
+
+    .dashboard-green {
+      color: #2d7a4f !important;
+    }
+
+
+    /* STOCK */
+
+    .dashboard-stock-list,
+    .dashboard-mini-list {
+      padding: 6px 16px 10px;
+    }
+
+    .dashboard-stock-item,
+    .dashboard-mini-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: .8rem;
+    }
+
+    .dashboard-stock-item:last-child,
+    .dashboard-mini-item:last-child {
+      border-bottom: 0;
+    }
+
+    .dashboard-stock-name,
+    .dashboard-mini-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .dashboard-stock-value {
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .dashboard-stock-negative {
+      color: #d33b3b;
+    }
+
+    .dashboard-stock-low {
+      color: #c47a00;
+    }
+
+    .dashboard-machine-badge {
+      font-size: .68rem;
+      padding: 3px 7px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+
+    .dashboard-machine-badge.averiada {
+      background: #fde8e8;
+      color: #c62828;
+    }
+
+    .dashboard-machine-badge.alquilada {
+      background: #fff3df;
+      color: #c47a00;
+    }
+
+
+    /* ACCIONES */
+
+    .dashboard-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding: 14px 16px;
+    }
+
+    .dashboard-action {
+      border: 1px solid #eee;
+      border-radius: 9px;
+      padding: 12px;
+      background: #fafafa;
+      cursor: pointer;
+      text-align: left;
+      transition: .15s;
+    }
+
+    .dashboard-action:hover {
+      background: #f7f0f5;
+      border-color: #e1c7d9;
+    }
+
+    .dashboard-action i {
+      color: #b53987;
+      margin-right: 7px;
+    }
+
+    .dashboard-action strong {
+      display: block;
+      margin-top: 7px;
+      font-size: .82rem;
+      color: #35284f;
+    }
+
+    .dashboard-action span {
+      display: block;
+      margin-top: 3px;
+      color: #888;
+      font-size: .72rem;
+    }
+
+    .dashboard-loading {
+      text-align: center;
+      color: #aaa;
+      padding: 22px 10px;
+      font-size: .8rem;
+    }
+
+
+    /* RESPONSIVE */
+
+    @media (max-width: 1000px) {
+
+      .dashboard-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .dashboard-actions {
+        grid-template-columns: 1fr 1fr;
+      }
+
+    }
+
+    @media (max-width: 700px) {
+
+      .dashboard-cards,
+      .dashboard-grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard-saludo {
+        align-items: flex-start;
+      }
+
+    }
+
+
+    #modalAuditoria {
+  display: none;
+}
+
+#modalAuditoria.visible {
+  display: flex;
+}
+
+.auditoria-tabla {
   width: 100%;
-  margin-top: 4px;
-  padding-bottom: 30px;
+  border-collapse: collapse;
 }
 
-.dashboard-saludo {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.dashboard-saludo h2 {
-  margin: 0;
-  font-size: 1.35rem;
-  color: #35284f;
-}
-
-.dashboard-saludo p {
-  margin: 4px 0 0;
-  color: #888;
-  font-size: .85rem;
-}
-
-.dashboard-refresh {
-  border: 1px solid #ddd;
-  background: white;
-  color: #35284f;
-  border-radius: 8px;
-  padding: 8px 13px;
-  cursor: pointer;
-  font-size: .82rem;
-}
-
-.dashboard-refresh:hover {
-  background: #f7f0f5;
-}
-
-
-/* TARJETAS */
-
-.dashboard-cards {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 18px;
-}
-
-.dashboard-card {
-  background: white;
-  border: 1px solid #eee;
-  border-radius: 13px;
-  padding: 17px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  cursor: pointer;
-  transition: .15s ease;
-  box-shadow: 0 2px 8px rgba(53,40,79,.05);
-}
-
-.dashboard-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(53,40,79,.10);
-}
-
-.dashboard-card-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 11px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.15rem;
-  flex-shrink: 0;
-}
-
-.dashboard-card-danger .dashboard-card-icon {
-  background: #fde8e8;
-  color: #c62828;
-}
-
-.dashboard-card-warning .dashboard-card-icon {
-  background: #fff3df;
-  color: #c47a00;
-}
-
-.dashboard-card-review .dashboard-card-icon {
-  background: #eee8f7;
-  color: #6a4c93;
-}
-
-.dashboard-card-stock .dashboard-card-icon {
-  background: #fce8f4;
-  color: #b53987;
-}
-
-.dashboard-card-obras .dashboard-card-icon {
-  background: #e8eef8;
-  color: #435b8a;
-}
-
-.dashboard-card-machinery .dashboard-card-icon {
-  background: #edf0f2;
-  color: #59656d;
-}
-
-.dashboard-card-title {
-  font-size: .78rem;
-  color: #777;
-}
-
-.dashboard-card-value {
-  font-size: 1.65rem;
-  line-height: 1.2;
-  font-weight: 700;
-  color: #35284f;
-  margin-top: 2px;
-}
-
-.dashboard-card-sub {
-  font-size: .7rem;
-  color: #aaa;
-  margin-top: 2px;
-}
-
-
-/* PANELES */
-
-.dashboard-grid-2 {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-  margin-bottom: 18px;
-}
-
-.dashboard-panel {
-  background: white;
-  border: 1px solid #eee;
-  border-radius: 13px;
-  box-shadow: 0 2px 8px rgba(53,40,79,.05);
-  overflow: hidden;
-}
-
-.dashboard-panel-full {
-  margin-bottom: 10px;
-}
-
-.dashboard-panel-header {
-  padding: 14px 16px;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-}
-
-.dashboard-panel-header > div {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  color: #35284f;
-  font-size: .9rem;
-}
-
-.dashboard-panel-header > div i {
-  color: #b53987;
-}
-
-.dashboard-panel-header button {
-  border: 0;
-  background: transparent;
-  color: #b53987;
-  cursor: pointer;
-  font-size: .75rem;
-}
-
-.dashboard-panel-header button:hover {
-  text-decoration: underline;
-}
-
-
-/* LISTAS */
-
-.dashboard-list {
-  padding: 4px 16px;
-}
-
-.dashboard-list-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
-  font-size: .82rem;
-}
-
-.dashboard-list-row:last-child {
-  border-bottom: 0;
-}
-
-.dashboard-list-row span {
-  color: #555;
-}
-
-.dashboard-list-row strong {
-  color: #35284f;
-}
-
-.dashboard-red {
-  color: #d33b3b !important;
-}
-
-.dashboard-orange {
-  color: #c47a00 !important;
-}
-
-.dashboard-purple {
-  color: #7a55a8 !important;
-}
-
-.dashboard-green {
-  color: #2d7a4f !important;
-}
-
-
-/* STOCK */
-
-.dashboard-stock-list,
-.dashboard-mini-list {
-  padding: 6px 16px 10px;
-}
-
-.dashboard-stock-item,
-.dashboard-mini-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid #f0f0f0;
-  font-size: .8rem;
-}
-
-.dashboard-stock-item:last-child,
-.dashboard-mini-item:last-child {
-  border-bottom: 0;
-}
-
-.dashboard-stock-name,
-.dashboard-mini-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.dashboard-stock-value {
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.dashboard-stock-negative {
-  color: #d33b3b;
-}
-
-.dashboard-stock-low {
-  color: #c47a00;
-}
-
-.dashboard-machine-badge {
-  font-size: .68rem;
-  padding: 3px 7px;
-  border-radius: 6px;
-  white-space: nowrap;
-}
-
-.dashboard-machine-badge.averiada {
-  background: #fde8e8;
-  color: #c62828;
-}
-
-.dashboard-machine-badge.alquilada {
-  background: #fff3df;
-  color: #c47a00;
-}
-
-
-/* ACCIONES */
-
-.dashboard-actions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  padding: 14px 16px;
-}
-
-.dashboard-action {
-  border: 1px solid #eee;
-  border-radius: 9px;
-  padding: 12px;
-  background: #fafafa;
-  cursor: pointer;
+.auditoria-tabla th {
   text-align: left;
-  transition: .15s;
-}
-
-.dashboard-action:hover {
+  padding: 10px;
   background: #f7f0f5;
-  border-color: #e1c7d9;
+  color: #35284f;
+  font-size: .78rem;
 }
 
-.dashboard-action i {
-  color: #b53987;
-  margin-right: 7px;
+.auditoria-tabla td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  font-size: .78rem;
+  vertical-align: top;
 }
 
-.dashboard-action strong {
-  display: block;
-  margin-top: 7px;
-  font-size: .82rem;
+.auditoria-fecha {
+  white-space: nowrap;
+  color: #888;
+}
+
+.auditoria-persona {
+  font-weight: 700;
   color: #35284f;
 }
 
-.dashboard-action span {
-  display: block;
-  margin-top: 3px;
-  color: #888;
-  font-size: .72rem;
+.auditoria-accion {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #f3e5f5;
+  color: #6a1b9a;
+  font-weight: 600;
+  font-size: .68rem;
 }
 
-.dashboard-loading {
-  text-align: center;
-  color: #aaa;
-  padding: 22px 10px;
-  font-size: .8rem;
+.auditoria-cambio {
+  margin-top: 5px;
+  padding: 7px 9px;
+  background: #fafafa;
+  border-radius: 6px;
+  border: 1px solid #eee;
 }
 
-
-/* RESPONSIVE */
-
-@media (max-width: 1000px) {
-
-  .dashboard-cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .dashboard-actions {
-    grid-template-columns: 1fr 1fr;
-  }
-
+.auditoria-campo {
+  font-weight: 700;
+  color: #35284f;
 }
 
-@media (max-width: 700px) {
-
-  .dashboard-cards,
-  .dashboard-grid-2 {
-    grid-template-columns: 1fr;
-  }
-
-  .dashboard-actions {
-    grid-template-columns: 1fr;
-  }
-
-  .dashboard-saludo {
-    align-items: flex-start;
-  }
-
+.auditoria-antes {
+  color: #c62828;
 }
 
+.auditoria-despues {
+  color: #2d7a4f;
+}
     /* ESTILOS DEL SELECTOR DE PANEL (tras el login) */
     .selector-wrap {
       flex: 1;
@@ -2896,6 +2968,12 @@
         <button class="btn-historial" id="btnHistorial" onclick="abrirHistorialMovimientos()" style="display:none">
           <i class="fa-solid fa-clock-rotate-left"></i>Historial
         </button>
+        <button class="btn btn-outline-secondary" onclick="abrirAuditoria()">
+
+          <i class="fa-solid fa-user-clock"></i>
+          Auditoría
+
+        </button>
         <button class="btn-toggle-pago vencido" id="btnEliminarSeleccionados" onclick="eliminarSeleccionados()"
           style="display:none">
           <i class="fa-solid fa-trash me-1"></i><span>Eliminar (0)</span>
@@ -3717,6 +3795,120 @@
       </div>
     </div>
   </div>
+
+  <div id="modalAuditoria"
+     class="modal">
+
+  <div class="modal-content"
+       style="max-width:1100px">
+
+    <div class="modal-header">
+
+      <h3>
+        <i class="fa-solid fa-user-clock"></i>
+        Historial de auditoría
+      </h3>
+
+      <button
+        class="btn-close"
+        onclick="cerrarAuditoria()">
+      </button>
+
+    </div>
+
+
+    <div style="
+      display:grid;
+      grid-template-columns:
+        1fr 1fr 1fr 1fr;
+      gap:10px;
+      margin-bottom:15px;
+    ">
+
+      <input
+        id="auditoriaBuscar"
+        class="form-control"
+        placeholder="Buscar...">
+
+      <select
+        id="auditoriaAccion"
+        class="form-select">
+
+        <option value="">Todas las acciones</option>
+        <option value="editar">Editar</option>
+        <option value="crear">Crear</option>
+        <option value="eliminar">Eliminar</option>
+        <option value="ajuste_stock">Ajuste de stock</option>
+        <option value="marcar_revisado">Marcar revisado</option>
+        <option value="desmarcar_revisado">Desmarcar revisado</option>
+
+      </select>
+
+
+      <select
+        id="auditoriaPersona"
+        class="form-select">
+
+        <option value="">Todas las personas</option>
+
+        <option value="cynthia">Cynthia</option>
+        <option value="angel">Angel</option>
+        <option value="emilio">Emilio</option>
+        <option value="jose">Jose</option>
+        <option value="natalia">Natalia</option>
+        <option value="paula">Paula</option>
+        <option value="juandavid">Juan David</option>
+
+      </select>
+
+
+      <select
+        id="auditoriaTabla"
+        class="form-select">
+
+        <option value="">Todas las secciones</option>
+
+        <option value="facturas_almacen">
+          Facturas almacén
+        </option>
+
+        <option value="facturas_obra">
+          Facturas obra
+        </option>
+
+        <option value="inventario">
+          Inventario
+        </option>
+
+        <option value="clientes">
+          Clientes
+        </option>
+
+        <option value="obras">
+          Obras
+        </option>
+
+        <option value="maquinaria">
+          Maquinaria
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div id="auditoriaContenedor">
+
+      <div class="dashboard-loading">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Cargando auditoría...
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
 
   <div class="modal-overlay" id="modalConsumoInterno">
     <div class="modal-box-sm">
@@ -4694,352 +4886,352 @@
 
 
 
-// =========================================================
-// DASHBOARD PRINCIPAL
-// =========================================================
+    // =========================================================
+    // DASHBOARD PRINCIPAL
+    // =========================================================
 
-let dashboardCargando = false;
-
-
-/**
- * Comprueba si el usuario puede utilizar una sección.
- */
-function dashboardTieneAcceso(sec) {
-  return tieneAccesoSeccion(currentPersona, sec);
-}
+    let dashboardCargando = false;
 
 
-/**
- * Ir desde una tarjeta del dashboard a una sección.
- */
-function dashboardIr(sec) {
-  if (!dashboardTieneAcceso(sec)) {
-    toast('No tienes acceso a esta sección', 'err');
-    return;
-  }
-
-  cambiarSeccion(sec);
-}
+    /**
+     * Comprueba si el usuario puede utilizar una sección.
+     */
+    function dashboardTieneAcceso(sec) {
+      return tieneAccesoSeccion(currentPersona, sec);
+    }
 
 
-/**
- * Escapa texto para evitar problemas al pintar HTML.
- */
-function dashboardEscape(texto) {
-  return String(texto ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
+    /**
+     * Ir desde una tarjeta del dashboard a una sección.
+     */
+    function dashboardIr(sec) {
+      if (!dashboardTieneAcceso(sec)) {
+        toast('No tienes acceso a esta sección', 'err');
+        return;
+      }
+
+      cambiarSeccion(sec);
+    }
 
 
-/**
- * Formatea euros.
- */
-function dashboardEuros(valor) {
-  const n = Number(valor || 0);
+    /**
+     * Escapa texto para evitar problemas al pintar HTML.
+     */
+    function dashboardEscape(texto) {
+      return String(texto ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
 
-  return n.toLocaleString('es-ES', {
-    style: 'currency',
-    currency: 'EUR'
-  });
-}
+
+    /**
+     * Formatea euros.
+     */
+    function dashboardEuros(valor) {
+      const n = Number(valor || 0);
+
+      return n.toLocaleString('es-ES', {
+        style: 'currency',
+        currency: 'EUR'
+      });
+    }
 
 
-/**
- * Obtiene todas las facturas a las que el usuario tiene acceso.
- */
-async function dashboardCargarFacturas() {
+    /**
+     * Obtiene todas las facturas a las que el usuario tiene acceso.
+     */
+    async function dashboardCargarFacturas() {
 
-  const tablas = [
-    'facturas_almacen',
-    'facturas_obra',
-    'facturas_csg',
-    'facturas_gastos_generales'
-  ];
+      const tablas = [
+        'facturas_almacen',
+        'facturas_obra',
+        'facturas_csg',
+        'facturas_gastos_generales'
+      ];
 
-  const permitidas = tablas.filter(t => dashboardTieneAcceso(t));
+      const permitidas = tablas.filter(t => dashboardTieneAcceso(t));
 
-  if (!permitidas.length) {
-    return [];
-  }
+      if (!permitidas.length) {
+        return [];
+      }
 
-  const resultados = await Promise.all(
-    permitidas.map(async tabla => {
+      const resultados = await Promise.all(
+        permitidas.map(async tabla => {
+
+          try {
+
+            const lista = await apiGetAll(
+              tabla,
+              'order=fecha_vencimiento.asc'
+            );
+
+            return (lista || []).map(f => ({
+              ...f,
+              _tablaDashboard: tabla
+            }));
+
+          } catch (e) {
+
+            console.error(
+              'Dashboard: error cargando',
+              tabla,
+              e
+            );
+
+            return [];
+          }
+
+        })
+      );
+
+      return resultados.flat();
+    }
+
+
+    /**
+     * Calcula la situación de las facturas.
+     */
+    function dashboardCalcularFacturas(facturas) {
+
+      const hoy = new Date();
+
+      hoy.setHours(0, 0, 0, 0);
+
+      const dentro7 = new Date(hoy);
+
+      dentro7.setDate(dentro7.getDate() + 7);
+
+      const pendientes = facturas.filter(f =>
+        f.estado === 'pendiente' &&
+        !f.imputado
+      );
+
+      const vencidas = pendientes.filter(f => {
+
+        if (!f.fecha_vencimiento) return false;
+
+        const fecha = new Date(f.fecha_vencimiento);
+        fecha.setHours(0, 0, 0, 0);
+
+        return fecha < hoy;
+      });
+
+      const proximas = pendientes.filter(f => {
+
+        if (!f.fecha_vencimiento) return false;
+
+        const fecha = new Date(f.fecha_vencimiento);
+        fecha.setHours(0, 0, 0, 0);
+
+        return fecha >= hoy && fecha <= dentro7;
+      });
+
+      const totalPendiente = pendientes.reduce(
+        (total, f) =>
+          total + Number(f.total || 0),
+        0
+      );
+
+      return {
+        pendientes,
+        vencidas,
+        proximas,
+        totalPendiente
+      };
+    }
+
+
+    /**
+     * Facturas que todavía tiene que revisar
+     * la persona conectada.
+     */
+    function dashboardCalcularRevisiones(facturas) {
+
+      return facturas.filter(f =>
+        faltaPorRevisar(
+          f,
+          f._tablaDashboard
+        )
+      );
+    }
+
+
+    /**
+     * Carga los datos de inventario.
+     */
+    async function dashboardCargarInventario() {
+
+      if (!dashboardTieneAcceso('inventario')) {
+        return [];
+      }
 
       try {
 
-        const lista = await apiGetAll(
-          tabla,
-          'order=fecha_vencimiento.asc'
+        return await apiGetAll(
+          'inventario',
+          'order=nombre'
         );
-
-        return (lista || []).map(f => ({
-          ...f,
-          _tablaDashboard: tabla
-        }));
 
       } catch (e) {
 
         console.error(
-          'Dashboard: error cargando',
-          tabla,
+          'Dashboard: error cargando inventario',
           e
         );
 
         return [];
       }
+    }
 
-    })
-  );
 
-  return resultados.flat();
-}
+    /**
+     * Calcula productos con stock problemático.
+     */
+    function dashboardCalcularStock(lista) {
 
+      const negativos = lista.filter(p =>
+        Number(p.stock || 0) < 0
+      );
 
-/**
- * Calcula la situación de las facturas.
- */
-function dashboardCalcularFacturas(facturas) {
+      const agotados = lista.filter(p =>
+        Number(p.stock || 0) === 0
+      );
 
-  const hoy = new Date();
+      const bajos = lista.filter(p => {
 
-  hoy.setHours(0, 0, 0, 0);
+        const stock = Number(p.stock || 0);
+        const minimo = Number(
+          p.stock_minimo ?? 5
+        );
 
-  const dentro7 = new Date(hoy);
+        return stock > 0 && stock <= minimo;
+      });
 
-  dentro7.setDate(dentro7.getDate() + 7);
+      return {
+        negativos,
+        agotados,
+        bajos
+      };
+    }
 
-  const pendientes = facturas.filter(f =>
-    f.estado === 'pendiente' &&
-    !f.imputado
-  );
 
-  const vencidas = pendientes.filter(f => {
+    /**
+     * Carga obras activas.
+     */
+    async function dashboardCargarObras() {
 
-    if (!f.fecha_vencimiento) return false;
+      if (!dashboardTieneAcceso('obras')) {
+        return [];
+      }
 
-    const fecha = new Date(f.fecha_vencimiento);
-    fecha.setHours(0, 0, 0, 0);
+      try {
 
-    return fecha < hoy;
-  });
+        const obras = await apiGetAll(
+          'obras',
+          'order=nombre'
+        );
 
-  const proximas = pendientes.filter(f => {
+        return (obras || []).filter(o =>
+          (o.estado || 'en_curso') === 'en_curso'
+        );
 
-    if (!f.fecha_vencimiento) return false;
+      } catch (e) {
 
-    const fecha = new Date(f.fecha_vencimiento);
-    fecha.setHours(0, 0, 0, 0);
+        console.error(
+          'Dashboard: error cargando obras',
+          e
+        );
 
-    return fecha >= hoy && fecha <= dentro7;
-  });
+        return [];
+      }
+    }
 
-  const totalPendiente = pendientes.reduce(
-    (total, f) =>
-      total + Number(f.total || 0),
-    0
-  );
 
-  return {
-    pendientes,
-    vencidas,
-    proximas,
-    totalPendiente
-  };
-}
+    /**
+     * Carga maquinaria problemática.
+     */
+    async function dashboardCargarMaquinaria() {
 
+      if (!dashboardTieneAcceso('maquinaria')) {
+        return [];
+      }
 
-/**
- * Facturas que todavía tiene que revisar
- * la persona conectada.
- */
-function dashboardCalcularRevisiones(facturas) {
+      try {
 
-  return facturas.filter(f =>
-    faltaPorRevisar(
-      f,
-      f._tablaDashboard
-    )
-  );
-}
+        const maquinaria = await apiGetAll(
+          'maquinaria',
+          'order=codigo'
+        );
 
+        return (maquinaria || []).filter(m =>
+          m.estado === 'averiada' ||
+          m.estado === 'alquilada'
+        );
 
-/**
- * Carga los datos de inventario.
- */
-async function dashboardCargarInventario() {
+      } catch (e) {
 
-  if (!dashboardTieneAcceso('inventario')) {
-    return [];
-  }
+        console.error(
+          'Dashboard: error cargando maquinaria',
+          e
+        );
 
-  try {
+        return [];
+      }
+    }
 
-    return await apiGetAll(
-      'inventario',
-      'order=nombre'
-    );
 
-  } catch (e) {
+    /**
+     * Pendientes de clasificación.
+     */
+    async function dashboardCargarClasificacion() {
 
-    console.error(
-      'Dashboard: error cargando inventario',
-      e
-    );
+      if (!dashboardTieneAcceso('clasificacion')) {
+        return [];
+      }
 
-    return [];
-  }
-}
+      try {
 
+        return await apiGetAll(
+          'facturas_pendientes',
+          'clasificado=eq.false&order=fecha_recibido.desc'
+        );
 
-/**
- * Calcula productos con stock problemático.
- */
-function dashboardCalcularStock(lista) {
+      } catch (e) {
 
-  const negativos = lista.filter(p =>
-    Number(p.stock || 0) < 0
-  );
+        console.error(
+          'Dashboard: error cargando clasificación',
+          e
+        );
 
-  const agotados = lista.filter(p =>
-    Number(p.stock || 0) === 0
-  );
+        return [];
+      }
+    }
 
-  const bajos = lista.filter(p => {
 
-    const stock = Number(p.stock || 0);
-    const minimo = Number(
-      p.stock_minimo ?? 5
-    );
+    /**
+     * Pinta los productos con stock bajo.
+     */
+    function dashboardRenderStock(stock) {
 
-    return stock > 0 && stock <= minimo;
-  });
+      const wrap =
+        document.getElementById(
+          'dashboardStockLista'
+        );
 
-  return {
-    negativos,
-    agotados,
-    bajos
-  };
-}
+      if (!wrap) return;
 
+      const lista = [
+        ...stock.negativos,
+        ...stock.agotados,
+        ...stock.bajos
+      ];
 
-/**
- * Carga obras activas.
- */
-async function dashboardCargarObras() {
+      if (!lista.length) {
 
-  if (!dashboardTieneAcceso('obras')) {
-    return [];
-  }
-
-  try {
-
-    const obras = await apiGetAll(
-      'obras',
-      'order=nombre'
-    );
-
-    return (obras || []).filter(o =>
-      (o.estado || 'en_curso') === 'en_curso'
-    );
-
-  } catch (e) {
-
-    console.error(
-      'Dashboard: error cargando obras',
-      e
-    );
-
-    return [];
-  }
-}
-
-
-/**
- * Carga maquinaria problemática.
- */
-async function dashboardCargarMaquinaria() {
-
-  if (!dashboardTieneAcceso('maquinaria')) {
-    return [];
-  }
-
-  try {
-
-    const maquinaria = await apiGetAll(
-      'maquinaria',
-      'order=codigo'
-    );
-
-    return (maquinaria || []).filter(m =>
-      m.estado === 'averiada' ||
-      m.estado === 'alquilada'
-    );
-
-  } catch (e) {
-
-    console.error(
-      'Dashboard: error cargando maquinaria',
-      e
-    );
-
-    return [];
-  }
-}
-
-
-/**
- * Pendientes de clasificación.
- */
-async function dashboardCargarClasificacion() {
-
-  if (!dashboardTieneAcceso('clasificacion')) {
-    return [];
-  }
-
-  try {
-
-    return await apiGetAll(
-      'facturas_pendientes',
-      'clasificado=eq.false&order=fecha_recibido.desc'
-    );
-
-  } catch (e) {
-
-    console.error(
-      'Dashboard: error cargando clasificación',
-      e
-    );
-
-    return [];
-  }
-}
-
-
-/**
- * Pinta los productos con stock bajo.
- */
-function dashboardRenderStock(stock) {
-
-  const wrap =
-    document.getElementById(
-      'dashboardStockLista'
-    );
-
-  if (!wrap) return;
-
-  const lista = [
-    ...stock.negativos,
-    ...stock.agotados,
-    ...stock.bajos
-  ];
-
-  if (!lista.length) {
-
-    wrap.innerHTML = `
+        wrap.innerHTML = `
       <div class="dashboard-loading"
            style="color:#2d7a4f">
         <i class="fa-solid fa-circle-check"></i>
@@ -5047,46 +5239,46 @@ function dashboardRenderStock(stock) {
       </div>
     `;
 
-    return;
-  }
+        return;
+      }
 
-  const unicos = [];
-  const ids = new Set();
+      const unicos = [];
+      const ids = new Set();
 
-  lista.forEach(p => {
+      lista.forEach(p => {
 
-    if (!ids.has(p.id)) {
+        if (!ids.has(p.id)) {
 
-      ids.add(p.id);
-      unicos.push(p);
+          ids.add(p.id);
+          unicos.push(p);
 
-    }
+        }
 
-  });
+      });
 
-  unicos
-    .sort((a, b) =>
-      Number(a.stock || 0) -
-      Number(b.stock || 0)
-    )
-    .slice(0, 7);
+      unicos
+        .sort((a, b) =>
+          Number(a.stock || 0) -
+          Number(b.stock || 0)
+        )
+        .slice(0, 7);
 
-  wrap.innerHTML = unicos
-    .slice(0, 7)
-    .map(p => {
+      wrap.innerHTML = unicos
+        .slice(0, 7)
+        .map(p => {
 
-      const stockActual =
-        Number(p.stock || 0);
+          const stockActual =
+            Number(p.stock || 0);
 
-      const minimo =
-        Number(p.stock_minimo ?? 5);
+          const minimo =
+            Number(p.stock_minimo ?? 5);
 
-      const clase =
-        stockActual < 0
-          ? 'dashboard-stock-negative'
-          : 'dashboard-stock-low';
+          const clase =
+            stockActual < 0
+              ? 'dashboard-stock-negative'
+              : 'dashboard-stock-low';
 
-      return `
+          return `
         <div class="dashboard-stock-item">
 
           <span
@@ -5094,8 +5286,8 @@ function dashboardRenderStock(stock) {
             title="${dashboardEscape(p.nombre)}">
 
             ${dashboardEscape(
-              p.nombre || 'Producto'
-            )}
+            p.nombre || 'Producto'
+          )}
 
           </span>
 
@@ -5104,47 +5296,47 @@ function dashboardRenderStock(stock) {
 
             ${stockActual}
             ${dashboardEscape(
-              typeof unidadCorta === 'function'
-                ? unidadCorta(p)
-                : 'uds.'
-            )}
+            typeof unidadCorta === 'function'
+              ? unidadCorta(p)
+              : 'uds.'
+          )}
 
           </span>
 
         </div>
       `;
 
-    })
-    .join('');
-}
+        })
+        .join('');
+    }
 
 
-/**
- * Pinta obras activas.
- */
-function dashboardRenderObras(obras) {
+    /**
+     * Pinta obras activas.
+     */
+    function dashboardRenderObras(obras) {
 
-  const wrap =
-    document.getElementById(
-      'dashboardObrasLista'
-    );
+      const wrap =
+        document.getElementById(
+          'dashboardObrasLista'
+        );
 
-  if (!wrap) return;
+      if (!wrap) return;
 
-  if (!obras.length) {
+      if (!obras.length) {
 
-    wrap.innerHTML = `
+        wrap.innerHTML = `
       <div class="dashboard-loading">
         No hay obras activas
       </div>
     `;
 
-    return;
-  }
+        return;
+      }
 
-  wrap.innerHTML = obras
-    .slice(0, 7)
-    .map(o => `
+      wrap.innerHTML = obras
+        .slice(0, 7)
+        .map(o => `
       <div class="dashboard-mini-item">
 
         <span
@@ -5155,40 +5347,40 @@ function dashboardRenderObras(obras) {
              style="color:#b53987;margin-right:6px"></i>
 
           ${dashboardEscape(
-            o.nombre || 'Obra'
-          )}
+          o.nombre || 'Obra'
+        )}
 
         </span>
 
         <span style="color:#888;font-size:.72rem">
 
           ${dashboardEscape(
-            o.cliente || ''
-          )}
+          o.cliente || ''
+        )}
 
         </span>
 
       </div>
     `)
-    .join('');
-}
+        .join('');
+    }
 
 
-/**
- * Pinta maquinaria problemática.
- */
-function dashboardRenderMaquinaria(maquinaria) {
+    /**
+     * Pinta maquinaria problemática.
+     */
+    function dashboardRenderMaquinaria(maquinaria) {
 
-  const wrap =
-    document.getElementById(
-      'dashboardMaquinariaLista'
-    );
+      const wrap =
+        document.getElementById(
+          'dashboardMaquinariaLista'
+        );
 
-  if (!wrap) return;
+      if (!wrap) return;
 
-  if (!maquinaria.length) {
+      if (!maquinaria.length) {
 
-    wrap.innerHTML = `
+        wrap.innerHTML = `
       <div class="dashboard-loading"
            style="color:#2d7a4f">
 
@@ -5199,17 +5391,17 @@ function dashboardRenderMaquinaria(maquinaria) {
       </div>
     `;
 
-    return;
-  }
+        return;
+      }
 
-  wrap.innerHTML = maquinaria
-    .slice(0, 7)
-    .map(m => {
+      wrap.innerHTML = maquinaria
+        .slice(0, 7)
+        .map(m => {
 
-      const averiada =
-        m.estado === 'averiada';
+          const averiada =
+            m.estado === 'averiada';
 
-      return `
+          return `
         <div class="dashboard-mini-item">
 
           <span
@@ -5217,26 +5409,24 @@ function dashboardRenderMaquinaria(maquinaria) {
 
             <strong>
               ${dashboardEscape(
-                m.codigo || ''
-              )}
+            m.codigo || ''
+          )}
             </strong>
 
             ${dashboardEscape(
-              m.nombre || 'Máquina'
-            )}
+            m.nombre || 'Máquina'
+          )}
 
           </span>
 
-          <span class="dashboard-machine-badge ${
-            averiada
+          <span class="dashboard-machine-badge ${averiada
               ? 'averiada'
               : 'alquilada'
-          }">
+            }">
 
-            ${
-              averiada
-                ? 'AVERIADA'
-                : 'ALQUILADA'
+            ${averiada
+              ? 'AVERIADA'
+              : 'ALQUILADA'
             }
 
           </span>
@@ -5244,93 +5434,93 @@ function dashboardRenderMaquinaria(maquinaria) {
         </div>
       `;
 
-    })
-    .join('');
-}
+        })
+        .join('');
+    }
 
 
-/**
- * Crea las acciones pendientes.
- */
-function dashboardRenderAcciones(datos) {
+    /**
+     * Crea las acciones pendientes.
+     */
+    function dashboardRenderAcciones(datos) {
 
-  const wrap =
-    document.getElementById(
-      'dashboardAcciones'
-    );
+      const wrap =
+        document.getElementById(
+          'dashboardAcciones'
+        );
 
-  if (!wrap) return;
+      if (!wrap) return;
 
-  const acciones = [];
+      const acciones = [];
 
-  if (datos.clasificacion.length) {
+      if (datos.clasificacion.length) {
 
-    acciones.push({
-      icon: 'fa-inbox',
-      titulo: `${datos.clasificacion.length} facturas por clasificar`,
-      texto: 'Revisar bandeja de entrada',
-      seccion: 'clasificacion'
-    });
+        acciones.push({
+          icon: 'fa-inbox',
+          titulo: `${datos.clasificacion.length} facturas por clasificar`,
+          texto: 'Revisar bandeja de entrada',
+          seccion: 'clasificacion'
+        });
 
-  }
+      }
 
-  if (datos.revisiones.length) {
+      if (datos.revisiones.length) {
 
-    acciones.push({
-      icon: 'fa-clipboard-check',
-      titulo: `${datos.revisiones.length} facturas por revisar`,
-      texto: 'Revisiones pendientes',
-      seccion:
-        datos.revisiones[0]?._tablaDashboard ||
-        'facturas_obra'
-    });
+        acciones.push({
+          icon: 'fa-clipboard-check',
+          titulo: `${datos.revisiones.length} facturas por revisar`,
+          texto: 'Revisiones pendientes',
+          seccion:
+            datos.revisiones[0]?._tablaDashboard ||
+            'facturas_obra'
+        });
 
-  }
+      }
 
-  if (datos.facturas.vencidas.length) {
+      if (datos.facturas.vencidas.length) {
 
-    acciones.push({
-      icon: 'fa-triangle-exclamation',
-      titulo: `${datos.facturas.vencidas.length} facturas vencidas`,
-      texto: 'Comprobar pagos pendientes',
-      seccion:
-        datos.facturas.vencidas[0]?._tablaDashboard ||
-        'facturas_obra'
-    });
+        acciones.push({
+          icon: 'fa-triangle-exclamation',
+          titulo: `${datos.facturas.vencidas.length} facturas vencidas`,
+          texto: 'Comprobar pagos pendientes',
+          seccion:
+            datos.facturas.vencidas[0]?._tablaDashboard ||
+            'facturas_obra'
+        });
 
-  }
+      }
 
-  if (
-    datos.stock.negativos.length ||
-    datos.stock.agotados.length ||
-    datos.stock.bajos.length
-  ) {
+      if (
+        datos.stock.negativos.length ||
+        datos.stock.agotados.length ||
+        datos.stock.bajos.length
+      ) {
 
-    acciones.push({
-      icon: 'fa-boxes-stacked',
-      titulo: 'Revisar inventario',
-      texto: 'Hay productos con stock bajo',
-      seccion: 'inventario'
-    });
+        acciones.push({
+          icon: 'fa-boxes-stacked',
+          titulo: 'Revisar inventario',
+          texto: 'Hay productos con stock bajo',
+          seccion: 'inventario'
+        });
 
-  }
+      }
 
-  if (datos.maquinaria.some(m =>
-    m.estado === 'averiada'
-  )) {
+      if (datos.maquinaria.some(m =>
+        m.estado === 'averiada'
+      )) {
 
-    acciones.push({
-      icon: 'fa-wrench',
-      titulo: 'Maquinaria averiada',
-      texto: 'Hay máquinas que requieren atención',
-      seccion: 'maquinaria'
-    });
+        acciones.push({
+          icon: 'fa-wrench',
+          titulo: 'Maquinaria averiada',
+          texto: 'Hay máquinas que requieren atención',
+          seccion: 'maquinaria'
+        });
 
-  }
+      }
 
-  if (!acciones.length) {
+      if (!acciones.length) {
 
-    wrap.innerHTML = `
+        wrap.innerHTML = `
       <div class="dashboard-loading"
            style="color:#2d7a4f;width:100%">
 
@@ -5341,12 +5531,12 @@ function dashboardRenderAcciones(datos) {
       </div>
     `;
 
-    return;
-  }
+        return;
+      }
 
-  wrap.innerHTML = acciones
-    .slice(0, 6)
-    .map(a => `
+      wrap.innerHTML = acciones
+        .slice(0, 6)
+        .map(a => `
       <div
         class="dashboard-action"
         onclick="dashboardIr('${a.seccion}')">
@@ -5363,275 +5553,275 @@ function dashboardRenderAcciones(datos) {
 
       </div>
     `)
-    .join('');
-}
-
-
-/**
- * Carga todo el dashboard.
- */
-async function cargarDashboard() {
-
-  if (dashboardCargando) return;
-
-  dashboardCargando = true;
-
-  try {
-
-    const nombre =
-      NOMBRES_PERSONAS[currentPersona] ||
-      currentPersona ||
-      '';
-
-    const ahora = new Date();
-    const hora = ahora.getHours();
-
-    let saludo = 'Buenas noches';
-
-    if (hora >= 6 && hora < 14) {
-      saludo = 'Buenos días';
-    } else if (hora >= 14 && hora < 21) {
-      saludo = 'Buenas tardes';
+        .join('');
     }
 
-    const saludoEl =
-      document.getElementById(
-        'dashboardSaludo'
-      );
 
-    const fechaEl =
-      document.getElementById(
-        'dashboardFecha'
-      );
+    /**
+     * Carga todo el dashboard.
+     */
+    async function cargarDashboard() {
 
-    if (saludoEl) {
+      if (dashboardCargando) return;
 
-      saludoEl.textContent =
-        `${saludo}${nombre ? ', ' + nombre : ''}`;
+      dashboardCargando = true;
 
-    }
+      try {
 
-    if (fechaEl) {
+        const nombre =
+          NOMBRES_PERSONAS[currentPersona] ||
+          currentPersona ||
+          '';
 
-      fechaEl.textContent =
-        ahora.toLocaleDateString(
-          'es-ES',
-          {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
-          }
+        const ahora = new Date();
+        const hora = ahora.getHours();
+
+        let saludo = 'Buenas noches';
+
+        if (hora >= 6 && hora < 14) {
+          saludo = 'Buenos días';
+        } else if (hora >= 14 && hora < 21) {
+          saludo = 'Buenas tardes';
+        }
+
+        const saludoEl =
+          document.getElementById(
+            'dashboardSaludo'
+          );
+
+        const fechaEl =
+          document.getElementById(
+            'dashboardFecha'
+          );
+
+        if (saludoEl) {
+
+          saludoEl.textContent =
+            `${saludo}${nombre ? ', ' + nombre : ''}`;
+
+        }
+
+        if (fechaEl) {
+
+          fechaEl.textContent =
+            ahora.toLocaleDateString(
+              'es-ES',
+              {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+              }
+            );
+
+        }
+
+
+        /*
+         * CARGAMOS TODO EN PARALELO
+         */
+        const [
+          facturas,
+          inventario,
+          obras,
+          maquinaria,
+          clasificacion
+        ] = await Promise.all([
+
+          dashboardCargarFacturas(),
+
+          dashboardCargarInventario(),
+
+          dashboardCargarObras(),
+
+          dashboardCargarMaquinaria(),
+
+          dashboardCargarClasificacion()
+
+        ]);
+
+
+        const facturasCalc =
+          dashboardCalcularFacturas(
+            facturas
+          );
+
+        const revisiones =
+          dashboardCalcularRevisiones(
+            facturas
+          );
+
+        const stockCalc =
+          dashboardCalcularStock(
+            inventario
+          );
+
+
+        /*
+         * TARJETAS
+         */
+
+        const elClasif =
+          document.getElementById(
+            'dashClasificacion'
+          );
+
+        if (elClasif) {
+          elClasif.textContent =
+            clasificacion.length;
+        }
+
+
+        const elVenc =
+          document.getElementById(
+            'dashVencidas'
+          );
+
+        if (elVenc) {
+          elVenc.textContent =
+            facturasCalc.vencidas.length;
+        }
+
+
+        const elRev =
+          document.getElementById(
+            'dashRevisar'
+          );
+
+        if (elRev) {
+          elRev.textContent =
+            revisiones.length;
+        }
+
+
+        const elStock =
+          document.getElementById(
+            'dashStock'
+          );
+
+        if (elStock) {
+
+          elStock.textContent =
+            stockCalc.negativos.length +
+            stockCalc.agotados.length +
+            stockCalc.bajos.length;
+
+        }
+
+
+        const elObras =
+          document.getElementById(
+            'dashObras'
+          );
+
+        if (elObras) {
+          elObras.textContent =
+            obras.length;
+        }
+
+
+        const elMaquinaria =
+          document.getElementById(
+            'dashMaquinaria'
+          );
+
+        if (elMaquinaria) {
+
+          elMaquinaria.textContent =
+            maquinaria.filter(m =>
+              m.estado === 'averiada'
+            ).length
+            +
+            maquinaria.filter(m =>
+              m.estado === 'alquilada'
+            ).length;
+
+        }
+
+
+        /*
+         * SITUACIÓN FACTURAS
+         */
+
+        document.getElementById(
+          'dashFactVencidas'
+        ).textContent =
+          facturasCalc.vencidas.length;
+
+
+        document.getElementById(
+          'dashFact7Dias'
+        ).textContent =
+          facturasCalc.proximas.length;
+
+
+        document.getElementById(
+          'dashFactPendientes'
+        ).textContent =
+          facturasCalc.pendientes.length;
+
+
+        document.getElementById(
+          'dashFactImporte'
+        ).textContent =
+          dashboardEuros(
+            facturasCalc.totalPendiente
+          );
+
+
+        /*
+         * LISTAS
+         */
+
+        dashboardRenderStock(
+          stockCalc
         );
 
-    }
+        dashboardRenderObras(
+          obras
+        );
+
+        dashboardRenderMaquinaria(
+          maquinaria
+        );
 
 
-    /*
-     * CARGAMOS TODO EN PARALELO
-     */
-    const [
-      facturas,
-      inventario,
-      obras,
-      maquinaria,
-      clasificacion
-    ] = await Promise.all([
+        dashboardRenderAcciones({
 
-      dashboardCargarFacturas(),
+          clasificacion,
 
-      dashboardCargarInventario(),
+          facturas: facturasCalc,
 
-      dashboardCargarObras(),
+          revisiones,
 
-      dashboardCargarMaquinaria(),
+          stock: stockCalc,
 
-      dashboardCargarClasificacion()
+          obras,
 
-    ]);
+          maquinaria
 
+        });
 
-    const facturasCalc =
-      dashboardCalcularFacturas(
-        facturas
-      );
+      } catch (e) {
 
-    const revisiones =
-      dashboardCalcularRevisiones(
-        facturas
-      );
+        console.error(
+          'Error cargando dashboard:',
+          e
+        );
 
-    const stockCalc =
-      dashboardCalcularStock(
-        inventario
-      );
+        toast(
+          'Error cargando el dashboard: ' +
+          e.message,
+          'err'
+        );
 
+      } finally {
 
-    /*
-     * TARJETAS
-     */
+        dashboardCargando = false;
 
-    const elClasif =
-      document.getElementById(
-        'dashClasificacion'
-      );
-
-    if (elClasif) {
-      elClasif.textContent =
-        clasificacion.length;
-    }
-
-
-    const elVenc =
-      document.getElementById(
-        'dashVencidas'
-      );
-
-    if (elVenc) {
-      elVenc.textContent =
-        facturasCalc.vencidas.length;
-    }
-
-
-    const elRev =
-      document.getElementById(
-        'dashRevisar'
-      );
-
-    if (elRev) {
-      elRev.textContent =
-        revisiones.length;
-    }
-
-
-    const elStock =
-      document.getElementById(
-        'dashStock'
-      );
-
-    if (elStock) {
-
-      elStock.textContent =
-        stockCalc.negativos.length +
-        stockCalc.agotados.length +
-        stockCalc.bajos.length;
+      }
 
     }
-
-
-    const elObras =
-      document.getElementById(
-        'dashObras'
-      );
-
-    if (elObras) {
-      elObras.textContent =
-        obras.length;
-    }
-
-
-    const elMaquinaria =
-      document.getElementById(
-        'dashMaquinaria'
-      );
-
-    if (elMaquinaria) {
-
-      elMaquinaria.textContent =
-        maquinaria.filter(m =>
-          m.estado === 'averiada'
-        ).length
-        +
-        maquinaria.filter(m =>
-          m.estado === 'alquilada'
-        ).length;
-
-    }
-
-
-    /*
-     * SITUACIÓN FACTURAS
-     */
-
-    document.getElementById(
-      'dashFactVencidas'
-    ).textContent =
-      facturasCalc.vencidas.length;
-
-
-    document.getElementById(
-      'dashFact7Dias'
-    ).textContent =
-      facturasCalc.proximas.length;
-
-
-    document.getElementById(
-      'dashFactPendientes'
-    ).textContent =
-      facturasCalc.pendientes.length;
-
-
-    document.getElementById(
-      'dashFactImporte'
-    ).textContent =
-      dashboardEuros(
-        facturasCalc.totalPendiente
-      );
-
-
-    /*
-     * LISTAS
-     */
-
-    dashboardRenderStock(
-      stockCalc
-    );
-
-    dashboardRenderObras(
-      obras
-    );
-
-    dashboardRenderMaquinaria(
-      maquinaria
-    );
-
-
-    dashboardRenderAcciones({
-
-      clasificacion,
-
-      facturas: facturasCalc,
-
-      revisiones,
-
-      stock: stockCalc,
-
-      obras,
-
-      maquinaria
-
-    });
-
-  } catch (e) {
-
-    console.error(
-      'Error cargando dashboard:',
-      e
-    );
-
-    toast(
-      'Error cargando el dashboard: ' +
-      e.message,
-      'err'
-    );
-
-  } finally {
-
-    dashboardCargando = false;
-
-  }
-
-}
 
 
 
@@ -5681,7 +5871,7 @@ async function cargarDashboard() {
       }
       seleccionados.clear();
       tablaActual = sec;  // se le dice en que seccion estamos y esa es la tabla actual
-      
+
       document.querySelectorAll('.btn-nav').forEach(b =>  // busca en todo el documento los .btn-nav y a cada uno, se ve cual coindice con la seccion a la que queremos entrar y si coincide lo pone como activo
         b.classList.toggle('active', b.getAttribute('onclick').includes(`'${sec}'`))
       );
@@ -5690,52 +5880,52 @@ async function cargarDashboard() {
       document.getElementById('iconoSeccion').className = `fa-solid ${ico}`;  // esto igual pero con el icono
       document.getElementById('statsContenedor').style.display = stats ? 'grid' : 'none';   // borra todo lo demas, alertas, busquedas, si hay algún archivo abierto....
       // =====================================================
-// DASHBOARD
-// =====================================================
+      // DASHBOARD
+      // =====================================================
 
-const dashboard =
-  document.getElementById('dashboardWrap');
+      const dashboard =
+        document.getElementById('dashboardWrap');
 
-if (dashboard) {
-  dashboard.style.display =
-    sec === 'dashboard' ? 'block' : 'none';
-}
+      if (dashboard) {
+        dashboard.style.display =
+          sec === 'dashboard' ? 'block' : 'none';
+      }
 
-if (sec === 'dashboard') {
+      if (sec === 'dashboard') {
 
-  // Ocultamos todo lo que pertenece a las tablas
-  document.getElementById('statsContenedor').style.display = 'none';
-  document.getElementById('alertasWrap').innerHTML = '';
-  document.getElementById('filtrosBar').style.display = 'none';
-  document.getElementById('splitWrap').style.display = 'none';
-  document.getElementById('calendarioPagosWrap').style.display = 'none';
-  document.getElementById('resumenObra').style.display = 'none';
+        // Ocultamos todo lo que pertenece a las tablas
+        document.getElementById('statsContenedor').style.display = 'none';
+        document.getElementById('alertasWrap').innerHTML = '';
+        document.getElementById('filtrosBar').style.display = 'none';
+        document.getElementById('splitWrap').style.display = 'none';
+        document.getElementById('calendarioPagosWrap').style.display = 'none';
+        document.getElementById('resumenObra').style.display = 'none';
 
-  document.getElementById('btnExportar').style.display = 'none';
-  document.getElementById('btnDescargarArchivos').style.display = 'none';
-  document.getElementById('btnDuplicados').style.display = 'none';
-  document.getElementById('btnPorRevisar').style.display = 'none';
-  document.getElementById('selPendientesDe').style.display = 'none';
-  document.getElementById('btnAjusteStock').style.display = 'none';
-  document.getElementById('btnNuevoVehiculo').style.display = 'none';
-  document.getElementById('btnSalidaInterna').style.display = 'none';
-  document.getElementById('btnHistorial').style.display = 'none';
-  document.getElementById('btnNuevo').style.display = 'none';
-  document.getElementById('btnEliminarSeleccionados').style.display = 'none';
+        document.getElementById('btnExportar').style.display = 'none';
+        document.getElementById('btnDescargarArchivos').style.display = 'none';
+        document.getElementById('btnDuplicados').style.display = 'none';
+        document.getElementById('btnPorRevisar').style.display = 'none';
+        document.getElementById('selPendientesDe').style.display = 'none';
+        document.getElementById('btnAjusteStock').style.display = 'none';
+        document.getElementById('btnNuevoVehiculo').style.display = 'none';
+        document.getElementById('btnSalidaInterna').style.display = 'none';
+        document.getElementById('btnHistorial').style.display = 'none';
+        document.getElementById('btnNuevo').style.display = 'none';
+        document.getElementById('btnEliminarSeleccionados').style.display = 'none';
 
-  const btnFactSel =
-    document.getElementById('btnFacturarSeleccionados');
+        const btnFactSel =
+          document.getElementById('btnFacturarSeleccionados');
 
-  if (btnFactSel) {
-    btnFactSel.style.display = 'none';
-  }
+        if (btnFactSel) {
+          btnFactSel.style.display = 'none';
+        }
 
-  cerrarVisorPdf();
+        cerrarVisorPdf();
 
-  await cargarDashboard();
+        await cargarDashboard();
 
-  return;
-}
+        return;
+      }
       const esIngresos = sec === 'ingresos';
       document.getElementById('sCobrado').previousElementSibling.textContent = esIngresos ? 'Total cobrado' : 'Total pagado';
       document.getElementById('sPagar').previousElementSibling.textContent = esIngresos ? 'Por cobrar' : 'Por pagar';
@@ -7841,6 +8031,190 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         console.error('No se pudo registrar en el historial:', e);
       }
     }
+    // =========================================================
+    // AUDITORÍA GENERAL DEL SISTEMA
+    // =========================================================
+
+    async function registrarAuditoria({
+      accion,
+      tabla,
+      registroId = null,
+      descripcion = '',
+      cambios = null,
+      seccion = null
+    }) {
+
+      try {
+
+        const datos = {
+          fecha: new Date().toISOString(),
+          persona: currentPersona || 'desconocido',
+          accion,
+          tabla,
+          registro_id: registroId,
+          descripcion,
+          cambios,
+          seccion: seccion || tablaActual || null
+        };
+
+        await apiPost('auditoria', datos);
+
+      } catch (e) {
+
+        // MUY IMPORTANTE:
+        // Si falla la auditoría NO debemos romper
+        // la operación principal.
+        console.error(
+          'No se pudo registrar la auditoría:',
+          e
+        );
+
+      }
+
+    }
+    function obtenerCambiosAuditoria(antes, despues, camposIgnorar = []) {
+
+      const cambios = {};
+
+      if (!antes || !despues) {
+        return cambios;
+      }
+
+      const ignorar = new Set([
+        'updated_at',
+        'created_at',
+        'fecha_modificacion',
+        ...camposIgnorar
+      ]);
+
+      const campos = new Set([
+        ...Object.keys(antes),
+        ...Object.keys(despues)
+      ]);
+
+      campos.forEach(campo => {
+
+        if (ignorar.has(campo)) {
+          return;
+        }
+
+        const valorAntes = antes[campo];
+        const valorDespues = despues[campo];
+
+        let iguales;
+
+        try {
+
+          iguales =
+            JSON.stringify(valorAntes) ===
+            JSON.stringify(valorDespues);
+
+        } catch {
+
+          iguales =
+            valorAntes === valorDespues;
+
+        }
+
+        if (!iguales) {
+
+          cambios[campo] = {
+            antes: valorAntes ?? null,
+            despues: valorDespues ?? null
+          };
+
+        }
+
+      });
+
+      return cambios;
+    }
+
+    function descripcionCambiosAuditoria(cambios) {
+
+      const campos = Object.keys(cambios || {});
+
+      if (!campos.length) {
+        return 'Sin cambios detectados';
+      }
+
+      return campos
+        .map(campo => {
+
+          const cambio = cambios[campo];
+
+          return `${campo}: ${formatearValorAuditoria(cambio.antes)} → ${formatearValorAuditoria(cambio.despues)}`;
+
+        })
+        .join(' | ');
+    }
+
+
+    function formatearValorAuditoria(valor) {
+
+      if (valor === null || valor === undefined) {
+        return 'vacío';
+      }
+
+      if (typeof valor === 'boolean') {
+        return valor ? 'Sí' : 'No';
+      }
+
+      if (typeof valor === 'object') {
+
+        try {
+          return JSON.stringify(valor);
+        } catch {
+          return '[objeto]';
+        }
+
+      }
+
+      return String(valor);
+    }
+
+    async function auditarEdicion(
+      tabla,
+      registroAntes,
+      registroDespues,
+      camposIgnorar = []
+    ) {
+
+      if (!registroAntes || !registroDespues) {
+        return;
+      }
+
+      const cambios = obtenerCambiosAuditoria(
+        registroAntes,
+        registroDespues,
+        camposIgnorar
+      );
+
+      if (!Object.keys(cambios).length) {
+        return;
+      }
+
+      await registrarAuditoria({
+
+        accion: 'editar',
+
+        tabla,
+
+        registroId:
+          registroDespues.id ??
+          registroAntes.id ??
+          null,
+
+        descripcion:
+          descripcionCambiosAuditoria(cambios),
+
+        cambios,
+
+        seccion: tablaActual
+
+      });
+
+    }
 
     function formatearDetalleHistorial(tipo, d) {
       if (!d) return '—';
@@ -7944,6 +8318,29 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         }
 
         await apiPatch(tabla, id, { [campo]: !actual });
+        await registrarAuditoria({
+
+          accion: !actual
+            ? 'marcar_revisado'
+            : 'desmarcar_revisado',
+
+          tabla,
+
+          registroId: id,
+
+          descripcion:
+            `${!actual ? 'Marcado' : 'Desmarcado'} ${campo}`,
+
+          cambios: {
+            [campo]: {
+              antes: actual,
+              despues: !actual
+            }
+          },
+
+          seccion: tablaActual
+
+        });
 
         const reg = registros.find(r => r.id === id && (r.origen ? r.origen === tabla : true));
         if (reg) reg[campo] = !actual;
@@ -8046,6 +8443,29 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       }
       try {
         await apiPatch(tabla, id, { [campoExento]: !actual });
+        await registrarAuditoria({
+
+          accion: !actual
+            ? 'marcar_no_corresponde'
+            : 'quitar_no_corresponde',
+
+          tabla,
+
+          registroId: id,
+
+          descripcion:
+            `${!actual ? 'Marcada exención' : 'Quitada exención'}: ${campoExento}`,
+
+          cambios: {
+            [campoExento]: {
+              antes: actual,
+              despues: !actual
+            }
+          },
+
+          seccion: tablaActual
+
+        });
 
         const reg = registros.find(r => r.id === id && (r.origen ? r.origen === tabla : true));
         if (reg) reg[campoExento] = !actual;
@@ -10159,10 +10579,28 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           let facturaIdGuardada = modalEditId;
 
           if (modalEditId) {
-            const historialPrevio = (prevReg && prevReg.historial_ediciones) || [];
-            payload.historial_ediciones = [...historialPrevio, { persona: currentPersona, fecha: new Date().toISOString() }];
-            await apiPatch(tabla, modalEditId, payload);
-          } else {
+
+    const historialPrevio = (prevReg && prevReg.historial_ediciones) || [];
+
+    payload.historial_ediciones = [
+        ...historialPrevio,
+        {
+            persona: currentPersona,
+            fecha: new Date().toISOString()
+        }
+    ];
+
+    await apiPatch(tabla, modalEditId, payload);
+
+    // AUDITORÍA
+    await auditarEdicionDesdePayload(
+        tabla,
+        prevReg,
+        payload,
+        modalEditId
+    );
+
+} else {
             try {
               const [nuevaFactura] = await apiPost(tabla, payload);
               facturaIdGuardada = nuevaFactura.id;
@@ -10332,11 +10770,24 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           };
 
           if (modalEditId) {
-            await apiPatch('clientes', modalEditId, payload);
-          } else {
-            payload.ultima_compra = new Date().toISOString();
-            await apiPost('clientes', payload);
-          }
+
+    const anterior = registros.find(r => r.id === modalEditId);
+
+    await apiPatch('clientes', modalEditId, payload);
+
+    await auditarEdicionDesdePayload(
+        'clientes',
+        anterior,
+        payload,
+        modalEditId
+    );
+
+} else {
+
+    payload.ultima_compra = new Date().toISOString();
+    await apiPost('clientes', payload);
+
+}
 
         } else if (tabla === 'notificaciones_presupuestos') {
           const cliente = document.getElementById('f_pr_cliente').value.trim();
@@ -10467,10 +10918,23 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           };
 
           if (modalEditId) {
-            await apiPatch('obras', modalEditId, payload);
-          } else {
-            await apiPost('obras', payload);
-          }
+
+    const anterior = registros.find(r => r.id === modalEditId);
+
+    await apiPatch('obras', modalEditId, payload);
+
+    await auditarEdicionDesdePayload(
+        'obras',
+        anterior,
+        payload,
+        modalEditId
+    );
+
+} else {
+
+    await apiPost('obras', payload);
+
+}
           await cargarObrasCache();
         } else if (tabla === 'varios') {
           const remitente = document.getElementById('f_remitente').value.trim();
@@ -10490,11 +10954,23 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           };
 
           if (modalEditId) {
-            await apiPatch('varios', modalEditId, payload);
-          } else {
-            payload.fecha_recibido = new Date().toISOString();
-            await apiPost('varios', payload);
-          }
+
+    const anterior = registros.find(r => r.id === modalEditId);
+
+    await apiPatch('maquinaria', modalEditId, payload);
+
+    await auditarEdicionDesdePayload(
+        'maquinaria',
+        anterior,
+        payload,
+        modalEditId
+    );
+
+} else {
+
+    await apiPost('maquinaria', payload);
+
+}
         }
         else if (tabla === 'ingresos') {
           const cliente = document.getElementById('f_cliente').value.trim();
@@ -12582,6 +13058,27 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             if (prod) {
               const nuevoStockProd = Number(prod.stock) + delta;
               await apiPatch('inventario', pid, { stock: nuevoStockProd });
+              await registrarAuditoria({
+
+                accion: 'ajuste_stock',
+
+                tabla: 'inventario',
+
+                registroId: id,
+
+                descripcion:
+                  `Ajuste manual de stock: ${stockAnterior} → ${nuevoStock}`,
+
+                cambios: {
+                  stock: {
+                    antes: stockAnterior,
+                    despues: nuevoStock
+                  }
+                },
+
+                seccion: 'inventario'
+
+              });
               prod.stock = nuevoStockProd;
               if (nuevoStockProd < 0) avisosStockNegativoAV.push(`${prod.nombre} (${fmtStock(nuevoStockProd)} ${unidadCorta(prod)})`);
             }
@@ -19353,6 +19850,434 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         await cargarAlbaranesSinFacturarCliente(cliente.id, [...seleccionadosAV]);
       }, 50);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    async function abrirAuditoria() {
+
+  const modal =
+    document.getElementById('modalAuditoria');
+
+  if (!modal) return;
+
+  modal.classList.add('visible');
+
+  await cargarAuditoria();
+
+}
+
+
+function cerrarAuditoria() {
+
+  const modal =
+    document.getElementById('modalAuditoria');
+
+  if (modal) {
+    modal.classList.remove('visible');
+  }
+
+}
+
+
+async function cargarAuditoria() {
+
+  const cont =
+    document.getElementById(
+      'auditoriaContenedor'
+    );
+
+  if (!cont) return;
+
+  cont.innerHTML = `
+    <div class="dashboard-loading">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      Cargando auditoría...
+    </div>
+  `;
+
+  try {
+
+    let filtros = [];
+
+    const accion =
+      document.getElementById(
+        'auditoriaAccion'
+      )?.value;
+
+    const persona =
+      document.getElementById(
+        'auditoriaPersona'
+      )?.value;
+
+    const tabla =
+      document.getElementById(
+        'auditoriaTabla'
+      )?.value;
+
+    if (accion) {
+      filtros.push(
+        `accion=eq.${encodeURIComponent(accion)}`
+      );
+    }
+
+    if (persona) {
+      filtros.push(
+        `persona=eq.${encodeURIComponent(persona)}`
+      );
+    }
+
+    if (tabla) {
+      filtros.push(
+        `tabla=eq.${encodeURIComponent(tabla)}`
+      );
+    }
+
+    filtros.push(
+      'order=fecha.desc'
+    );
+
+    filtros.push(
+      'limit=200'
+    );
+
+    const datos =
+      await apiGetAll(
+        'auditoria',
+        filtros.join('&')
+      );
+
+    renderAuditoria(datos || []);
+
+  } catch (e) {
+
+    console.error(e);
+
+    cont.innerHTML = `
+      <div style="
+        text-align:center;
+        color:#c62828;
+        padding:30px">
+
+        <i class="fa-solid fa-circle-exclamation"></i>
+
+        Error cargando auditoría
+
+      </div>
+    `;
+
+  }
+
+}
+
+
+
+function renderAuditoria(lista) {
+
+  const cont =
+    document.getElementById(
+      'auditoriaContenedor'
+    );
+
+  if (!cont) return;
+
+  const busqueda =
+    (
+      document.getElementById(
+        'auditoriaBuscar'
+      )?.value || ''
+    )
+    .toLowerCase()
+    .trim();
+
+
+  const filtrada =
+    lista.filter(a => {
+
+      if (!busqueda) {
+        return true;
+      }
+
+      return (
+        String(a.descripcion || '')
+          .toLowerCase()
+          .includes(busqueda)
+        ||
+        String(a.tabla || '')
+          .toLowerCase()
+          .includes(busqueda)
+        ||
+        String(a.registro_id || '')
+          .toLowerCase()
+          .includes(busqueda)
+        ||
+        String(a.persona || '')
+          .toLowerCase()
+          .includes(busqueda)
+      );
+
+    });
+
+
+  if (!filtrada.length) {
+
+    cont.innerHTML = `
+      <div class="dashboard-loading">
+
+        <i class="fa-solid fa-clock-rotate-left"></i>
+
+        No hay movimientos de auditoría.
+
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  cont.innerHTML = `
+
+    <div style="overflow:auto">
+
+      <table class="auditoria-tabla">
+
+        <thead>
+
+          <tr>
+
+            <th>Fecha</th>
+            <th>Persona</th>
+            <th>Acción</th>
+            <th>Sección</th>
+            <th>Registro</th>
+            <th>Cambios</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          ${filtrada.map(a => {
+
+            const cambios =
+              a.cambios || {};
+
+            const cambiosHtml =
+              Object.entries(cambios)
+                .map(([campo, valores]) => `
+
+                  <div class="auditoria-cambio">
+
+                    <div class="auditoria-campo">
+                      ${dashboardEscape(campo)}
+                    </div>
+
+                    <span class="auditoria-antes">
+                      ${dashboardEscape(
+                        formatearValorAuditoria(
+                          valores?.antes
+                        )
+                      )}
+                    </span>
+
+                    <i
+                      class="fa-solid fa-arrow-right"
+                      style="margin:0 5px;color:#aaa">
+                    </i>
+
+                    <span class="auditoria-despues">
+                      ${dashboardEscape(
+                        formatearValorAuditoria(
+                          valores?.despues
+                        )
+                      )}
+                    </span>
+
+                  </div>
+
+                `)
+                .join('');
+
+            return `
+
+              <tr>
+
+                <td class="auditoria-fecha">
+
+                  ${a.fecha
+                    ? new Date(
+                        a.fecha
+                      ).toLocaleString(
+                        'es-ES'
+                      )
+                    : '—'}
+
+                </td>
+
+
+                <td class="auditoria-persona">
+
+                  ${
+                    NOMBRES_PERSONAS[
+                      a.persona
+                    ] ||
+                    dashboardEscape(
+                      a.persona
+                    )
+                  }
+
+                </td>
+
+
+                <td>
+
+                  <span
+                    class="auditoria-accion">
+
+                    ${dashboardEscape(
+                      a.accion
+                    )}
+
+                  </span>
+
+                </td>
+
+
+                <td>
+                  ${dashboardEscape(
+                    a.seccion ||
+                    a.tabla ||
+                    '—'
+                  )}
+                </td>
+
+
+                <td>
+                  #${dashboardEscape(
+                    a.registro_id ||
+                    '—'
+                  )}
+                </td>
+
+
+                <td>
+
+                  ${
+                    cambiosHtml ||
+                    dashboardEscape(
+                      a.descripcion ||
+                      '—'
+                    )
+                  }
+
+                </td>
+
+              </tr>
+
+            `;
+
+          }).join('')}
+
+        </tbody>
+
+      </table>
+
+    </div>
+  `;
+
+}
+
+
+document
+  .getElementById('auditoriaAccion')
+  ?.addEventListener(
+    'change',
+    cargarAuditoria
+  );
+
+document
+  .getElementById('auditoriaPersona')
+  ?.addEventListener(
+    'change',
+    cargarAuditoria
+  );
+
+document
+  .getElementById('auditoriaTabla')
+  ?.addEventListener(
+    'change',
+    cargarAuditoria
+  );
+
+
+document
+  .getElementById('auditoriaBuscar')
+  ?.addEventListener(
+    'input',
+    async function () {
+
+      await cargarAuditoria();
+
+    }
+  );
+
+
+
+  async function auditarEdicionDesdePayload(tabla, registroAntes, payload, id) {
+
+    if (!registroAntes || !payload) return;
+
+    // Creamos una copia del registro anterior
+    // y aplicamos encima los valores nuevos.
+    const registroDespues = {
+        ...registroAntes,
+        ...payload,
+        id: id ?? registroAntes.id
+    };
+
+    await auditarEdicion(
+        tabla,
+        registroAntes,
+        registroDespues,
+        [
+            'historial_ediciones',
+            'updated_at',
+            'created_at',
+            'fecha_modificacion'
+        ]
+    );
+}
   </script>
 
 

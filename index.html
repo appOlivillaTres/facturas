@@ -2264,6 +2264,10 @@
           style="display:none">
           <i class="fa-solid fa-trash me-1"></i><span>Eliminar (0)</span>
         </button>
+        <button class="btn-toggle-pago pagado" id="btnFacturarSeleccionados" onclick="facturarAlbaranesSeleccionados()"
+          style="display:none">
+          <i class="fa-solid fa-file-invoice-dollar me-1"></i><span>Facturar (0)</span>
+        </button>
       </div>
       <div id="resumenObra" style="display:none; margin: -8px 0 14px; font-weight:600; color:#333;"></div>
       <div class="split-wrap" id="splitWrap">
@@ -4112,6 +4116,10 @@
       document.getElementById('btnDescargarArchivos').style.display = SECCIONES_CON_ARCHIVOS.includes(sec) ? 'flex' : 'none';
       // si estamos en facturas o albaranes, saldrá el boton de duplicados
       document.getElementById('btnDuplicados').style.display = (esFacturas || sec === 'albaranes') ? 'flex' : 'none';
+      seleccionadosAV.clear();
+      clienteSeleccionAV = null;
+      const btnFactSel = document.getElementById('btnFacturarSeleccionados');
+      if (btnFactSel) btnFactSel.style.display = 'none';
       // Solo se ve si la persona conectada tiene una casilla de revisión en esta sección
       filtroPorRevisar = false;
       const SECCIONES_CON_REVISION = ['facturas_almacen', 'facturas_obra', 'facturas_csg', 'ingresos'];
@@ -7219,7 +7227,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       </tr>`;
         }).join('');
       } else if (tablaActual === 'albaranes_venta') {
-        hdr.innerHTML = `<tr><th>Nº Albarán</th><th>Fecha</th><th>Cliente</th><th>NIF</th><th class="num-cell">Total</th><th>Registrado por</th><th>Puntos</th><th>Cobro</th><th>Facturado</th><th>Documento</th></tr>`;
+        hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodosAV(this)"></th><th>Nº Albarán</th><th>Fecha</th><th>Cliente</th><th>NIF</th><th class="num-cell">Total</th><th>Registrado por</th><th>Puntos</th><th>Cobro</th><th>Facturado</th><th>Documento</th></tr>`;
         let lista = registros.filter(f => {
           const mQ = [f.numero_albaran, f.cliente_nombre].some(v => (v || '').toLowerCase().includes(q));
           const forma = f.forma_cobro || 'facturar';
@@ -7261,6 +7269,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             const fnEditar = esAlta ? 'abrirModalEditarAltaAlquiler' : 'abrirModalEditarBajaAlquiler';
             const factAlq = !!f.facturado;
             return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => ${fnEditar}(${f.id}))">
+    <td>${celdaCheckAV(f)}</td>
     <td><strong>${f.numero_albaran || '—'}</strong></td>
     <td>${fmtF(f.fecha)}</td>
     <td class="td-nombre">${f.cliente_nombre || '—'}</td>
@@ -7289,6 +7298,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 
           return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarAlbaranVenta(${f.id}))">
+    <td>${celdaCheckAV(f)}</td>
     <td><strong>${f.numero_albaran || '—'}</strong></td>
     <td>${fmtF(f.fecha)}</td>
     <td class="td-nombre">${f.cliente_nombre || '—'}</td>
@@ -16611,6 +16621,9 @@ function setupClienteFacturaAC(inputNombreId, inputNifId, inputIdId) {
         toast(fvEditId ? 'Factura actualizada correctamente' : `Factura ${payload.numero_factura || ''} guardada correctamente`);
         const idParaImprimir = facturaId;
         fvEditId = null;
+        seleccionadosAV.clear();
+        clienteSeleccionAV = null;
+        actualizarBarraSeleccionAV();
         cerrarModal('modalFacturaVenta');
         cargarDatos();
         imprimirFacturaVenta(idParaImprimir);
@@ -17497,6 +17510,113 @@ function setupClienteFacturaAC(inputNombreId, inputNifId, inputIdId) {
       <i class="fa-solid fa-xmark"></i>
     </button>`;
       document.getElementById('lineasConsumoInternoExclusivo').appendChild(div);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ── SELECCIÓN DE ALBARANES DE VENTA PARA FACTURAR JUNTOS ──
+    let seleccionadosAV = new Set();
+    let clienteSeleccionAV = null;
+
+    function celdaCheckAV(f) {
+      if (f.facturado) return '';
+      const key = f._esAlquiler ? `alquiler:${f.id}` : `venta:${f.id}`;
+      return `<input type="checkbox" class="chk-av" data-key="${key}" ${seleccionadosAV.has(key) ? 'checked' : ''} onchange="toggleSeleccionAV('${key}', ${f.cliente_id}, this.checked)">`;
+    }
+
+    function toggleSeleccionAV(key, clienteId, marcado) {
+      if (marcado) {
+        if (seleccionadosAV.size && clienteSeleccionAV !== clienteId) {
+          toast('Solo puedes seleccionar albaranes del mismo cliente para facturarlos juntos', 'err');
+          renderTablaConScroll();
+          return;
+        }
+        seleccionadosAV.add(key);
+        clienteSeleccionAV = clienteId;
+      } else {
+        seleccionadosAV.delete(key);
+        if (!seleccionadosAV.size) clienteSeleccionAV = null;
+      }
+      actualizarBarraSeleccionAV();
+    }
+
+    function toggleSeleccionarTodosAV(chkCabecera) {
+      const marcado = chkCabecera.checked;
+      document.querySelectorAll('#tablaBody .chk-av').forEach(chk => {
+        const key = chk.dataset.key;
+        const [tipo, idStr] = key.split(':');
+        const id = parseInt(idStr);
+        const reg = registros.find(r => r.id === id && (tipo === 'alquiler' ? r._esAlquiler : !r._esAlquiler));
+        if (!reg) return;
+        chk.checked = marcado;
+        if (marcado) toggleSeleccionAV(key, reg.cliente_id, true);
+        else toggleSeleccionAV(key, reg.cliente_id, false);
+      });
+    }
+
+    function actualizarBarraSeleccionAV() {
+      const btn = document.getElementById('btnFacturarSeleccionados');
+      if (!btn) return;
+      if (seleccionadosAV.size > 0) {
+        btn.style.display = 'flex';
+        btn.querySelector('span').textContent = `Facturar (${seleccionadosAV.size})`;
+      } else {
+        btn.style.display = 'none';
+      }
+    }
+
+    async function facturarAlbaranesSeleccionados() {
+      if (!seleccionadosAV.size || !clienteSeleccionAV) return;
+      const cliente = clientesDB.find(c => c.id === clienteSeleccionAV);
+      if (!cliente) { toast('Cliente no encontrado', 'err'); return; }
+
+      fvEditId = null;
+      fvClienteSelId = cliente.id;
+      document.getElementById('facturaVentaTitulo').textContent = 'Nueva Factura de Venta';
+      document.getElementById('fv_num').value = '';
+      document.getElementById('fv_fecha').value = hoy();
+      document.getElementById('fv_venc').value = '';
+      document.getElementById('fv_cliente').value = cliente.nombre || '';
+      document.getElementById('fv_nif').value = cliente.nif || '';
+      document.getElementById('fv_cliente_id').value = cliente.id;
+      document.getElementById('fv_obra').value = '';
+      document.getElementById('fv_pct_iva').value = 21;
+      document.getElementById('fv_forma_pago').value = '';
+      document.getElementById('fv_notas').value = '';
+      document.getElementById('fv_filtro_mes').value = '';
+
+      document.getElementById('modalFacturaVenta').classList.add('visible');
+      setTimeout(async () => {
+        setupClienteFacturaAC('fv_cliente', 'fv_nif', 'fv_cliente_id');
+        fvAlbaranesCliente = [];
+        await cargarAlbaranesSinFacturarCliente(cliente.id, [...seleccionadosAV]);
+      }, 50);
     }
   </script>
 

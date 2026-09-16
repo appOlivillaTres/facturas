@@ -7008,7 +7008,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
         // ALBARANES
       } else if (tablaActual === 'albaranes') {
-        hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Nº Albarán</th><th>Proveedor</th><th>NIF</th><th>Obra</th><th>Fecha</th><th>Total</th><th>Facturado</th><th>Archivo</th><th>Facturas por NIF</th><th>Acción</th><th></th></tr>`;
+        hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Nº Albarán</th><th>Proveedor</th><th>NIF</th><th>Obra</th><th>Fecha</th><th>Total</th><th>Facturado</th><th>Archivo</th><th>Facturas por NIF</th><th>Acción</th><th>Mover a</th><th></th></tr>`;
         const fObraAlb = document.getElementById('filtroObra').value;
         const lista = registros.filter(f => {
           const mQ = [f.numero_albaran, f.empresa, f.nif].some(v => (v || '').toLowerCase().includes(q));
@@ -7016,7 +7016,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           const mObra = !fObraAlb || f.nombre_obra === fObraAlb;
           return mQ && mE && mObra;
         });
-        if (!lista.length) { bdy.innerHTML = emptyRow(11, 'No se encontraron albaranes'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(12, 'No se encontraron albaranes'); return; }
         bdy.innerHTML = lista.map(f => {
           const fact = !!f.facturado;
           return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarAlbaran(${f.id}))">
@@ -7042,6 +7042,23 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         <td><button class="btn-toggle-facturado ${fact ? 'si' : 'no'}" onclick="toggleFacturado(${f.id},${fact})">
           ${fact ? '<i class="fa-solid fa-rotate-left me-1"></i>Sin facturar' : '<i class="fa-solid fa-file-circle-check me-1"></i>Marcar facturado'}
         </button></td>
+        <td style="white-space:nowrap">
+          <button class="btn-toggle-pago pendiente" style="margin-bottom:4px" onclick="moverAlbaranAFactura(${f.id},'facturas_almacen')">
+            <i class="fa-solid fa-warehouse"></i> Almacén
+          </button>
+          <button class="btn-toggle-pago pendiente" style="margin-bottom:4px" onclick="moverAlbaranAFactura(${f.id},'facturas_obra')">
+            <i class="fa-solid fa-helmet-safety"></i> Obra
+          </button>
+          <button class="btn-toggle-pago pendiente" style="margin-bottom:4px" onclick="moverAlbaranAFactura(${f.id},'facturas_csg')">
+            <i class="fa-solid fa-building"></i> CSG
+          </button>
+          <button class="btn-toggle-pago" style="background:#fff3e0;color:#c47a00;border:1.5px solid #f0c060;margin-bottom:4px" onclick="moverAlbaranAFactura(${f.id},'facturas_gastos_generales')">
+            <i class="fa-solid fa-receipt"></i> Gastos
+          </button>
+          <button class="btn-toggle-pago" style="background:#607d8b;color:#fff;border:1.5px solid #546570" onclick="moverAlbaranAVarios(${f.id})">
+            <i class="fa-solid fa-ellipsis"></i> Varios
+          </button>
+        </td>
         <td><button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
       </tr>`;
         }).join('');
@@ -7781,6 +7798,63 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         cargarDatos();
       } catch (e) {
         toast('Error al mover a Albarán: ' + e.message, 'err');
+      }
+    }
+
+    // MOVER UN ALBARÁN A UNA TABLA DE FACTURAS (almacén/obra/CSG/gastos generales)
+    async function moverAlbaranAFactura(id, destino) {
+      if (!confirm('¿Mover este albarán a ' + (ETIQUETA_TABLA_FACTURAS[destino] || destino) + '? Se eliminará de Albaranes.')) return;
+      try {
+        const encontrado = await apiGet('albaranes', `id=eq.${id}`);
+        if (!encontrado || !encontrado.length) { toast('Albarán no encontrado', 'err'); return; }
+        const a = encontrado[0];
+
+        const payload = {
+          proveedor: a.empresa || null,
+          nif: a.nif || null,
+          fecha: a.fecha || hoy(),
+          total: a.total != null ? a.total : 0,
+          numeros_albaran: a.numero_albaran ? [a.numero_albaran] : [],
+          estado: 'pendiente',
+          archivo_url: a.archivo_url || null,
+          archivos_urls: a.archivos_urls || []
+        };
+        if (destino === 'facturas_obra' || destino === 'facturas_csg') {
+          payload.nombre_obra = a.nombre_obra || '';
+        }
+
+        await asegurarProveedor(payload.proveedor, payload.nif);
+        await apiPost(destino, payload);
+        notificarRevisoresFactura(destino, payload);
+        await apiDelete('albaranes', id);
+
+        toast(`Albarán movido a <strong>${ETIQUETA_TABLA_FACTURAS[destino] || destino}</strong>`);
+        cargarDatos();
+      } catch (e) {
+        toast('Error al mover el albarán: ' + e.message, 'err');
+      }
+    }
+
+    // MOVER UN ALBARÁN A VARIOS
+    async function moverAlbaranAVarios(id) {
+      if (!confirm('¿Mover este albarán a Varios? Se eliminará de Albaranes.')) return;
+      try {
+        const encontrado = await apiGet('albaranes', `id=eq.${id}`);
+        if (!encontrado || !encontrado.length) { toast('Albarán no encontrado', 'err'); return; }
+        const a = encontrado[0];
+
+        await apiPost('varios', {
+          remitente: a.empresa || null,
+          mensaje: a.numero_albaran ? `Albarán ${a.numero_albaran}` : null,
+          archivo_url: a.archivo_url || null,
+          fecha_recibido: new Date().toISOString()
+        });
+        await apiDelete('albaranes', id);
+
+        toast('Movido a Varios correctamente');
+        cargarDatos();
+      } catch (e) {
+        toast('Error al mover a Varios: ' + e.message, 'err');
       }
     }
 

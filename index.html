@@ -1301,7 +1301,8 @@
       box-shadow: 0 8px 32px rgba(74, 59, 104, .2);
       margin: auto;
     }
-        #modalDetalle .modal-box {
+
+    #modalDetalle .modal-box {
       display: flex;
       flex-direction: column;
       max-height: 85vh;
@@ -5832,6 +5833,49 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         inventarioDB = await apiGetAll('inventario', 'order=nombre');
         clientesDB = await apiGetAll('clientes', 'order=nombre');
         proveedoresDB = await apiGetAll('proveedores', 'order=nombre');
+        if (tablaActual === 'obras') {
+          try {
+            const [facturasObra, facturasCsg, repartos, albaranesTodos] = await Promise.all([
+              apiGetAll('facturas_obra', 'select=nombre_obra,total'),
+              apiGetAll('facturas_csg', 'select=nombre_obra,total'),
+              apiGetAll('facturas_reparto_obras', 'select=nombre_obra,importe'),
+              apiGetAll('albaranes', 'select=nombre_obra')
+            ]);
+
+            const totalPorObra = {};
+            const numFacturasPorObra = {};
+            const numAlbaranesPorObra = {};
+
+            // Facturas de Obra y CSG con nombre_obra directo (sin reparto entre varias obras)
+            [...facturasObra, ...facturasCsg].forEach(f => {
+              if (!f.nombre_obra) return; // si tiene reparto, nombre_obra es null y se cuenta abajo
+              totalPorObra[f.nombre_obra] = (totalPorObra[f.nombre_obra] || 0) + (parseFloat(f.total) || 0);
+              numFacturasPorObra[f.nombre_obra] = (numFacturasPorObra[f.nombre_obra] || 0) + 1;
+            });
+
+            // Facturas repartidas entre varias obras (tabla facturas_reparto_obras)
+            // Ojo: aquí "importe" es la BASE IMPONIBLE de esa parte, sin IVA.
+            repartos.forEach(r => {
+              if (!r.nombre_obra) return;
+              totalPorObra[r.nombre_obra] = (totalPorObra[r.nombre_obra] || 0) + (parseFloat(r.importe) || 0);
+              numFacturasPorObra[r.nombre_obra] = (numFacturasPorObra[r.nombre_obra] || 0) + 1;
+            });
+
+            albaranesTodos.forEach(a => {
+              if (!a.nombre_obra) return;
+              numAlbaranesPorObra[a.nombre_obra] = (numAlbaranesPorObra[a.nombre_obra] || 0) + 1;
+            });
+
+            registros.forEach(o => {
+              o._total_facturado = totalPorObra[o.nombre] || 0;
+              o._num_facturas = numFacturasPorObra[o.nombre] || 0;
+              o._num_albaranes = numAlbaranesPorObra[o.nombre] || 0;
+            });
+          } catch (e) {
+            console.error('No se pudo calcular el gasto por obra:', e);
+          }
+        }
+
         if (tablaActual === 'albaranes_venta') {
           const alquileres = await apiGetAll('alquileres', 'select=*,alquileres_items(*)&order=fecha.desc');
           registros = [...registros, ...(alquileres || []).map(a => ({ ...a, _esAlquiler: true, _tipoAlquiler: a.tipo === 'baja' ? 'baja' : 'alta' }))];
@@ -6144,7 +6188,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       return '—';
     }
 
-        let filtroSoloCaducidad = false;
+    let filtroSoloCaducidad = false;
 
     async function abrirHistorialMovimientos() {
       const cfg = TIPO_HISTORIAL_POR_SECCION[tablaActual];
@@ -7095,7 +7139,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
         // INVENTARIO
       } else if (tablaActual === 'inventario') {
-                hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Producto</th><th>Stock</th><th>Pts/unidad</th><th class="num-cell">Costo</th><th class="num-cell">Venta</th><th class="num-cell">Margen</th><th class="num-cell">Descuento</th><th>Cód. Barras</th><th></th></tr>`;
+        hdr.innerHTML = `<tr><th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th><th>Producto</th><th>Stock</th><th>Pts/unidad</th><th class="num-cell">Costo</th><th class="num-cell">Venta</th><th class="num-cell">Margen</th><th class="num-cell">Descuento</th><th>Cód. Barras</th><th></th></tr>`;
         const lista = registros.filter(p => (p.nombre || '').toLowerCase().includes(q));
         if (!lista.length) { bdy.innerHTML = emptyRow(7, 'No se encontraron productos'); return; }
         bdy.innerHTML = lista.map(p => {
@@ -7119,8 +7163,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <td class="num-cell">${(costo != null && venta != null) ? fmt(venta - costo) : '—'}</td>
     <td class="num-cell">${p.descuento != null && p.descuento > 0 ? p.descuento + '%' : '—'}</td>
         <td>${p.codigo_barras
-      ? `<span class="badge-estado badge-pagado" title="${p.codigo_barras}"><i class="fa-solid fa-check"></i> Sí</span>`
-      : `<span class="badge-estado badge-vencido"><i class="fa-solid fa-xmark"></i> No</span>`}</td>
+              ? `<span class="badge-estado badge-pagado" title="${p.codigo_barras}"><i class="fa-solid fa-check"></i> Sí</span>`
+              : `<span class="badge-estado badge-vencido"><i class="fa-solid fa-xmark"></i> No</span>`}</td>
     <td>
 <button class="btn-toggle-pago pagado" onclick="sumarStock(${p.id})"><i class="fa-solid fa-plus"></i></button>
 <button class="btn-toggle-pago vencido" onclick="restarStock(${p.id})"><i class="fa-solid fa-minus"></i></button>

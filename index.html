@@ -156,6 +156,380 @@
       margin-top: 8px;
       display: none;
     }
+    /* =========================================================
+   DASHBOARD
+   ========================================================= */
+
+#dashboardWrap {
+  width: 100%;
+  margin-top: 4px;
+  padding-bottom: 30px;
+}
+
+.dashboard-saludo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.dashboard-saludo h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  color: #35284f;
+}
+
+.dashboard-saludo p {
+  margin: 4px 0 0;
+  color: #888;
+  font-size: .85rem;
+}
+
+.dashboard-refresh {
+  border: 1px solid #ddd;
+  background: white;
+  color: #35284f;
+  border-radius: 8px;
+  padding: 8px 13px;
+  cursor: pointer;
+  font-size: .82rem;
+}
+
+.dashboard-refresh:hover {
+  background: #f7f0f5;
+}
+
+
+/* TARJETAS */
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.dashboard-card {
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 13px;
+  padding: 17px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: .15s ease;
+  box-shadow: 0 2px 8px rgba(53,40,79,.05);
+}
+
+.dashboard-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(53,40,79,.10);
+}
+
+.dashboard-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.dashboard-card-danger .dashboard-card-icon {
+  background: #fde8e8;
+  color: #c62828;
+}
+
+.dashboard-card-warning .dashboard-card-icon {
+  background: #fff3df;
+  color: #c47a00;
+}
+
+.dashboard-card-review .dashboard-card-icon {
+  background: #eee8f7;
+  color: #6a4c93;
+}
+
+.dashboard-card-stock .dashboard-card-icon {
+  background: #fce8f4;
+  color: #b53987;
+}
+
+.dashboard-card-obras .dashboard-card-icon {
+  background: #e8eef8;
+  color: #435b8a;
+}
+
+.dashboard-card-machinery .dashboard-card-icon {
+  background: #edf0f2;
+  color: #59656d;
+}
+
+.dashboard-card-title {
+  font-size: .78rem;
+  color: #777;
+}
+
+.dashboard-card-value {
+  font-size: 1.65rem;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #35284f;
+  margin-top: 2px;
+}
+
+.dashboard-card-sub {
+  font-size: .7rem;
+  color: #aaa;
+  margin-top: 2px;
+}
+
+
+/* PANELES */
+
+.dashboard-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.dashboard-panel {
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 13px;
+  box-shadow: 0 2px 8px rgba(53,40,79,.05);
+  overflow: hidden;
+}
+
+.dashboard-panel-full {
+  margin-bottom: 10px;
+}
+
+.dashboard-panel-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-panel-header > div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #35284f;
+  font-size: .9rem;
+}
+
+.dashboard-panel-header > div i {
+  color: #b53987;
+}
+
+.dashboard-panel-header button {
+  border: 0;
+  background: transparent;
+  color: #b53987;
+  cursor: pointer;
+  font-size: .75rem;
+}
+
+.dashboard-panel-header button:hover {
+  text-decoration: underline;
+}
+
+
+/* LISTAS */
+
+.dashboard-list {
+  padding: 4px 16px;
+}
+
+.dashboard-list-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: .82rem;
+}
+
+.dashboard-list-row:last-child {
+  border-bottom: 0;
+}
+
+.dashboard-list-row span {
+  color: #555;
+}
+
+.dashboard-list-row strong {
+  color: #35284f;
+}
+
+.dashboard-red {
+  color: #d33b3b !important;
+}
+
+.dashboard-orange {
+  color: #c47a00 !important;
+}
+
+.dashboard-purple {
+  color: #7a55a8 !important;
+}
+
+.dashboard-green {
+  color: #2d7a4f !important;
+}
+
+
+/* STOCK */
+
+.dashboard-stock-list,
+.dashboard-mini-list {
+  padding: 6px 16px 10px;
+}
+
+.dashboard-stock-item,
+.dashboard-mini-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: .8rem;
+}
+
+.dashboard-stock-item:last-child,
+.dashboard-mini-item:last-child {
+  border-bottom: 0;
+}
+
+.dashboard-stock-name,
+.dashboard-mini-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-stock-value {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.dashboard-stock-negative {
+  color: #d33b3b;
+}
+
+.dashboard-stock-low {
+  color: #c47a00;
+}
+
+.dashboard-machine-badge {
+  font-size: .68rem;
+  padding: 3px 7px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.dashboard-machine-badge.averiada {
+  background: #fde8e8;
+  color: #c62828;
+}
+
+.dashboard-machine-badge.alquilada {
+  background: #fff3df;
+  color: #c47a00;
+}
+
+
+/* ACCIONES */
+
+.dashboard-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.dashboard-action {
+  border: 1px solid #eee;
+  border-radius: 9px;
+  padding: 12px;
+  background: #fafafa;
+  cursor: pointer;
+  text-align: left;
+  transition: .15s;
+}
+
+.dashboard-action:hover {
+  background: #f7f0f5;
+  border-color: #e1c7d9;
+}
+
+.dashboard-action i {
+  color: #b53987;
+  margin-right: 7px;
+}
+
+.dashboard-action strong {
+  display: block;
+  margin-top: 7px;
+  font-size: .82rem;
+  color: #35284f;
+}
+
+.dashboard-action span {
+  display: block;
+  margin-top: 3px;
+  color: #888;
+  font-size: .72rem;
+}
+
+.dashboard-loading {
+  text-align: center;
+  color: #aaa;
+  padding: 22px 10px;
+  font-size: .8rem;
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 1000px) {
+
+  .dashboard-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+}
+
+@media (max-width: 700px) {
+
+  .dashboard-cards,
+  .dashboard-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-saludo {
+    align-items: flex-start;
+  }
+
+}
 
     /* ESTILOS DEL SELECTOR DE PANEL (tras el login) */
     .selector-wrap {
@@ -2130,6 +2504,9 @@
         </div>
       </div>
       <div class="nav-principal">
+        <button class="btn-nav" onclick="cambiarSeccion('dashboard')">
+          <i class="fa-solid fa-chart-line"></i>Inicio
+        </button>
         <button class="btn-nav active" onclick="cambiarSeccion('clasificacion')"><i
             class="fa-solid fa-inbox"></i>Clasificación</button>
         <button class="btn-nav" onclick="cambiarSeccion('facturas_almacen')"><i
@@ -2186,6 +2563,265 @@
         <i id="iconoSeccion" class="fa-solid fa-inbox" style="color:#b53987"></i>
         <span id="txtSeccionTitulo">Bandeja de Clasificación</span>
         <span id="badgePendientes" class="badge-nuevo" style="display:none"></span>
+      </div>
+      <!-- ============================= -->
+      <!-- DASHBOARD -->
+      <!-- ============================= -->
+      <div id="dashboardWrap" style="display:none">
+
+        <div class="dashboard-saludo">
+          <div>
+            <h2 id="dashboardSaludo">Buenos días</h2>
+            <p id="dashboardFecha">Resumen de actividad</p>
+          </div>
+
+          <button class="dashboard-refresh" onclick="cargarDashboard()">
+            <i class="fa-solid fa-rotate"></i>
+            Actualizar
+          </button>
+        </div>
+
+
+        <!-- TARJETAS PRINCIPALES -->
+        <div class="dashboard-cards">
+
+          <div class="dashboard-card dashboard-card-danger" onclick="dashboardIr('clasificacion')">
+            <div class="dashboard-card-icon">
+              <i class="fa-solid fa-inbox"></i>
+            </div>
+            <div>
+              <div class="dashboard-card-title">Por clasificar</div>
+              <div class="dashboard-card-value" id="dashClasificacion">—</div>
+              <div class="dashboard-card-sub">facturas pendientes</div>
+            </div>
+          </div>
+
+
+          <div class="dashboard-card dashboard-card-warning" onclick="dashboardIr('facturas_obra')">
+            <div class="dashboard-card-icon">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+              <div class="dashboard-card-title">Facturas vencidas</div>
+              <div class="dashboard-card-value" id="dashVencidas">—</div>
+              <div class="dashboard-card-sub">requieren atención</div>
+            </div>
+          </div>
+
+
+          <div class="dashboard-card dashboard-card-review" onclick="dashboardIr('facturas_obra')">
+            <div class="dashboard-card-icon">
+              <i class="fa-solid fa-clipboard-check"></i>
+            </div>
+            <div>
+              <div class="dashboard-card-title">Por revisar</div>
+              <div class="dashboard-card-value" id="dashRevisar">—</div>
+              <div class="dashboard-card-sub">pendientes para ti</div>
+            </div>
+          </div>
+
+
+          <div class="dashboard-card dashboard-card-stock" onclick="dashboardIr('inventario')">
+            <div class="dashboard-card-icon">
+              <i class="fa-solid fa-boxes-stacked"></i>
+            </div>
+            <div>
+              <div class="dashboard-card-title">Stock bajo</div>
+              <div class="dashboard-card-value" id="dashStock">—</div>
+              <div class="dashboard-card-sub">productos a revisar</div>
+            </div>
+          </div>
+
+
+          <div class="dashboard-card dashboard-card-obras" onclick="dashboardIr('obras')">
+            <div class="dashboard-card-icon">
+              <i class="fa-solid fa-helmet-safety"></i>
+            </div>
+            <div>
+              <div class="dashboard-card-title">Obras activas</div>
+              <div class="dashboard-card-value" id="dashObras">—</div>
+              <div class="dashboard-card-sub">en curso</div>
+            </div>
+          </div>
+
+
+          <div class="dashboard-card dashboard-card-machinery" onclick="dashboardIr('maquinaria')">
+            <div class="dashboard-card-icon">
+              <i class="fa-solid fa-truck-monster"></i>
+            </div>
+            <div>
+              <div class="dashboard-card-title">Maquinaria</div>
+              <div class="dashboard-card-value" id="dashMaquinaria">—</div>
+              <div class="dashboard-card-sub">alquiladas / averiadas</div>
+            </div>
+          </div>
+
+        </div>
+
+
+        <!-- SEGUNDA FILA -->
+        <div class="dashboard-grid-2">
+
+
+          <!-- FACTURAS -->
+          <div class="dashboard-panel">
+
+            <div class="dashboard-panel-header">
+              <div>
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+                <strong>Situación de facturas</strong>
+              </div>
+
+              <button onclick="dashboardIr('facturas_obra')">
+                Ver facturas
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+
+            <div class="dashboard-list">
+
+              <div class="dashboard-list-row">
+                <span>
+                  <i class="fa-solid fa-circle-xmark dashboard-red"></i>
+                  Vencidas
+                </span>
+                <strong id="dashFactVencidas">—</strong>
+              </div>
+
+              <div class="dashboard-list-row">
+                <span>
+                  <i class="fa-solid fa-clock dashboard-orange"></i>
+                  Vencen en 7 días
+                </span>
+                <strong id="dashFact7Dias">—</strong>
+              </div>
+
+              <div class="dashboard-list-row">
+                <span>
+                  <i class="fa-solid fa-hourglass-half dashboard-purple"></i>
+                  Pendientes de pago
+                </span>
+                <strong id="dashFactPendientes">—</strong>
+              </div>
+
+              <div class="dashboard-list-row">
+                <span>
+                  <i class="fa-solid fa-euro-sign dashboard-green"></i>
+                  Total pendiente
+                </span>
+                <strong id="dashFactImporte">—</strong>
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- INVENTARIO -->
+          <div class="dashboard-panel">
+
+            <div class="dashboard-panel-header">
+              <div>
+                <i class="fa-solid fa-boxes-stacked"></i>
+                <strong>Inventario</strong>
+              </div>
+
+              <button onclick="dashboardIr('inventario')">
+                Ver inventario
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+
+            <div id="dashboardStockLista" class="dashboard-stock-list">
+              <div class="dashboard-loading">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                Cargando...
+              </div>
+            </div>
+
+          </div>
+
+
+        </div>
+
+
+        <!-- TERCERA FILA -->
+        <div class="dashboard-grid-2">
+
+
+          <!-- OBRAS -->
+          <div class="dashboard-panel">
+
+            <div class="dashboard-panel-header">
+              <div>
+                <i class="fa-solid fa-helmet-safety"></i>
+                <strong>Obras activas</strong>
+              </div>
+
+              <button onclick="dashboardIr('obras')">
+                Ver obras
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+
+            <div id="dashboardObrasLista" class="dashboard-mini-list">
+              <div class="dashboard-loading">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                Cargando...
+              </div>
+            </div>
+
+          </div>
+
+
+          <!-- MAQUINARIA -->
+          <div class="dashboard-panel">
+
+            <div class="dashboard-panel-header">
+              <div>
+                <i class="fa-solid fa-truck-monster"></i>
+                <strong>Maquinaria que requiere atención</strong>
+              </div>
+
+              <button onclick="dashboardIr('maquinaria')">
+                Ver maquinaria
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+
+            <div id="dashboardMaquinariaLista" class="dashboard-mini-list">
+              <div class="dashboard-loading">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                Cargando...
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- ACTIVIDAD -->
+        <div class="dashboard-panel dashboard-panel-full">
+
+          <div class="dashboard-panel-header">
+            <div>
+              <i class="fa-solid fa-bolt"></i>
+              <strong>Acciones pendientes</strong>
+            </div>
+          </div>
+
+          <div id="dashboardAcciones" class="dashboard-actions">
+
+            <div class="dashboard-loading">
+              <i class="fa-solid fa-spinner fa-spin"></i>
+              Comprobando pendientes...
+            </div>
+
+          </div>
+
+        </div>
+
       </div>
       <div class="alertas-wrap" id="alertasWrap"></div>
       <div id="statsContenedor" class="stats-grid" style="display:none">
@@ -3324,7 +3960,7 @@
     let _refrescoPendiente = null;  // Crea una variable vacia para guardar el temporizador de refresco, para que no se ejecute varias veces seguidas si llegan varios cambios en poco tiempo.
 
     // Primero mira si hay un modal abierto, y si lo hay, no hace nada (para no romper lo que se está editando en ese momento).
-        function hayModalAbierto() {
+    function hayModalAbierto() {
       return ['modalNueva', 'modalMaterialObra', 'modalDetalle', 'modalExportar', 'modalExportarMateriales',
         'modalCita', 'modalPuntos', 'modalEvento', 'modalCobros', 'modalTipoAlbaranVenta', 'modalTipoVenta',
         'modalConsumoInterno', 'modalAltaAlquiler', 'modalBajaAlquiler', 'modalSalidaMaquina', 'modalDevolverMaquina']
@@ -3465,7 +4101,7 @@
 
     // Todas las secciones que existen en el menú.
     const TODAS_LAS_SECCIONES = [
-      'clasificacion', 'facturas_almacen', 'facturas_obra', 'facturas_csg', 'facturas_gastos_generales',
+      'dashboard', 'clasificacion', 'facturas_almacen', 'facturas_obra', 'facturas_csg', 'facturas_gastos_generales',
       'revisadas_facturadas', 'obras', 'calendario_pagos', 'notificaciones_presupuestos',
       'albaranes', 'albaranes_venta', 'facturas_venta', 'presupuestos_venta', 'proveedores', 'clientes', 'inventario',
       'materiales_obra', 'ingresos', 'varios', 'maquinaria', 'consumo_interno', 'estudio_obras', 'obras_estudio'
@@ -3850,6 +4486,7 @@
     };
     // Nombre, icono y si muestra tarjetas de estadísticas, por sección.
     const SECCIONES_INFO = {
+      dashboard: ['Inicio / Resumen', 'fa-chart-line', false],
       clasificacion: ['Bandeja de Clasificación', 'fa-inbox', false],
       facturas_almacen: ['Facturas de Almacén', 'fa-warehouse', true],
       facturas_obra: ['Facturas de Obra', 'fa-helmet-safety', true],
@@ -4057,6 +4694,978 @@
 
 
 
+// =========================================================
+// DASHBOARD PRINCIPAL
+// =========================================================
+
+let dashboardCargando = false;
+
+
+/**
+ * Comprueba si el usuario puede utilizar una sección.
+ */
+function dashboardTieneAcceso(sec) {
+  return tieneAccesoSeccion(currentPersona, sec);
+}
+
+
+/**
+ * Ir desde una tarjeta del dashboard a una sección.
+ */
+function dashboardIr(sec) {
+  if (!dashboardTieneAcceso(sec)) {
+    toast('No tienes acceso a esta sección', 'err');
+    return;
+  }
+
+  cambiarSeccion(sec);
+}
+
+
+/**
+ * Escapa texto para evitar problemas al pintar HTML.
+ */
+function dashboardEscape(texto) {
+  return String(texto ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+
+/**
+ * Formatea euros.
+ */
+function dashboardEuros(valor) {
+  const n = Number(valor || 0);
+
+  return n.toLocaleString('es-ES', {
+    style: 'currency',
+    currency: 'EUR'
+  });
+}
+
+
+/**
+ * Obtiene todas las facturas a las que el usuario tiene acceso.
+ */
+async function dashboardCargarFacturas() {
+
+  const tablas = [
+    'facturas_almacen',
+    'facturas_obra',
+    'facturas_csg',
+    'facturas_gastos_generales'
+  ];
+
+  const permitidas = tablas.filter(t => dashboardTieneAcceso(t));
+
+  if (!permitidas.length) {
+    return [];
+  }
+
+  const resultados = await Promise.all(
+    permitidas.map(async tabla => {
+
+      try {
+
+        const lista = await apiGetAll(
+          tabla,
+          'order=fecha_vencimiento.asc'
+        );
+
+        return (lista || []).map(f => ({
+          ...f,
+          _tablaDashboard: tabla
+        }));
+
+      } catch (e) {
+
+        console.error(
+          'Dashboard: error cargando',
+          tabla,
+          e
+        );
+
+        return [];
+      }
+
+    })
+  );
+
+  return resultados.flat();
+}
+
+
+/**
+ * Calcula la situación de las facturas.
+ */
+function dashboardCalcularFacturas(facturas) {
+
+  const hoy = new Date();
+
+  hoy.setHours(0, 0, 0, 0);
+
+  const dentro7 = new Date(hoy);
+
+  dentro7.setDate(dentro7.getDate() + 7);
+
+  const pendientes = facturas.filter(f =>
+    f.estado === 'pendiente' &&
+    !f.imputado
+  );
+
+  const vencidas = pendientes.filter(f => {
+
+    if (!f.fecha_vencimiento) return false;
+
+    const fecha = new Date(f.fecha_vencimiento);
+    fecha.setHours(0, 0, 0, 0);
+
+    return fecha < hoy;
+  });
+
+  const proximas = pendientes.filter(f => {
+
+    if (!f.fecha_vencimiento) return false;
+
+    const fecha = new Date(f.fecha_vencimiento);
+    fecha.setHours(0, 0, 0, 0);
+
+    return fecha >= hoy && fecha <= dentro7;
+  });
+
+  const totalPendiente = pendientes.reduce(
+    (total, f) =>
+      total + Number(f.total || 0),
+    0
+  );
+
+  return {
+    pendientes,
+    vencidas,
+    proximas,
+    totalPendiente
+  };
+}
+
+
+/**
+ * Facturas que todavía tiene que revisar
+ * la persona conectada.
+ */
+function dashboardCalcularRevisiones(facturas) {
+
+  return facturas.filter(f =>
+    faltaPorRevisar(
+      f,
+      f._tablaDashboard
+    )
+  );
+}
+
+
+/**
+ * Carga los datos de inventario.
+ */
+async function dashboardCargarInventario() {
+
+  if (!dashboardTieneAcceso('inventario')) {
+    return [];
+  }
+
+  try {
+
+    return await apiGetAll(
+      'inventario',
+      'order=nombre'
+    );
+
+  } catch (e) {
+
+    console.error(
+      'Dashboard: error cargando inventario',
+      e
+    );
+
+    return [];
+  }
+}
+
+
+/**
+ * Calcula productos con stock problemático.
+ */
+function dashboardCalcularStock(lista) {
+
+  const negativos = lista.filter(p =>
+    Number(p.stock || 0) < 0
+  );
+
+  const agotados = lista.filter(p =>
+    Number(p.stock || 0) === 0
+  );
+
+  const bajos = lista.filter(p => {
+
+    const stock = Number(p.stock || 0);
+    const minimo = Number(
+      p.stock_minimo ?? 5
+    );
+
+    return stock > 0 && stock <= minimo;
+  });
+
+  return {
+    negativos,
+    agotados,
+    bajos
+  };
+}
+
+
+/**
+ * Carga obras activas.
+ */
+async function dashboardCargarObras() {
+
+  if (!dashboardTieneAcceso('obras')) {
+    return [];
+  }
+
+  try {
+
+    const obras = await apiGetAll(
+      'obras',
+      'order=nombre'
+    );
+
+    return (obras || []).filter(o =>
+      (o.estado || 'en_curso') === 'en_curso'
+    );
+
+  } catch (e) {
+
+    console.error(
+      'Dashboard: error cargando obras',
+      e
+    );
+
+    return [];
+  }
+}
+
+
+/**
+ * Carga maquinaria problemática.
+ */
+async function dashboardCargarMaquinaria() {
+
+  if (!dashboardTieneAcceso('maquinaria')) {
+    return [];
+  }
+
+  try {
+
+    const maquinaria = await apiGetAll(
+      'maquinaria',
+      'order=codigo'
+    );
+
+    return (maquinaria || []).filter(m =>
+      m.estado === 'averiada' ||
+      m.estado === 'alquilada'
+    );
+
+  } catch (e) {
+
+    console.error(
+      'Dashboard: error cargando maquinaria',
+      e
+    );
+
+    return [];
+  }
+}
+
+
+/**
+ * Pendientes de clasificación.
+ */
+async function dashboardCargarClasificacion() {
+
+  if (!dashboardTieneAcceso('clasificacion')) {
+    return [];
+  }
+
+  try {
+
+    return await apiGetAll(
+      'facturas_pendientes',
+      'clasificado=eq.false&order=fecha_recibido.desc'
+    );
+
+  } catch (e) {
+
+    console.error(
+      'Dashboard: error cargando clasificación',
+      e
+    );
+
+    return [];
+  }
+}
+
+
+/**
+ * Pinta los productos con stock bajo.
+ */
+function dashboardRenderStock(stock) {
+
+  const wrap =
+    document.getElementById(
+      'dashboardStockLista'
+    );
+
+  if (!wrap) return;
+
+  const lista = [
+    ...stock.negativos,
+    ...stock.agotados,
+    ...stock.bajos
+  ];
+
+  if (!lista.length) {
+
+    wrap.innerHTML = `
+      <div class="dashboard-loading"
+           style="color:#2d7a4f">
+        <i class="fa-solid fa-circle-check"></i>
+        No hay productos con stock bajo
+      </div>
+    `;
+
+    return;
+  }
+
+  const unicos = [];
+  const ids = new Set();
+
+  lista.forEach(p => {
+
+    if (!ids.has(p.id)) {
+
+      ids.add(p.id);
+      unicos.push(p);
+
+    }
+
+  });
+
+  unicos
+    .sort((a, b) =>
+      Number(a.stock || 0) -
+      Number(b.stock || 0)
+    )
+    .slice(0, 7);
+
+  wrap.innerHTML = unicos
+    .slice(0, 7)
+    .map(p => {
+
+      const stockActual =
+        Number(p.stock || 0);
+
+      const minimo =
+        Number(p.stock_minimo ?? 5);
+
+      const clase =
+        stockActual < 0
+          ? 'dashboard-stock-negative'
+          : 'dashboard-stock-low';
+
+      return `
+        <div class="dashboard-stock-item">
+
+          <span
+            class="dashboard-stock-name"
+            title="${dashboardEscape(p.nombre)}">
+
+            ${dashboardEscape(
+              p.nombre || 'Producto'
+            )}
+
+          </span>
+
+          <span
+            class="dashboard-stock-value ${clase}">
+
+            ${stockActual}
+            ${dashboardEscape(
+              typeof unidadCorta === 'function'
+                ? unidadCorta(p)
+                : 'uds.'
+            )}
+
+          </span>
+
+        </div>
+      `;
+
+    })
+    .join('');
+}
+
+
+/**
+ * Pinta obras activas.
+ */
+function dashboardRenderObras(obras) {
+
+  const wrap =
+    document.getElementById(
+      'dashboardObrasLista'
+    );
+
+  if (!wrap) return;
+
+  if (!obras.length) {
+
+    wrap.innerHTML = `
+      <div class="dashboard-loading">
+        No hay obras activas
+      </div>
+    `;
+
+    return;
+  }
+
+  wrap.innerHTML = obras
+    .slice(0, 7)
+    .map(o => `
+      <div class="dashboard-mini-item">
+
+        <span
+          class="dashboard-mini-name"
+          title="${dashboardEscape(o.nombre)}">
+
+          <i class="fa-solid fa-helmet-safety"
+             style="color:#b53987;margin-right:6px"></i>
+
+          ${dashboardEscape(
+            o.nombre || 'Obra'
+          )}
+
+        </span>
+
+        <span style="color:#888;font-size:.72rem">
+
+          ${dashboardEscape(
+            o.cliente || ''
+          )}
+
+        </span>
+
+      </div>
+    `)
+    .join('');
+}
+
+
+/**
+ * Pinta maquinaria problemática.
+ */
+function dashboardRenderMaquinaria(maquinaria) {
+
+  const wrap =
+    document.getElementById(
+      'dashboardMaquinariaLista'
+    );
+
+  if (!wrap) return;
+
+  if (!maquinaria.length) {
+
+    wrap.innerHTML = `
+      <div class="dashboard-loading"
+           style="color:#2d7a4f">
+
+        <i class="fa-solid fa-circle-check"></i>
+
+        Toda la maquinaria está disponible
+
+      </div>
+    `;
+
+    return;
+  }
+
+  wrap.innerHTML = maquinaria
+    .slice(0, 7)
+    .map(m => {
+
+      const averiada =
+        m.estado === 'averiada';
+
+      return `
+        <div class="dashboard-mini-item">
+
+          <span
+            class="dashboard-mini-name">
+
+            <strong>
+              ${dashboardEscape(
+                m.codigo || ''
+              )}
+            </strong>
+
+            ${dashboardEscape(
+              m.nombre || 'Máquina'
+            )}
+
+          </span>
+
+          <span class="dashboard-machine-badge ${
+            averiada
+              ? 'averiada'
+              : 'alquilada'
+          }">
+
+            ${
+              averiada
+                ? 'AVERIADA'
+                : 'ALQUILADA'
+            }
+
+          </span>
+
+        </div>
+      `;
+
+    })
+    .join('');
+}
+
+
+/**
+ * Crea las acciones pendientes.
+ */
+function dashboardRenderAcciones(datos) {
+
+  const wrap =
+    document.getElementById(
+      'dashboardAcciones'
+    );
+
+  if (!wrap) return;
+
+  const acciones = [];
+
+  if (datos.clasificacion.length) {
+
+    acciones.push({
+      icon: 'fa-inbox',
+      titulo: `${datos.clasificacion.length} facturas por clasificar`,
+      texto: 'Revisar bandeja de entrada',
+      seccion: 'clasificacion'
+    });
+
+  }
+
+  if (datos.revisiones.length) {
+
+    acciones.push({
+      icon: 'fa-clipboard-check',
+      titulo: `${datos.revisiones.length} facturas por revisar`,
+      texto: 'Revisiones pendientes',
+      seccion:
+        datos.revisiones[0]?._tablaDashboard ||
+        'facturas_obra'
+    });
+
+  }
+
+  if (datos.facturas.vencidas.length) {
+
+    acciones.push({
+      icon: 'fa-triangle-exclamation',
+      titulo: `${datos.facturas.vencidas.length} facturas vencidas`,
+      texto: 'Comprobar pagos pendientes',
+      seccion:
+        datos.facturas.vencidas[0]?._tablaDashboard ||
+        'facturas_obra'
+    });
+
+  }
+
+  if (
+    datos.stock.negativos.length ||
+    datos.stock.agotados.length ||
+    datos.stock.bajos.length
+  ) {
+
+    acciones.push({
+      icon: 'fa-boxes-stacked',
+      titulo: 'Revisar inventario',
+      texto: 'Hay productos con stock bajo',
+      seccion: 'inventario'
+    });
+
+  }
+
+  if (datos.maquinaria.some(m =>
+    m.estado === 'averiada'
+  )) {
+
+    acciones.push({
+      icon: 'fa-wrench',
+      titulo: 'Maquinaria averiada',
+      texto: 'Hay máquinas que requieren atención',
+      seccion: 'maquinaria'
+    });
+
+  }
+
+  if (!acciones.length) {
+
+    wrap.innerHTML = `
+      <div class="dashboard-loading"
+           style="color:#2d7a4f;width:100%">
+
+        <i class="fa-solid fa-circle-check"></i>
+
+        No hay acciones urgentes pendientes
+
+      </div>
+    `;
+
+    return;
+  }
+
+  wrap.innerHTML = acciones
+    .slice(0, 6)
+    .map(a => `
+      <div
+        class="dashboard-action"
+        onclick="dashboardIr('${a.seccion}')">
+
+        <i class="fa-solid ${a.icon}"></i>
+
+        <strong>
+          ${dashboardEscape(a.titulo)}
+        </strong>
+
+        <span>
+          ${dashboardEscape(a.texto)}
+        </span>
+
+      </div>
+    `)
+    .join('');
+}
+
+
+/**
+ * Carga todo el dashboard.
+ */
+async function cargarDashboard() {
+
+  if (dashboardCargando) return;
+
+  dashboardCargando = true;
+
+  try {
+
+    const nombre =
+      NOMBRES_PERSONAS[currentPersona] ||
+      currentPersona ||
+      '';
+
+    const ahora = new Date();
+    const hora = ahora.getHours();
+
+    let saludo = 'Buenas noches';
+
+    if (hora >= 6 && hora < 14) {
+      saludo = 'Buenos días';
+    } else if (hora >= 14 && hora < 21) {
+      saludo = 'Buenas tardes';
+    }
+
+    const saludoEl =
+      document.getElementById(
+        'dashboardSaludo'
+      );
+
+    const fechaEl =
+      document.getElementById(
+        'dashboardFecha'
+      );
+
+    if (saludoEl) {
+
+      saludoEl.textContent =
+        `${saludo}${nombre ? ', ' + nombre : ''}`;
+
+    }
+
+    if (fechaEl) {
+
+      fechaEl.textContent =
+        ahora.toLocaleDateString(
+          'es-ES',
+          {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+          }
+        );
+
+    }
+
+
+    /*
+     * CARGAMOS TODO EN PARALELO
+     */
+    const [
+      facturas,
+      inventario,
+      obras,
+      maquinaria,
+      clasificacion
+    ] = await Promise.all([
+
+      dashboardCargarFacturas(),
+
+      dashboardCargarInventario(),
+
+      dashboardCargarObras(),
+
+      dashboardCargarMaquinaria(),
+
+      dashboardCargarClasificacion()
+
+    ]);
+
+
+    const facturasCalc =
+      dashboardCalcularFacturas(
+        facturas
+      );
+
+    const revisiones =
+      dashboardCalcularRevisiones(
+        facturas
+      );
+
+    const stockCalc =
+      dashboardCalcularStock(
+        inventario
+      );
+
+
+    /*
+     * TARJETAS
+     */
+
+    const elClasif =
+      document.getElementById(
+        'dashClasificacion'
+      );
+
+    if (elClasif) {
+      elClasif.textContent =
+        clasificacion.length;
+    }
+
+
+    const elVenc =
+      document.getElementById(
+        'dashVencidas'
+      );
+
+    if (elVenc) {
+      elVenc.textContent =
+        facturasCalc.vencidas.length;
+    }
+
+
+    const elRev =
+      document.getElementById(
+        'dashRevisar'
+      );
+
+    if (elRev) {
+      elRev.textContent =
+        revisiones.length;
+    }
+
+
+    const elStock =
+      document.getElementById(
+        'dashStock'
+      );
+
+    if (elStock) {
+
+      elStock.textContent =
+        stockCalc.negativos.length +
+        stockCalc.agotados.length +
+        stockCalc.bajos.length;
+
+    }
+
+
+    const elObras =
+      document.getElementById(
+        'dashObras'
+      );
+
+    if (elObras) {
+      elObras.textContent =
+        obras.length;
+    }
+
+
+    const elMaquinaria =
+      document.getElementById(
+        'dashMaquinaria'
+      );
+
+    if (elMaquinaria) {
+
+      elMaquinaria.textContent =
+        maquinaria.filter(m =>
+          m.estado === 'averiada'
+        ).length
+        +
+        maquinaria.filter(m =>
+          m.estado === 'alquilada'
+        ).length;
+
+    }
+
+
+    /*
+     * SITUACIÓN FACTURAS
+     */
+
+    document.getElementById(
+      'dashFactVencidas'
+    ).textContent =
+      facturasCalc.vencidas.length;
+
+
+    document.getElementById(
+      'dashFact7Dias'
+    ).textContent =
+      facturasCalc.proximas.length;
+
+
+    document.getElementById(
+      'dashFactPendientes'
+    ).textContent =
+      facturasCalc.pendientes.length;
+
+
+    document.getElementById(
+      'dashFactImporte'
+    ).textContent =
+      dashboardEuros(
+        facturasCalc.totalPendiente
+      );
+
+
+    /*
+     * LISTAS
+     */
+
+    dashboardRenderStock(
+      stockCalc
+    );
+
+    dashboardRenderObras(
+      obras
+    );
+
+    dashboardRenderMaquinaria(
+      maquinaria
+    );
+
+
+    dashboardRenderAcciones({
+
+      clasificacion,
+
+      facturas: facturasCalc,
+
+      revisiones,
+
+      stock: stockCalc,
+
+      obras,
+
+      maquinaria
+
+    });
+
+  } catch (e) {
+
+    console.error(
+      'Error cargando dashboard:',
+      e
+    );
+
+    toast(
+      'Error cargando el dashboard: ' +
+      e.message,
+      'err'
+    );
+
+  } finally {
+
+    dashboardCargando = false;
+
+  }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4072,6 +5681,7 @@
       }
       seleccionados.clear();
       tablaActual = sec;  // se le dice en que seccion estamos y esa es la tabla actual
+      
       document.querySelectorAll('.btn-nav').forEach(b =>  // busca en todo el documento los .btn-nav y a cada uno, se ve cual coindice con la seccion a la que queremos entrar y si coincide lo pone como activo
         b.classList.toggle('active', b.getAttribute('onclick').includes(`'${sec}'`))
       );
@@ -4079,6 +5689,53 @@
       document.getElementById('txtSeccionTitulo').textContent = tit;   //  pone el titulo en la parte que se llame txtSeccionTitulo
       document.getElementById('iconoSeccion').className = `fa-solid ${ico}`;  // esto igual pero con el icono
       document.getElementById('statsContenedor').style.display = stats ? 'grid' : 'none';   // borra todo lo demas, alertas, busquedas, si hay algún archivo abierto....
+      // =====================================================
+// DASHBOARD
+// =====================================================
+
+const dashboard =
+  document.getElementById('dashboardWrap');
+
+if (dashboard) {
+  dashboard.style.display =
+    sec === 'dashboard' ? 'block' : 'none';
+}
+
+if (sec === 'dashboard') {
+
+  // Ocultamos todo lo que pertenece a las tablas
+  document.getElementById('statsContenedor').style.display = 'none';
+  document.getElementById('alertasWrap').innerHTML = '';
+  document.getElementById('filtrosBar').style.display = 'none';
+  document.getElementById('splitWrap').style.display = 'none';
+  document.getElementById('calendarioPagosWrap').style.display = 'none';
+  document.getElementById('resumenObra').style.display = 'none';
+
+  document.getElementById('btnExportar').style.display = 'none';
+  document.getElementById('btnDescargarArchivos').style.display = 'none';
+  document.getElementById('btnDuplicados').style.display = 'none';
+  document.getElementById('btnPorRevisar').style.display = 'none';
+  document.getElementById('selPendientesDe').style.display = 'none';
+  document.getElementById('btnAjusteStock').style.display = 'none';
+  document.getElementById('btnNuevoVehiculo').style.display = 'none';
+  document.getElementById('btnSalidaInterna').style.display = 'none';
+  document.getElementById('btnHistorial').style.display = 'none';
+  document.getElementById('btnNuevo').style.display = 'none';
+  document.getElementById('btnEliminarSeleccionados').style.display = 'none';
+
+  const btnFactSel =
+    document.getElementById('btnFacturarSeleccionados');
+
+  if (btnFactSel) {
+    btnFactSel.style.display = 'none';
+  }
+
+  cerrarVisorPdf();
+
+  await cargarDashboard();
+
+  return;
+}
       const esIngresos = sec === 'ingresos';
       document.getElementById('sCobrado').previousElementSibling.textContent = esIngresos ? 'Total cobrado' : 'Total pagado';
       document.getElementById('sPagar').previousElementSibling.textContent = esIngresos ? 'Por cobrar' : 'Por pagar';
@@ -6019,7 +7676,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 
     // ESTADOS
-        function actualizarStats() {
+    function actualizarStats() {
       const hoyD = new Date(); hoyD.setHours(0, 0, 0, 0);
       const pend = registros.filter(f => f.estado === 'pendiente' && !f.imputado);
       const venc = pend.filter(f => f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD);
@@ -9292,7 +10949,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       }
     }
 
-        async function crearProductoRapidoDesdeLineaCI(idx) {
+    async function crearProductoRapidoDesdeLineaCI(idx) {
       const inp = document.getElementById(`ci_prod_${idx}`);
       if (!inp) return;
       const nombre = inp.value.trim();
@@ -10933,7 +12590,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           // Puntos: solo se aplica la diferencia entre lo que sumaba/restaba
           // antes y lo que debería sumar/restar ahora
 
-          const cliente = clientesDB.find(c => c.id === cliente_id); 
+          const cliente = clientesDB.find(c => c.id === cliente_id);
           const puntosAntes = (anterior && anterior.puntos_generados) || 0;
           const deltaPuntos = puntosNuevos - puntosAntes;
           if (deltaPuntos !== 0) {
@@ -13955,26 +15612,26 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
 
 
-// DESPUÉS:
-async function crearProveedorRapido(inputNombreId, inputNifId) {
-  inputNombreId = inputNombreId || 'f_prov';
-  inputNifId = inputNifId || 'f_nif';
-  const inpN = document.getElementById(inputNombreId);
-  const inpF = document.getElementById(inputNifId);
-  if (!inpN) return;
-  const nombre = inpN.value.trim();
-  if (!nombre) { toast('Introduce un nombre de proveedor', 'err'); return; }
-  const nif = inpF ? (inpF.value.trim() || null) : null;
-  try {
-    await apiPost('proveedores', { nombre, nif });
-    toast('Proveedor creado correctamente');
-    proveedoresDB = await apiGet('proveedores', 'order=nombre');
-    const prov = proveedoresDB.find(p => p.nombre === nombre);
-    if (prov && inpF) inpF.value = prov.nif || '';
-  } catch (e) {
-    toast('Error creando proveedor: ' + e.message, 'err');
-  }
-}
+    // DESPUÉS:
+    async function crearProveedorRapido(inputNombreId, inputNifId) {
+      inputNombreId = inputNombreId || 'f_prov';
+      inputNifId = inputNifId || 'f_nif';
+      const inpN = document.getElementById(inputNombreId);
+      const inpF = document.getElementById(inputNifId);
+      if (!inpN) return;
+      const nombre = inpN.value.trim();
+      if (!nombre) { toast('Introduce un nombre de proveedor', 'err'); return; }
+      const nif = inpF ? (inpF.value.trim() || null) : null;
+      try {
+        await apiPost('proveedores', { nombre, nif });
+        toast('Proveedor creado correctamente');
+        proveedoresDB = await apiGet('proveedores', 'order=nombre');
+        const prov = proveedoresDB.find(p => p.nombre === nombre);
+        if (prov && inpF) inpF.value = prov.nif || '';
+      } catch (e) {
+        toast('Error creando proveedor: ' + e.message, 'err');
+      }
+    }
 
 
 
@@ -14874,56 +16531,56 @@ async function crearProveedorRapido(inputNombreId, inputNifId) {
     }
     let clienteConsumoSelId = null;
 
-// DESPUÉS:
-function setupClienteConsumoAC(inputNombreId, inputIdId) {
-  const inpN = document.getElementById(inputNombreId);
-  const inpId = document.getElementById(inputIdId);
-  if (!inpN || !inpId) return;
+    // DESPUÉS:
+    function setupClienteConsumoAC(inputNombreId, inputIdId) {
+      const inpN = document.getElementById(inputNombreId);
+      const inpId = document.getElementById(inputIdId);
+      if (!inpN || !inpId) return;
 
-  inpN.parentElement.style.position = 'relative';
-  const lista = _crearLista('ac_consumo_' + inputNombreId, inpN.parentElement);
+      inpN.parentElement.style.position = 'relative';
+      const lista = _crearLista('ac_consumo_' + inputNombreId, inpN.parentElement);
 
-  function filtrar(q) {
-    return clientesDB.filter(c => (c.nombre || '').toLowerCase().includes(q)).slice(0, 10);
-  }
-  function seleccionar(c) {
-    inpN.value = c.nombre || '';
-    inpId.value = c.id;
-    clienteConsumoSelId = c.id;
-    lista.style.display = 'none';
-    if (c.aviso_albaran) {
-      alert(c.aviso_albaran);
-    }
-  }
-  function render(items, textoEscrito) {
-    if (!items.length) {
-      lista.innerHTML = `<div class="ac-item" style="color:#2d7a4f;font-weight:600" onmousedown="event.preventDefault(); abrirModalClienteRapido('${textoEscrito.replace(/'/g, "\\'")}', {inputNombre:'${inputNombreId}', inputNif:'', inputId:'${inputIdId}', setSelId: v => clienteConsumoSelId = v})">
+      function filtrar(q) {
+        return clientesDB.filter(c => (c.nombre || '').toLowerCase().includes(q)).slice(0, 10);
+      }
+      function seleccionar(c) {
+        inpN.value = c.nombre || '';
+        inpId.value = c.id;
+        clienteConsumoSelId = c.id;
+        lista.style.display = 'none';
+        if (c.aviso_albaran) {
+          alert(c.aviso_albaran);
+        }
+      }
+      function render(items, textoEscrito) {
+        if (!items.length) {
+          lista.innerHTML = `<div class="ac-item" style="color:#2d7a4f;font-weight:600" onmousedown="event.preventDefault(); abrirModalClienteRapido('${textoEscrito.replace(/'/g, "\\'")}', {inputNombre:'${inputNombreId}', inputNif:'', inputId:'${inputIdId}', setSelId: v => clienteConsumoSelId = v})">
         <i class="fa-solid fa-plus me-1"></i>Añadir "${textoEscrito}" como cliente nuevo
       </div>`;
-      lista.style.display = textoEscrito ? 'block' : 'none';
-      return;
-    }
-    lista.innerHTML = items.map(c =>
-      `<div class="ac-item" data-id="${c.id}">
+          lista.style.display = textoEscrito ? 'block' : 'none';
+          return;
+        }
+        lista.innerHTML = items.map(c =>
+          `<div class="ac-item" data-id="${c.id}">
     <span class="ac-nombre">${c.nombre || '—'}</span>
     <span class="ac-nif">${c.nif || 'Sin NIF'}</span>
   </div>`).join('');
-    lista.style.display = 'block';
-    lista.querySelectorAll('.ac-item').forEach(el => {
-      el.addEventListener('mousedown', e => {
-        e.preventDefault();
-        const c = clientesDB.find(x => x.id == el.dataset.id);
-        if (c) seleccionar(c);
+        lista.style.display = 'block';
+        lista.querySelectorAll('.ac-item').forEach(el => {
+          el.addEventListener('mousedown', e => {
+            e.preventDefault();
+            const c = clientesDB.find(x => x.id == el.dataset.id);
+            if (c) seleccionar(c);
+          });
+        });
+      }
+      inpN.addEventListener('input', () => {
+        inpId.value = ''; clienteConsumoSelId = null;
+        render(filtrar(inpN.value.toLowerCase().trim()), inpN.value.trim());
       });
-    });
-  }
-  inpN.addEventListener('input', () => {
-    inpId.value = ''; clienteConsumoSelId = null;
-    render(filtrar(inpN.value.toLowerCase().trim()), inpN.value.trim());
-  });
-  inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim()), inpN.value.trim()); });
-  inpN.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
-}
+      inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim()), inpN.value.trim()); });
+      inpN.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
+    }
 
     async function verVentasYConsumosCliente(clienteId, nombre) {
       try {
@@ -16398,45 +18055,45 @@ function setupClienteConsumoAC(inputNombreId, inputIdId) {
     let fvAlbaranesCliente = [];   // albaranes sin facturar del cliente seleccionado
     let fvEditId = null;
 
-function setupClienteFacturaAC(inputNombreId, inputNifId, inputIdId) {
-  const inpN = document.getElementById(inputNombreId);
-  const inpF = document.getElementById(inputNifId);
-  const inpId = document.getElementById(inputIdId);
-  if (!inpN || !inpF || !inpId) return;
-  inpN.parentElement.style.position = 'relative';
-  const lista = _crearLista('ac_fv_' + inputNombreId, inpN.parentElement);
+    function setupClienteFacturaAC(inputNombreId, inputNifId, inputIdId) {
+      const inpN = document.getElementById(inputNombreId);
+      const inpF = document.getElementById(inputNifId);
+      const inpId = document.getElementById(inputIdId);
+      if (!inpN || !inpF || !inpId) return;
+      inpN.parentElement.style.position = 'relative';
+      const lista = _crearLista('ac_fv_' + inputNombreId, inpN.parentElement);
 
-  function filtrar(q) {
-    return clientesDB.filter(c => (c.nombre || '').toLowerCase().includes(q) || (c.nif || '').toLowerCase().includes(q)).slice(0, 10);
-  }
-  async function seleccionar(c) {
-    inpN.value = c.nombre || ''; inpF.value = c.nif || ''; inpId.value = c.id;
-    fvClienteSelId = c.id;
-    lista.style.display = 'none';
-    await cargarAlbaranesSinFacturarCliente(c.id);
-  }
-  function render(items, textoEscrito) {
-    if (!items.length) {
-      lista.innerHTML = `<div class="ac-item" style="color:#2d7a4f;font-weight:600" onmousedown="event.preventDefault(); abrirModalClienteRapido('${textoEscrito.replace(/'/g, "\\'")}', {inputNombre:'${inputNombreId}', inputNif:'${inputNifId}', inputId:'${inputIdId}', setSelId: v => { fvClienteSelId = v; cargarAlbaranesSinFacturarCliente(v); }})">
+      function filtrar(q) {
+        return clientesDB.filter(c => (c.nombre || '').toLowerCase().includes(q) || (c.nif || '').toLowerCase().includes(q)).slice(0, 10);
+      }
+      async function seleccionar(c) {
+        inpN.value = c.nombre || ''; inpF.value = c.nif || ''; inpId.value = c.id;
+        fvClienteSelId = c.id;
+        lista.style.display = 'none';
+        await cargarAlbaranesSinFacturarCliente(c.id);
+      }
+      function render(items, textoEscrito) {
+        if (!items.length) {
+          lista.innerHTML = `<div class="ac-item" style="color:#2d7a4f;font-weight:600" onmousedown="event.preventDefault(); abrirModalClienteRapido('${textoEscrito.replace(/'/g, "\\'")}', {inputNombre:'${inputNombreId}', inputNif:'${inputNifId}', inputId:'${inputIdId}', setSelId: v => { fvClienteSelId = v; cargarAlbaranesSinFacturarCliente(v); }})">
         <i class="fa-solid fa-plus me-1"></i>Añadir "${textoEscrito}" como cliente nuevo
       </div>`;
-      lista.style.display = textoEscrito ? 'block' : 'none';
-      return;
+          lista.style.display = textoEscrito ? 'block' : 'none';
+          return;
+        }
+        lista.innerHTML = items.map(c => `<div class="ac-item" data-id="${c.id}"><span class="ac-nombre">${c.nombre || '—'}</span><span class="ac-nif">${c.nif || 'Sin NIF'}</span></div>`).join('');
+        lista.style.display = 'block';
+        lista.querySelectorAll('.ac-item').forEach(el => {
+          el.addEventListener('mousedown', e => {
+            e.preventDefault();
+            const c = clientesDB.find(x => x.id == el.dataset.id);
+            if (c) seleccionar(c);
+          });
+        });
+      }
+      inpN.addEventListener('input', () => { inpId.value = ''; fvClienteSelId = null; render(filtrar(inpN.value.toLowerCase().trim()), inpN.value.trim()); });
+      inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim()), inpN.value.trim()); });
+      inpN.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
     }
-    lista.innerHTML = items.map(c => `<div class="ac-item" data-id="${c.id}"><span class="ac-nombre">${c.nombre || '—'}</span><span class="ac-nif">${c.nif || 'Sin NIF'}</span></div>`).join('');
-    lista.style.display = 'block';
-    lista.querySelectorAll('.ac-item').forEach(el => {
-      el.addEventListener('mousedown', e => {
-        e.preventDefault();
-        const c = clientesDB.find(x => x.id == el.dataset.id);
-        if (c) seleccionar(c);
-      });
-    });
-  }
-  inpN.addEventListener('input', () => { inpId.value = ''; fvClienteSelId = null; render(filtrar(inpN.value.toLowerCase().trim()), inpN.value.trim()); });
-  inpN.addEventListener('focus', () => { if (inpN.value.trim()) render(filtrar(inpN.value.toLowerCase().trim()), inpN.value.trim()); });
-  inpN.addEventListener('blur', () => setTimeout(() => lista.style.display = 'none', 160));
-}
 
     async function cargarAlbaranesSinFacturarCliente(clienteId, marcarKeys) {
       const cont = document.getElementById('fvAlbaranesLista');
@@ -17618,7 +19275,7 @@ function setupClienteFacturaAC(inputNombreId, inputNifId, inputIdId) {
 
 
 
-// ── SELECCIÓN DE ALBARANES DE VENTA PARA FACTURAR JUNTOS ──
+    // ── SELECCIÓN DE ALBARANES DE VENTA PARA FACTURAR JUNTOS ──
     let seleccionadosAV = new Set();
     let clienteSeleccionAV = null;
 

@@ -17243,10 +17243,14 @@ function setupClienteFacturaAC(inputNombreId, inputNifId, inputIdId) {
       presupuestoEnvioActualId = null;
       alquilerEnvioActualId = null;
 
-      const f = registros.find(r => r.id === id) || (await apiGet('facturas_venta', `id = eq.${id} `))[0];
-      document.getElementById('ea_email').value = ''; // facturas_venta no guarda email de cliente directo; se rellena a mano
+      let f = registros.find(r => r.id === id);
+      if (!f) {
+        const encontrado = await apiGet('facturas_venta', `id=eq.${id}`);
+        f = encontrado && encontrado[0];
+      }
+
       const cliente = clientesDB.find(c => c.id === f?.cliente_id);
-      if (cliente?.email) document.getElementById('ea_email').value = cliente.email;
+      document.getElementById('ea_email').value = cliente?.email || '';
       document.getElementById('ea_mensaje').value = '';
       document.querySelector('#modalEnviarAlbaran h3').innerHTML =
         '<i class="fa-solid fa-envelope" style="color:#1565c0"></i>Enviar factura por email';

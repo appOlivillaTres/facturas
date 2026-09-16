@@ -290,7 +290,7 @@
     }
 
 
-    
+
 
     /* PANELES */
 
@@ -536,73 +536,74 @@
 
 
     #modalAuditoria {
-  display: none;
-}
+      display: none;
+    }
 
-#modalAuditoria.visible {
-  display: flex;
-}
+    #modalAuditoria.visible {
+      display: flex;
+    }
 
-.auditoria-tabla {
-  width: 100%;
-  border-collapse: collapse;
-}
+    .auditoria-tabla {
+      width: 100%;
+      border-collapse: collapse;
+    }
 
-.auditoria-tabla th {
-  text-align: left;
-  padding: 10px;
-  background: #f7f0f5;
-  color: #35284f;
-  font-size: .78rem;
-}
+    .auditoria-tabla th {
+      text-align: left;
+      padding: 10px;
+      background: #f7f0f5;
+      color: #35284f;
+      font-size: .78rem;
+    }
 
-.auditoria-tabla td {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-  font-size: .78rem;
-  vertical-align: top;
-}
+    .auditoria-tabla td {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      font-size: .78rem;
+      vertical-align: top;
+    }
 
-.auditoria-fecha {
-  white-space: nowrap;
-  color: #888;
-}
+    .auditoria-fecha {
+      white-space: nowrap;
+      color: #888;
+    }
 
-.auditoria-persona {
-  font-weight: 700;
-  color: #35284f;
-}
+    .auditoria-persona {
+      font-weight: 700;
+      color: #35284f;
+    }
 
-.auditoria-accion {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 6px;
-  background: #f3e5f5;
-  color: #6a1b9a;
-  font-weight: 600;
-  font-size: .68rem;
-}
+    .auditoria-accion {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: #f3e5f5;
+      color: #6a1b9a;
+      font-weight: 600;
+      font-size: .68rem;
+    }
 
-.auditoria-cambio {
-  margin-top: 5px;
-  padding: 7px 9px;
-  background: #fafafa;
-  border-radius: 6px;
-  border: 1px solid #eee;
-}
+    .auditoria-cambio {
+      margin-top: 5px;
+      padding: 7px 9px;
+      background: #fafafa;
+      border-radius: 6px;
+      border: 1px solid #eee;
+    }
 
-.auditoria-campo {
-  font-weight: 700;
-  color: #35284f;
-}
+    .auditoria-campo {
+      font-weight: 700;
+      color: #35284f;
+    }
 
-.auditoria-antes {
-  color: #c62828;
-}
+    .auditoria-antes {
+      color: #c62828;
+    }
 
-.auditoria-despues {
-  color: #2d7a4f;
-}
+    .auditoria-despues {
+      color: #2d7a4f;
+    }
+
     /* ESTILOS DEL SELECTOR DE PANEL (tras el login) */
     .selector-wrap {
       flex: 1;
@@ -3796,28 +3797,24 @@
     </div>
   </div>
 
-  <div id="modalAuditoria"
-     class="modal">
+  <div id="modalAuditoria" class="modal">
 
-  <div class="modal-content"
-       style="max-width:1100px">
+    <div class="modal-content" style="max-width:1100px">
 
-    <div class="modal-header">
+      <div class="modal-header">
 
-      <h3>
-        <i class="fa-solid fa-user-clock"></i>
-        Historial de auditoría
-      </h3>
+        <h3>
+          <i class="fa-solid fa-user-clock"></i>
+          Historial de auditoría
+        </h3>
 
-      <button
-        class="btn-close"
-        onclick="cerrarAuditoria()">
-      </button>
+        <button class="btn-close" onclick="cerrarAuditoria()">
+        </button>
 
-    </div>
+      </div>
 
 
-    <div style="
+      <div style="
       display:grid;
       grid-template-columns:
         1fr 1fr 1fr 1fr;
@@ -3825,90 +3822,81 @@
       margin-bottom:15px;
     ">
 
-      <input
-        id="auditoriaBuscar"
-        class="form-control"
-        placeholder="Buscar...">
+        <input id="auditoriaBuscar" class="form-control" placeholder="Buscar...">
 
-      <select
-        id="auditoriaAccion"
-        class="form-select">
+        <select id="auditoriaAccion" class="form-select">
 
-        <option value="">Todas las acciones</option>
-        <option value="editar">Editar</option>
-        <option value="crear">Crear</option>
-        <option value="eliminar">Eliminar</option>
-        <option value="ajuste_stock">Ajuste de stock</option>
-        <option value="marcar_revisado">Marcar revisado</option>
-        <option value="desmarcar_revisado">Desmarcar revisado</option>
+          <option value="">Todas las acciones</option>
+          <option value="editar">Editar</option>
+          <option value="crear">Crear</option>
+          <option value="eliminar">Eliminar</option>
+          <option value="ajuste_stock">Ajuste de stock</option>
+          <option value="marcar_revisado">Marcar revisado</option>
+          <option value="desmarcar_revisado">Desmarcar revisado</option>
 
-      </select>
+        </select>
 
 
-      <select
-        id="auditoriaPersona"
-        class="form-select">
+        <select id="auditoriaPersona" class="form-select">
 
-        <option value="">Todas las personas</option>
+          <option value="">Todas las personas</option>
 
-        <option value="cynthia">Cynthia</option>
-        <option value="angel">Angel</option>
-        <option value="emilio">Emilio</option>
-        <option value="jose">Jose</option>
-        <option value="natalia">Natalia</option>
-        <option value="paula">Paula</option>
-        <option value="juandavid">Juan David</option>
+          <option value="cynthia">Cynthia</option>
+          <option value="angel">Angel</option>
+          <option value="emilio">Emilio</option>
+          <option value="jose">Jose</option>
+          <option value="natalia">Natalia</option>
+          <option value="paula">Paula</option>
+          <option value="juandavid">Juan David</option>
 
-      </select>
+        </select>
 
 
-      <select
-        id="auditoriaTabla"
-        class="form-select">
+        <select id="auditoriaTabla" class="form-select">
 
-        <option value="">Todas las secciones</option>
+          <option value="">Todas las secciones</option>
 
-        <option value="facturas_almacen">
-          Facturas almacén
-        </option>
+          <option value="facturas_almacen">
+            Facturas almacén
+          </option>
 
-        <option value="facturas_obra">
-          Facturas obra
-        </option>
+          <option value="facturas_obra">
+            Facturas obra
+          </option>
 
-        <option value="inventario">
-          Inventario
-        </option>
+          <option value="inventario">
+            Inventario
+          </option>
 
-        <option value="clientes">
-          Clientes
-        </option>
+          <option value="clientes">
+            Clientes
+          </option>
 
-        <option value="obras">
-          Obras
-        </option>
+          <option value="obras">
+            Obras
+          </option>
 
-        <option value="maquinaria">
-          Maquinaria
-        </option>
+          <option value="maquinaria">
+            Maquinaria
+          </option>
 
-      </select>
+        </select>
 
-    </div>
+      </div>
 
 
-    <div id="auditoriaContenedor">
+      <div id="auditoriaContenedor">
 
-      <div class="dashboard-loading">
-        <i class="fa-solid fa-spinner fa-spin"></i>
-        Cargando auditoría...
+        <div class="dashboard-loading">
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          Cargando auditoría...
+        </div>
+
       </div>
 
     </div>
 
   </div>
-
-</div>
 
   <div class="modal-overlay" id="modalConsumoInterno">
     <div class="modal-box-sm">
@@ -10580,27 +10568,27 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
           if (modalEditId) {
 
-    const historialPrevio = (prevReg && prevReg.historial_ediciones) || [];
+            const historialPrevio = (prevReg && prevReg.historial_ediciones) || [];
 
-    payload.historial_ediciones = [
-        ...historialPrevio,
-        {
-            persona: currentPersona,
-            fecha: new Date().toISOString()
-        }
-    ];
+            payload.historial_ediciones = [
+              ...historialPrevio,
+              {
+                persona: currentPersona,
+                fecha: new Date().toISOString()
+              }
+            ];
 
-    await apiPatch(tabla, modalEditId, payload);
+            await apiPatch(tabla, modalEditId, payload);
 
-    // AUDITORÍA
-    await auditarEdicionDesdePayload(
-        tabla,
-        prevReg,
-        payload,
-        modalEditId
-    );
+            // AUDITORÍA
+            await auditarEdicionDesdePayload(
+              tabla,
+              prevReg,
+              payload,
+              modalEditId
+            );
 
-} else {
+          } else {
             try {
               const [nuevaFactura] = await apiPost(tabla, payload);
               facturaIdGuardada = nuevaFactura.id;
@@ -10771,23 +10759,23 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
           if (modalEditId) {
 
-    const anterior = registros.find(r => r.id === modalEditId);
+            const anterior = registros.find(r => r.id === modalEditId);
 
-    await apiPatch('clientes', modalEditId, payload);
+            await apiPatch('clientes', modalEditId, payload);
 
-    await auditarEdicionDesdePayload(
-        'clientes',
-        anterior,
-        payload,
-        modalEditId
-    );
+            await auditarEdicionDesdePayload(
+              'clientes',
+              anterior,
+              payload,
+              modalEditId
+            );
 
-} else {
+          } else {
 
-    payload.ultima_compra = new Date().toISOString();
-    await apiPost('clientes', payload);
+            payload.ultima_compra = new Date().toISOString();
+            await apiPost('clientes', payload);
 
-}
+          }
 
         } else if (tabla === 'notificaciones_presupuestos') {
           const cliente = document.getElementById('f_pr_cliente').value.trim();
@@ -10919,22 +10907,22 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
           if (modalEditId) {
 
-    const anterior = registros.find(r => r.id === modalEditId);
+            const anterior = registros.find(r => r.id === modalEditId);
 
-    await apiPatch('obras', modalEditId, payload);
+            await apiPatch('obras', modalEditId, payload);
 
-    await auditarEdicionDesdePayload(
-        'obras',
-        anterior,
-        payload,
-        modalEditId
-    );
+            await auditarEdicionDesdePayload(
+              'obras',
+              anterior,
+              payload,
+              modalEditId
+            );
 
-} else {
+          } else {
 
-    await apiPost('obras', payload);
+            await apiPost('obras', payload);
 
-}
+          }
           await cargarObrasCache();
         } else if (tabla === 'varios') {
           const remitente = document.getElementById('f_remitente').value.trim();
@@ -10955,22 +10943,22 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
           if (modalEditId) {
 
-    const anterior = registros.find(r => r.id === modalEditId);
+            const anterior = registros.find(r => r.id === modalEditId);
 
-    await apiPatch('maquinaria', modalEditId, payload);
+            await apiPatch('maquinaria', modalEditId, payload);
 
-    await auditarEdicionDesdePayload(
-        'maquinaria',
-        anterior,
-        payload,
-        modalEditId
-    );
+            await auditarEdicionDesdePayload(
+              'maquinaria',
+              anterior,
+              payload,
+              modalEditId
+            );
 
-} else {
+          } else {
 
-    await apiPost('maquinaria', payload);
+            await apiPost('maquinaria', payload);
 
-}
+          }
         }
         else if (tabla === 'ingresos') {
           const cliente = document.getElementById('f_cliente').value.trim();
@@ -19885,104 +19873,104 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     async function abrirAuditoria() {
 
-  const modal =
-    document.getElementById('modalAuditoria');
+      const modal =
+        document.getElementById('modalAuditoria');
 
-  if (!modal) return;
+      if (!modal) return;
 
-  modal.classList.add('visible');
+      modal.classList.add('visible');
 
-  await cargarAuditoria();
+      await cargarAuditoria();
 
-}
-
-
-function cerrarAuditoria() {
-
-  const modal =
-    document.getElementById('modalAuditoria');
-
-  if (modal) {
-    modal.classList.remove('visible');
-  }
-
-}
+    }
 
 
-async function cargarAuditoria() {
+    function cerrarAuditoria() {
 
-  const cont =
-    document.getElementById(
-      'auditoriaContenedor'
-    );
+      const modal =
+        document.getElementById('modalAuditoria');
 
-  if (!cont) return;
+      if (modal) {
+        modal.classList.remove('visible');
+      }
 
-  cont.innerHTML = `
+    }
+
+
+    async function cargarAuditoria() {
+
+      const cont =
+        document.getElementById(
+          'auditoriaContenedor'
+        );
+
+      if (!cont) return;
+
+      cont.innerHTML = `
     <div class="dashboard-loading">
       <i class="fa-solid fa-spinner fa-spin"></i>
       Cargando auditoría...
     </div>
   `;
 
-  try {
+      try {
 
-    let filtros = [];
+        let filtros = [];
 
-    const accion =
-      document.getElementById(
-        'auditoriaAccion'
-      )?.value;
+        const accion =
+          document.getElementById(
+            'auditoriaAccion'
+          )?.value;
 
-    const persona =
-      document.getElementById(
-        'auditoriaPersona'
-      )?.value;
+        const persona =
+          document.getElementById(
+            'auditoriaPersona'
+          )?.value;
 
-    const tabla =
-      document.getElementById(
-        'auditoriaTabla'
-      )?.value;
+        const tabla =
+          document.getElementById(
+            'auditoriaTabla'
+          )?.value;
 
-    if (accion) {
-      filtros.push(
-        `accion=eq.${encodeURIComponent(accion)}`
-      );
-    }
+        if (accion) {
+          filtros.push(
+            `accion=eq.${encodeURIComponent(accion)}`
+          );
+        }
 
-    if (persona) {
-      filtros.push(
-        `persona=eq.${encodeURIComponent(persona)}`
-      );
-    }
+        if (persona) {
+          filtros.push(
+            `persona=eq.${encodeURIComponent(persona)}`
+          );
+        }
 
-    if (tabla) {
-      filtros.push(
-        `tabla=eq.${encodeURIComponent(tabla)}`
-      );
-    }
+        if (tabla) {
+          filtros.push(
+            `tabla=eq.${encodeURIComponent(tabla)}`
+          );
+        }
 
-    filtros.push(
-      'order=fecha.desc'
-    );
+        filtros.push(
+          'order=fecha.desc'
+        );
 
-    filtros.push(
-      'limit=200'
-    );
+        filtros.push(
+          'limit=200'
+        );
 
-    const datos =
-      await apiGetAll(
-        'auditoria',
-        filtros.join('&')
-      );
+        const datos =
+          await apiGetAll(
+            'auditoria',
+            filtros.join('&')
+          );
 
-    renderAuditoria(datos || []);
+        renderAuditoria(datos || []);
 
-  } catch (e) {
+      } catch (e) {
 
-    console.error(e);
+        console.error(e);
 
-    cont.innerHTML = `
+        cont.innerHTML = `
       <div style="
         text-align:center;
         color:#c62828;
@@ -19995,62 +19983,62 @@ async function cargarAuditoria() {
       </div>
     `;
 
-  }
-
-}
-
-
-
-function renderAuditoria(lista) {
-
-  const cont =
-    document.getElementById(
-      'auditoriaContenedor'
-    );
-
-  if (!cont) return;
-
-  const busqueda =
-    (
-      document.getElementById(
-        'auditoriaBuscar'
-      )?.value || ''
-    )
-    .toLowerCase()
-    .trim();
-
-
-  const filtrada =
-    lista.filter(a => {
-
-      if (!busqueda) {
-        return true;
       }
 
-      return (
-        String(a.descripcion || '')
-          .toLowerCase()
-          .includes(busqueda)
-        ||
-        String(a.tabla || '')
-          .toLowerCase()
-          .includes(busqueda)
-        ||
-        String(a.registro_id || '')
-          .toLowerCase()
-          .includes(busqueda)
-        ||
-        String(a.persona || '')
-          .toLowerCase()
-          .includes(busqueda)
-      );
-
-    });
+    }
 
 
-  if (!filtrada.length) {
 
-    cont.innerHTML = `
+    function renderAuditoria(lista) {
+
+      const cont =
+        document.getElementById(
+          'auditoriaContenedor'
+        );
+
+      if (!cont) return;
+
+      const busqueda =
+        (
+          document.getElementById(
+            'auditoriaBuscar'
+          )?.value || ''
+        )
+          .toLowerCase()
+          .trim();
+
+
+      const filtrada =
+        lista.filter(a => {
+
+          if (!busqueda) {
+            return true;
+          }
+
+          return (
+            String(a.descripcion || '')
+              .toLowerCase()
+              .includes(busqueda)
+            ||
+            String(a.tabla || '')
+              .toLowerCase()
+              .includes(busqueda)
+            ||
+            String(a.registro_id || '')
+              .toLowerCase()
+              .includes(busqueda)
+            ||
+            String(a.persona || '')
+              .toLowerCase()
+              .includes(busqueda)
+          );
+
+        });
+
+
+      if (!filtrada.length) {
+
+        cont.innerHTML = `
       <div class="dashboard-loading">
 
         <i class="fa-solid fa-clock-rotate-left"></i>
@@ -20060,12 +20048,12 @@ function renderAuditoria(lista) {
       </div>
     `;
 
-    return;
+        return;
 
-  }
+      }
 
 
-  cont.innerHTML = `
+      cont.innerHTML = `
 
     <div style="overflow:auto">
 
@@ -20090,12 +20078,12 @@ function renderAuditoria(lista) {
 
           ${filtrada.map(a => {
 
-            const cambios =
-              a.cambios || {};
+        const cambios =
+          a.cambios || {};
 
-            const cambiosHtml =
-              Object.entries(cambios)
-                .map(([campo, valores]) => `
+        const cambiosHtml =
+          Object.entries(cambios)
+            .map(([campo, valores]) => `
 
                   <div class="auditoria-cambio">
 
@@ -20105,10 +20093,10 @@ function renderAuditoria(lista) {
 
                     <span class="auditoria-antes">
                       ${dashboardEscape(
-                        formatearValorAuditoria(
-                          valores?.antes
-                        )
-                      )}
+              formatearValorAuditoria(
+                valores?.antes
+              )
+            )}
                     </span>
 
                     <i
@@ -20118,44 +20106,43 @@ function renderAuditoria(lista) {
 
                     <span class="auditoria-despues">
                       ${dashboardEscape(
-                        formatearValorAuditoria(
-                          valores?.despues
-                        )
-                      )}
+              formatearValorAuditoria(
+                valores?.despues
+              )
+            )}
                     </span>
 
                   </div>
 
                 `)
-                .join('');
+            .join('');
 
-            return `
+        return `
 
               <tr>
 
                 <td class="auditoria-fecha">
 
                   ${a.fecha
-                    ? new Date(
-                        a.fecha
-                      ).toLocaleString(
-                        'es-ES'
-                      )
-                    : '—'}
+            ? new Date(
+              a.fecha
+            ).toLocaleString(
+              'es-ES'
+            )
+            : '—'}
 
                 </td>
 
 
                 <td class="auditoria-persona">
 
-                  ${
-                    NOMBRES_PERSONAS[
-                      a.persona
-                    ] ||
-                    dashboardEscape(
-                      a.persona
-                    )
-                  }
+                  ${NOMBRES_PERSONAS[
+          a.persona
+          ] ||
+          dashboardEscape(
+            a.persona
+          )
+          }
 
                 </td>
 
@@ -20166,8 +20153,8 @@ function renderAuditoria(lista) {
                     class="auditoria-accion">
 
                     ${dashboardEscape(
-                      a.accion
-                    )}
+            a.accion
+          )}
 
                   </span>
 
@@ -20176,30 +20163,29 @@ function renderAuditoria(lista) {
 
                 <td>
                   ${dashboardEscape(
-                    a.seccion ||
-                    a.tabla ||
-                    '—'
-                  )}
+            a.seccion ||
+            a.tabla ||
+            '—'
+          )}
                 </td>
 
 
                 <td>
                   #${dashboardEscape(
-                    a.registro_id ||
-                    '—'
-                  )}
+            a.registro_id ||
+            '—'
+          )}
                 </td>
 
 
                 <td>
 
-                  ${
-                    cambiosHtml ||
-                    dashboardEscape(
-                      a.descripcion ||
-                      '—'
-                    )
-                  }
+                  ${cambiosHtml ||
+          dashboardEscape(
+            a.descripcion ||
+            '—'
+          )
+          }
 
                 </td>
 
@@ -20207,7 +20193,7 @@ function renderAuditoria(lista) {
 
             `;
 
-          }).join('')}
+      }).join('')}
 
         </tbody>
 
@@ -20216,68 +20202,68 @@ function renderAuditoria(lista) {
     </div>
   `;
 
-}
-
-
-document
-  .getElementById('auditoriaAccion')
-  ?.addEventListener(
-    'change',
-    cargarAuditoria
-  );
-
-document
-  .getElementById('auditoriaPersona')
-  ?.addEventListener(
-    'change',
-    cargarAuditoria
-  );
-
-document
-  .getElementById('auditoriaTabla')
-  ?.addEventListener(
-    'change',
-    cargarAuditoria
-  );
-
-
-document
-  .getElementById('auditoriaBuscar')
-  ?.addEventListener(
-    'input',
-    async function () {
-
-      await cargarAuditoria();
-
     }
-  );
+
+
+    document
+      .getElementById('auditoriaAccion')
+      ?.addEventListener(
+        'change',
+        cargarAuditoria
+      );
+
+    document
+      .getElementById('auditoriaPersona')
+      ?.addEventListener(
+        'change',
+        cargarAuditoria
+      );
+
+    document
+      .getElementById('auditoriaTabla')
+      ?.addEventListener(
+        'change',
+        cargarAuditoria
+      );
+
+
+    document
+      .getElementById('auditoriaBuscar')
+      ?.addEventListener(
+        'input',
+        async function () {
+
+          await cargarAuditoria();
+
+        }
+      );
 
 
 
-  async function auditarEdicionDesdePayload(tabla, registroAntes, payload, id) {
+    async function auditarEdicionDesdePayload(tabla, registroAntes, payload, id) {
 
-    if (!registroAntes || !payload) return;
+      if (!registroAntes || !payload) return;
 
-    // Creamos una copia del registro anterior
-    // y aplicamos encima los valores nuevos.
-    const registroDespues = {
+      // Creamos una copia del registro anterior
+      // y aplicamos encima los valores nuevos.
+      const registroDespues = {
         ...registroAntes,
         ...payload,
         id: id ?? registroAntes.id
-    };
+      };
 
-    await auditarEdicion(
+      await auditarEdicion(
         tabla,
         registroAntes,
         registroDespues,
         [
-            'historial_ediciones',
-            'updated_at',
-            'created_at',
-            'fecha_modificacion'
+          'historial_ediciones',
+          'updated_at',
+          'created_at',
+          'fecha_modificacion'
         ]
-    );
-}
+      );
+    }
   </script>
 
 

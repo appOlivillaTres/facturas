@@ -6483,12 +6483,19 @@
 
       const dashboard =
         document.getElementById('dashboardWrap');
-
+      const estadisticasVentas =
+        document.getElementById('estadisticasVentasWrap');
       if (dashboard) {
         dashboard.style.display =
           sec === 'dashboard' ? 'block' : 'none';
       }
 
+      if (estadisticasVentas) {
+        estadisticasVentas.style.display =
+          sec === 'ventas_estadisticas'
+            ? 'block'
+            : 'none';
+      }
       if (sec === 'dashboard') {
 
         // Ocultamos todo lo que pertenece a las tablas
@@ -6528,15 +6535,7 @@
    ESTADÍSTICAS DE VENTAS
    ===================================================== */
 
-      const estadisticasVentas =
-        document.getElementById('estadisticasVentasWrap');
-
-      if (estadisticasVentas) {
-        estadisticasVentas.style.display =
-          sec === 'ventas_estadisticas'
-            ? 'block'
-            : 'none';
-      }
+      
 
       if (sec === 'ventas_estadisticas') {
 

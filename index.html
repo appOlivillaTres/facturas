@@ -9334,7 +9334,18 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             ventasStatsDentroPeriodo(v.fecha, periodo)
           );
 
-        renderEstadisticasVentas(ventasPeriodo);
+        // Año de referencia para la gráfica de evolución mensual:
+        // si el periodo es "Año anterior" usamos ese año, si no, el actual.
+        const anioRef = periodo === 'anio_anterior'
+          ? new Date().getFullYear() - 1
+          : new Date().getFullYear();
+
+        const ventasAnio = ventasEstadisticasCache.filter(v => {
+          if (!ventasStatsFechaValida(v.fecha)) return false;
+          return new Date(v.fecha + 'T00:00:00').getFullYear() === anioRef;
+        });
+
+        renderEstadisticasVentas(ventasPeriodo, ventasAnio);
 
       } catch (e) {
 
@@ -9361,7 +9372,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
 
-    function renderEstadisticasVentas(ventas) {
+    function renderEstadisticasVentas(ventas, ventasAnio) {
 
       const normales =
         ventas.filter(v =>
@@ -9463,7 +9474,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           ventasStatsFormatearEuros(totalDevoluciones);
 
 
-      renderVentasGraficaMensual(ventas);
+      // La gráfica de evolución mensual usa siempre el año completo
+      // (ventasAnio), no el subconjunto ya recortado por el periodo (ventas).
+      renderVentasGraficaMensual(ventasAnio || ventas);
 
       renderVentasFormasCobro(
         totalEfectivo,

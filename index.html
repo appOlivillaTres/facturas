@@ -1965,7 +1965,7 @@
       flex-direction: column;
     }
 
-    #modalConsumoInterno .modal-box-sm>div:first-of-type {
+    #modalConsumoInterno .modal-box-sm .ci-scroll {
       overflow-y: auto;
       flex: 1;
     }
@@ -4690,81 +4690,86 @@
     <div class="modal-box-sm">
       <h3><i class="fa-solid fa-user-check" style="color:#b53987"></i>Consumo Interno</h3>
 
-      <div class="form-group ac-wrap">
-        <label>Cliente *</label>
-        <input type="text" id="ci_empleado" placeholder="Escribe el nombre para buscar en Clientes...">
-        <input type="hidden" id="ci_cliente_id">
-      </div>
+      <div class="ci-scroll">
+        <div class="form-group ac-wrap">
+          <label>Cliente *</label>
+          <input type="text" id="ci_empleado" placeholder="Escribe el nombre para buscar en Clientes...">
+          <input type="hidden" id="ci_cliente_id">
+        </div>
 
-      <div class="form-group">
-        <label>Fecha *</label>
-        <input type="date" id="ci_fecha">
-      </div>
+        <div class="form-group">
+          <label>Fecha *</label>
+          <input type="date" id="ci_fecha">
+        </div>
 
-      <div class="form-group"
-        style="display:flex;align-items:center;gap:8px;background:#fff3e0;border:1.5px solid #f0c060;border-radius:8px;padding:10px 14px;margin-bottom:4px">
-        <input type="checkbox" id="ci_es_devolucion" onchange="recalcTotalCI()" style="width:auto">
-        <label for="ci_es_devolucion" style="margin:0;font-size:.85rem;font-weight:600;color:#c47a00;cursor:pointer">
-          <i class="fa-solid fa-rotate-left me-1"></i>Es una devolución (el material vuelve al stock y el total queda en
-          negativo)
-        </label>
-      </div>
+        <div class="form-group"
+          style="display:flex;align-items:center;gap:8px;background:#fff3e0;border:1.5px solid #f0c060;border-radius:8px;padding:10px 14px;margin-bottom:4px">
+          <input type="checkbox" id="ci_es_devolucion" onchange="recalcTotalCI()" style="width:auto">
+          <label for="ci_es_devolucion" style="margin:0;font-size:.85rem;font-weight:600;color:#c47a00;cursor:pointer">
+            <i class="fa-solid fa-rotate-left me-1"></i>Es una devolución (el material vuelve al stock y el total queda
+            en
+            negativo)
+          </label>
+        </div>
 
-      <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">¿Qué se lleva?</div>
+        <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">¿Qué se lleva?</div>
 
-      <!-- Se mantiene solo la opción de escáner con cámara (más completa) -->
-      <div class="form-group" style="margin:0">
-        <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear producto</label>
-        <div style="display:flex;gap:6px">
-          <input type="text" id="ci_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
-            style="border-color:#2d7a4f;font-weight:600;flex:1">
-          <button type="button" onclick="escanearConCamara('ci_scan')" title="Usar la cámara del móvil"
-            style="background:#2d7a4f;border:none;color:#fff;border-radius:6px;width:38px;flex-shrink:0;cursor:pointer">
-            <i class="fa-solid fa-camera"></i>
+        <!-- Se mantiene solo la opción de escáner con cámara (más completa) -->
+        <div class="form-group" style="margin:0">
+          <label style="font-size:.75rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanear
+            producto</label>
+          <div style="display:flex;gap:6px">
+            <input type="text" id="ci_scan" placeholder="Escanea aquí con el lector..." autocomplete="off"
+              style="border-color:#2d7a4f;font-weight:600;flex:1">
+            <button type="button" onclick="escanearConCamara('ci_scan')" title="Usar la cámara del móvil"
+              style="background:#2d7a4f;border:none;color:#fff;border-radius:6px;width:38px;flex-shrink:0;cursor:pointer">
+              <i class="fa-solid fa-camera"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="lineasConsumoInterno"></div>
+
+        <button type="button" class="btn-add-linea" onclick="addLineaConsumoInterno()">
+          <i class="fa-solid fa-plus me-1"></i>Añadir producto
+        </button>
+
+        <div class="form-seccion">Material exclusivo <span style="font-weight:400;font-size:.75rem;color:#888">(no
+            descuenta del inventario)</span></div>
+        <p style="font-size:.78rem;color:#888;margin-top:-8px"><i class="fa-solid fa-info-circle me-1"></i>Para
+          productos
+          que no tenemos en el inventario general.</p>
+
+        <div id="lineasConsumoInternoExclusivo"></div>
+
+        <button type="button" class="btn-add-linea" onclick="addLineaConsumoInternoExclusivo()">
+          <i class="fa-solid fa-plus me-1"></i>Añadir material exclusivo
+        </button>
+
+        <!-- Corregido el anidamiento del total -->
+        <div class="form-group" style="margin-top:12px;padding-top:12px;border-top:1.5px solid #ede5f5">
+          <label style="font-weight:600">Total (€)</label>
+          <input type="number" id="ci_total" readonly style="background:#f7f0f5;font-weight:700;max-width:200px">
+        </div>
+
+        <div
+          style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;padding-top:10px;border-top:1.5px solid #ede5f5">
+          <span style="font-size:.85rem;color:#888;font-weight:600">Total de unidades:</span>
+          <span id="ci_total_unidades" style="font-size:1.3rem;font-weight:700;color:#b53987">0</span>
+        </div>
+
+        <div class="form-group" style="margin-top:10px">
+          <label>Observaciones</label>
+          <input type="text" id="ci_notas" placeholder="Observaciones opcionales">
+        </div>
+
+        <!-- Botones del modal corregidos -->
+        <div class="modal-btns">
+          <button class="btn-cancelar" onclick="cerrarModal('modalConsumoInterno')">Cancelar</button>
+          <button class="btn-guardar" onclick="guardarConsumoInterno()">
+            <i class="fa-solid fa-floppy-disk me-1"></i>Guardar
           </button>
         </div>
-      </div>
-
-      <div id="lineasConsumoInterno"></div>
-
-      <button type="button" class="btn-add-linea" onclick="addLineaConsumoInterno()">
-        <i class="fa-solid fa-plus me-1"></i>Añadir producto
-      </button>
-
-      <div class="form-seccion">Material exclusivo <span style="font-weight:400;font-size:.75rem;color:#888">(no
-          descuenta del inventario)</span></div>
-      <p style="font-size:.78rem;color:#888;margin-top:-8px"><i class="fa-solid fa-info-circle me-1"></i>Para productos
-        que no tenemos en el inventario general.</p>
-
-      <div id="lineasConsumoInternoExclusivo"></div>
-
-      <button type="button" class="btn-add-linea" onclick="addLineaConsumoInternoExclusivo()">
-        <i class="fa-solid fa-plus me-1"></i>Añadir material exclusivo
-      </button>
-
-      <!-- Corregido el anidamiento del total -->
-      <div class="form-group" style="margin-top:12px;padding-top:12px;border-top:1.5px solid #ede5f5">
-        <label style="font-weight:600">Total (€)</label>
-        <input type="number" id="ci_total" readonly style="background:#f7f0f5;font-weight:700;max-width:200px">
-      </div>
-
-      <div
-        style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;padding-top:10px;border-top:1.5px solid #ede5f5">
-        <span style="font-size:.85rem;color:#888;font-weight:600">Total de unidades:</span>
-        <span id="ci_total_unidades" style="font-size:1.3rem;font-weight:700;color:#b53987">0</span>
-      </div>
-
-      <div class="form-group" style="margin-top:10px">
-        <label>Observaciones</label>
-        <input type="text" id="ci_notas" placeholder="Observaciones opcionales">
-      </div>
-
-      <!-- Botones del modal corregidos -->
-      <div class="modal-btns">
-        <button class="btn-cancelar" onclick="cerrarModal('modalConsumoInterno')">Cancelar</button>
-        <button class="btn-guardar" onclick="guardarConsumoInterno()">
-          <i class="fa-solid fa-floppy-disk me-1"></i>Guardar
-        </button>
       </div>
     </div> <!-- Cierre de modal-box-sm -->
   </div> <!-- Cierre de modalConsumoInterno -->
@@ -16315,6 +16320,81 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       document.getElementById('lineasPresupuesto').appendChild(div);
     }
 
+    let lineasPresupuestoMaquinariaCount = 0;
+
+    function addLineaPresupuestoMaquinaria(item) {
+      lineasPresupuestoMaquinariaCount++;
+      const idx = lineasPresupuestoMaquinariaCount;
+      const div = document.createElement('div');
+      div.id = `lpm_${idx}`;
+      div.className = 'linea-prod';
+      div.style.gridTemplateColumns = '110px 1fr 90px 100px 70px 100px auto';
+      div.innerHTML = `
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Código</label>
+      <input type="text" id="lpm_cod_${idx}" list="dl_maquinaria" placeholder="MAQ008" oninput="autocompletarMaquinaLineaPresupuesto(${idx})">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Máquina</label>
+      <input type="text" id="lpm_desc_${idx}" placeholder="Ej: Hilti-Martillo rompedor (por día)" oninput="recalcBaseDesdePresupuesto()">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Días</label>
+      <input type="number" id="lpm_cant_${idx}" value="1" min="0.01" step="0.01" oninput="recalcBaseDesdePresupuesto()">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Precio/día (€)</label>
+      <input type="number" id="lpm_precio_${idx}" step="0.01" min="0" value="0" oninput="recalcBaseDesdePresupuesto()">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Dto. %</label>
+      <input type="number" id="lpm_dto_${idx}" step="0.01" min="0" max="100" value="0" oninput="recalcBaseDesdePresupuesto()">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Total (€)</label>
+      <input type="number" id="lpm_lineatotal_${idx}" step="0.01" readonly style="background:#f7f0f5;font-weight:600;text-align:right" value="0.00">
+    </div>
+    <button type="button" onclick="document.getElementById('lpm_${idx}').remove(); recalcBaseDesdePresupuesto();"
+      style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
+      <i class="fa-solid fa-xmark"></i>
+    </button>`;
+      document.getElementById('lineasPresupuestoMaquinaria').appendChild(div);
+    }
+
+    function autocompletarMaquinaLineaPresupuesto(idx) {
+      const inpCod = document.getElementById(`lpm_cod_${idx}`);
+      const inpDesc = document.getElementById(`lpm_desc_${idx}`);
+      const inpPrecio = document.getElementById(`lpm_precio_${idx}`);
+      if (!inpCod) return;
+      const maquina = buscarMaquinaPorCodigo(inpCod.value);
+      if (maquina) {
+        if (inpDesc) inpDesc.value = maquina.nombre || '';
+        if (inpPrecio && maquina.precio_dia != null) inpPrecio.value = maquina.precio_dia;
+      }
+      recalcBaseDesdePresupuesto();
+    }
+
+    function _leerLineasPresupuestoMaquinaria() {
+      const lineas = [];
+      document.querySelectorAll('[id^="lpm_desc_"]').forEach(inp => {
+        const desc = inp.value.trim();
+        if (!desc) return;
+        const idx = inp.id.split('_')[2];
+        const cod = document.getElementById(`lpm_cod_${idx}`)?.value.trim() || '';
+        const cant = parseFloat(document.getElementById(`lpm_cant_${idx}`)?.value || 0);
+        const precio = parseFloat(document.getElementById(`lpm_precio_${idx}`)?.value || 0);
+        const dto = parseFloat(document.getElementById(`lpm_dto_${idx}`)?.value || 0);
+        if (cant <= 0) return;
+        const subtotal = cant * precio;
+        const importe = +(subtotal - (subtotal * dto / 100)).toFixed(2);
+        lineas.push({
+          nombre: cod ? `🚜 ${desc} (${cod})` : `🚜 ${desc}`,
+          cantidad: cant, precio, dto, importe
+        });
+      });
+      return lineas;
+    }
+
     function autocompletarPrecioLineaPresupuesto(idx) {
       const inpNombre = document.getElementById(`lp_prod_${idx}`);
       const inpPrecio = document.getElementById(`lp_precio_${idx}`);
@@ -16326,17 +16406,18 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     function recalcBaseDesdePresupuesto() {
       let base = 0;
-      document.querySelectorAll('[id^="lp_prod_"]').forEach(inp => {
+      document.querySelectorAll('[id^="lpm_desc_"]').forEach(inp => {
         const idx = inp.id.split('_')[2];
-        const cant = parseFloat(document.getElementById(`lp_cant_${idx}`)?.value || 0);
-        const precio = parseFloat(document.getElementById(`lp_precio_${idx}`)?.value || 0);
-        const dto = parseFloat(document.getElementById(`lp_dto_${idx}`)?.value || 0);
+        const cant = parseFloat(document.getElementById(`lpm_cant_${idx}`)?.value || 0);
+        const precio = parseFloat(document.getElementById(`lpm_precio_${idx}`)?.value || 0);
+        const dto = parseFloat(document.getElementById(`lpm_dto_${idx}`)?.value || 0);
         const subtotal = cant * precio;
         const lineaTotal = subtotal - (subtotal * dto / 100);
-        const elLineaTotal = document.getElementById(`lp_lineatotal_${idx}`);
+        const elLineaTotal = document.getElementById(`lpm_lineatotal_${idx}`);
         if (elLineaTotal) elLineaTotal.value = lineaTotal.toFixed(2);
         base += lineaTotal;
       });
+
       const baseInput = document.getElementById('f_pr_base');
       if (baseInput) { baseInput.value = base.toFixed(2); recalcTotalPresupuesto(); }
       const elTotalImporte = document.getElementById('totalImportePresupuesto');
@@ -16364,7 +16445,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         const importe = +(subtotal - (subtotal * dto / 100)).toFixed(2);
         lineas.push({ nombre, cantidad: cant, precio, dto, importe });
       }
-      return lineas;
+      return [...lineas, ..._leerLineasPresupuestoMaquinaria()];
     }
 
     async function guardarPresupuestoVenta() {
@@ -16461,6 +16542,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
         document.getElementById('lineasPresupuesto').innerHTML = '';
         lineasPresupuestoCount = 0;
+        document.getElementById('lineasPresupuestoMaquinaria').innerHTML = '';
+        lineasPresupuestoMaquinariaCount = 0;
         const items = f.presupuestos_venta_items || [];
         if (items.length) {
           items.forEach(item => {
@@ -18173,6 +18256,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <p style="font-size:.78rem;color:#888;margin-top:-8px"><i class="fa-solid fa-info-circle me-1"></i>Estos productos NO afectan al stock — es solo una simulación de precio.</p>
       <div id="lineasPresupuesto"></div>
       <button type="button" class="btn-add-linea" onclick="addLineaPresupuesto()"><i class="fa-solid fa-plus me-1"></i>Añadir producto</button>
+      <div class="form-seccion">Maquinaria presupuestada <span style="font-weight:400;font-size:.75rem;color:#888">(no afecta a la disponibilidad de la máquina)</span></div>
+<div id="lineasPresupuestoMaquinaria"></div>
+<button type="button" class="btn-add-linea" onclick="addLineaPresupuestoMaquinaria()"><i class="fa-solid fa-plus me-1"></i>Añadir máquina</button>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1.5px solid #ede5f5">
         <span style="font-size:.85rem;color:#888;font-weight:600">Importe total de las líneas:</span>
         <span id="totalImportePresupuesto" style="font-size:1.3rem;font-weight:700;color:#b53987">0,00 €</span>
@@ -18185,6 +18271,8 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <div class="form-group" style="margin-top:12px"><label>Notas</label><input type="text" id="f_pr_notas" placeholder="Observaciones opcionales"></div>`;
         document.getElementById('lineasPresupuesto').innerHTML = '';
         lineasPresupuestoCount = 0;
+        document.getElementById('lineasPresupuestoMaquinaria').innerHTML = '';
+        lineasPresupuestoMaquinariaCount = 0;
         clientePresupuestoSelId = null;
         document.getElementById('modalNueva').classList.add('visible');
         setTimeout(() => {

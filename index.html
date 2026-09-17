@@ -2910,6 +2910,191 @@
         grid-template-columns: 1fr;
       }
     }
+
+
+
+
+
+
+
+
+
+
+
+    /* =========================================================
+   RENTABILIDAD DE OBRA
+   ========================================================= */
+
+.rentabilidad-resumen {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.rentabilidad-card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 11px;
+  padding: 14px;
+}
+
+.rentabilidad-card .rc-label {
+  display: block;
+  color: #888;
+  font-size: .72rem;
+  margin-bottom: 5px;
+}
+
+.rentabilidad-card .rc-value {
+  display: block;
+  color: #35284f;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.rentabilidad-card .rc-sub {
+  display: block;
+  color: #999;
+  font-size: .67rem;
+  margin-top: 3px;
+}
+
+.rentabilidad-beneficio {
+  background: #f8f2f7;
+  border-radius: 11px;
+  padding: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rentabilidad-beneficio .rb-titulo {
+  color: #35284f;
+  font-weight: 700;
+  font-size: .9rem;
+}
+
+.rentabilidad-beneficio .rb-valor {
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.rentabilidad-positivo {
+  color: #2d7a4f;
+}
+
+.rentabilidad-negativo {
+  color: #c0392b;
+}
+
+.rentabilidad-barra-wrap {
+  margin-top: 7px;
+  height: 9px;
+  border-radius: 20px;
+  background: #eee;
+  overflow: hidden;
+}
+
+.rentabilidad-barra {
+  height: 100%;
+  background: #b53987;
+  border-radius: 20px;
+}
+
+.rentabilidad-categorias {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.rentabilidad-cat {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 13px;
+}
+
+.rentabilidad-cat-titulo {
+  color: #35284f;
+  font-size: .78rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.rentabilidad-cat-importe {
+  color: #b53987;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.rentabilidad-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .78rem;
+}
+
+.rentabilidad-tabla th {
+  background: #f7f0f5;
+  color: #4a3b68;
+  padding: 9px;
+  text-align: left;
+}
+
+.rentabilidad-tabla td {
+  padding: 9px;
+  border-bottom: 1px solid #eee;
+}
+
+.rentabilidad-tabla .importe {
+  text-align: right;
+  font-weight: 600;
+}
+
+.rentabilidad-form {
+  background: #faf8fb;
+  border-radius: 10px;
+  padding: 13px;
+  margin-top: 16px;
+}
+
+.rentabilidad-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 9px;
+  align-items: end;
+}
+
+.rentabilidad-form label {
+  display: block;
+  font-size: .7rem;
+  color: #777;
+  margin-bottom: 4px;
+}
+
+.rentabilidad-form input,
+.rentabilidad-form select {
+  width: 100%;
+  padding: 8px 9px;
+  border: 1px solid #ddd;
+  border-radius: 7px;
+  background: #fff;
+}
+
+@media(max-width:800px) {
+  .rentabilidad-resumen {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .rentabilidad-categorias {
+    grid-template-columns: 1fr;
+  }
+
+  .rentabilidad-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
   </style>
 </head>
 
@@ -4719,7 +4904,7 @@
     const TABLAS_REALTIME = [
       'facturas_pendientes', 'facturas_almacen', 'facturas_obra', 'facturas_csg', 'facturas_gastos_generales',
       'albaranes', 'proveedores', 'clientes', 'inventario', 'proveedores', 'materiales_obra', 'citas',
-      'ingresos', 'varios', 'albaranes_venta', 'facturas_venta', 'maquinaria', 'consumo_interno', 'notificaciones_presupuestos', 'facturas_reparto_obras', 'presupuestos_venta', 'estudio_obras_envios'
+      'ingresos', 'varios', 'albaranes_venta', 'facturas_venta', 'maquinaria', 'consumo_interno', 'notificaciones_presupuestos', 'facturas_reparto_obras', 'presupuestos_venta', 'estudio_obras_envios', 'costes_obra'
     ];
 
     let canalRealtime = null;
@@ -10006,6 +10191,1121 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
   `;
     }
 
+
+
+
+
+/* =========================================================
+   RENTABILIDAD REAL DE UNA OBRA
+   ========================================================= */
+
+let rentabilidadObraActual = null;
+
+
+/**
+ * Convierte un valor a número.
+ */
+function rentabilidadNum(valor) {
+  const n = parseFloat(valor);
+  return Number.isFinite(n) ? n : 0;
+}
+
+
+/**
+ * Devuelve la base imponible de una factura.
+ * Si no tiene base registrada, usamos el total.
+ */
+function rentabilidadBaseFactura(f) {
+  if (f.base1 != null && f.base1 !== '') {
+    return rentabilidadNum(f.base1);
+  }
+
+  return rentabilidadNum(f.total);
+}
+
+
+/**
+ * Carga y muestra la rentabilidad de una obra.
+ */
+async function abrirRentabilidadObra(nombreObra) {
+
+  if (!nombreObra) return;
+
+  rentabilidadObraActual = nombreObra;
+
+  const modal = document.getElementById('modalDetalle');
+  const titulo = document.getElementById('modalDetalleTitulo');
+  const contenido = document.getElementById('modalDetalleContenido');
+
+  if (!modal || !titulo || !contenido) return;
+
+  titulo.innerHTML = `
+    <i class="fa-solid fa-chart-line"
+       style="color:#b53987"></i>
+    Rentabilidad — ${nombreObra}
+  `;
+
+  contenido.innerHTML = `
+    <div style="text-align:center;padding:35px;color:#999">
+      <i class="fa-solid fa-spinner fa-spin"
+         style="font-size:1.5rem;color:#b53987"></i>
+      <div style="margin-top:8px">
+        Calculando rentabilidad...
+      </div>
+    </div>
+  `;
+
+  modal.classList.add('visible');
+
+  try {
+
+    /*
+     * Cargamos todos los datos necesarios.
+     */
+    const [
+      obraLista,
+      ingresos,
+      facturasObra,
+      facturasCsg,
+      repartos,
+      costesManuales
+    ] = await Promise.all([
+
+      apiGetAll(
+        'obras',
+        `nombre=eq.${encodeURIComponent(nombreObra)}`
+      ),
+
+      apiGetAll(
+        'ingresos',
+        `nombre_obra=eq.${encodeURIComponent(nombreObra)}`
+      ),
+
+      apiGetAll(
+        'facturas_obra',
+        `nombre_obra=eq.${encodeURIComponent(nombreObra)}`
+      ),
+
+      apiGetAll(
+        'facturas_csg',
+        `nombre_obra=eq.${encodeURIComponent(nombreObra)}`
+      ),
+
+      apiGetAll(
+        'facturas_reparto_obras',
+        `nombre_obra=eq.${encodeURIComponent(nombreObra)}`
+      ),
+
+      apiGetAll(
+        'costes_obra',
+        `nombre_obra=eq.${encodeURIComponent(nombreObra)}&order=fecha.desc,id.desc`
+      )
+
+    ]);
+
+
+    const obra = obraLista?.[0] || null;
+
+
+    /*
+     * =====================================================
+     * INGRESOS
+     * =====================================================
+     */
+
+    const totalIngresos =
+      (ingresos || []).reduce(
+        (s, i) =>
+          s + rentabilidadBaseIngreso(i),
+        0
+      );
+
+
+    /*
+     * =====================================================
+     * COSTES DE FACTURAS DE OBRA
+     * =====================================================
+     */
+
+    const facturasDirectas = [
+      ...(facturasObra || []),
+      ...(facturasCsg || [])
+    ];
+
+
+    let costeFacturasDirectas = 0;
+
+    facturasDirectas.forEach(f => {
+
+      costeFacturasDirectas +=
+        rentabilidadBaseFactura(f);
+
+    });
+
+
+    /*
+     * =====================================================
+     * FACTURAS REPARTIDAS
+     * =====================================================
+     */
+
+    const costeFacturasRepartidas =
+      (repartos || []).reduce(
+        (s, r) =>
+          s + rentabilidadNum(r.importe),
+        0
+      );
+
+
+    /*
+     * =====================================================
+     * COSTES MANUALES
+     * =====================================================
+     */
+
+    const costes = costesManuales || [];
+
+
+    const costeMaterial =
+      costes
+        .filter(c => c.categoria === 'material')
+        .reduce(
+          (s, c) =>
+            s + rentabilidadNum(c.importe),
+          0
+        );
+
+
+    const costeMaquinaria =
+      costes
+        .filter(c => c.categoria === 'maquinaria')
+        .reduce(
+          (s, c) =>
+            s + rentabilidadNum(c.importe),
+          0
+        );
+
+
+    const costeOtros =
+      costes
+        .filter(c => c.categoria === 'otros')
+        .reduce(
+          (s, c) =>
+            s + rentabilidadNum(c.importe),
+          0
+        );
+
+
+    /*
+     * Las facturas de obra/CSG se consideran
+     * coste directo de proveedor.
+     */
+
+    const costeProveedores =
+      costeFacturasDirectas +
+      costeFacturasRepartidas;
+
+
+    /*
+     * COSTE TOTAL
+     */
+
+    const costeTotal =
+      costeProveedores +
+      costeMaterial +
+      costeMaquinaria +
+      costeOtros;
+
+
+    /*
+     * BENEFICIO
+     */
+
+    const beneficio =
+      totalIngresos -
+      costeTotal;
+
+
+    /*
+     * MARGEN
+     */
+
+    const margen =
+      totalIngresos > 0
+        ? (beneficio / totalIngresos) * 100
+        : 0;
+
+
+    /*
+     * PRESUPUESTO
+     */
+
+    const presupuesto =
+      obra?.presupuesto != null
+        ? rentabilidadNum(obra.presupuesto)
+        : null;
+
+
+    const diferenciaPresupuesto =
+      presupuesto != null
+        ? presupuesto - costeTotal
+        : null;
+
+
+    renderRentabilidadObra({
+
+      nombreObra,
+
+      obra,
+
+      ingresos,
+
+      costes,
+
+      totalIngresos,
+
+      costeProveedores,
+
+      costeMaterial,
+
+      costeMaquinaria,
+
+      costeOtros,
+
+      costeTotal,
+
+      beneficio,
+
+      margen,
+
+      presupuesto,
+
+      diferenciaPresupuesto,
+
+      facturasDirectas,
+
+      repartos
+
+    });
+
+
+  } catch (e) {
+
+    console.error(
+      'Error calculando rentabilidad:',
+      e
+    );
+
+    contenido.innerHTML = `
+      <div style="
+        text-align:center;
+        padding:30px;
+        color:#c0392b">
+
+        <i class="fa-solid fa-circle-exclamation"></i>
+
+        <div style="margin-top:8px">
+          No se pudo calcular la rentabilidad.
+        </div>
+
+        <small>
+          ${e.message || ''}
+        </small>
+
+      </div>
+    `;
+
+  }
+}
+
+
+/**
+ * Base de un ingreso.
+ */
+function rentabilidadBaseIngreso(i) {
+
+  if (
+    i.base1 != null &&
+    i.base1 !== ''
+  ) {
+    return rentabilidadNum(i.base1);
+  }
+
+  return rentabilidadNum(i.total);
+}
+
+
+/**
+ * Render completo.
+ */
+function renderRentabilidadObra(datos) {
+
+  const contenido =
+    document.getElementById(
+      'modalDetalleContenido'
+    );
+
+  if (!contenido) return;
+
+
+  const {
+    nombreObra,
+    ingresos,
+    costes,
+    totalIngresos,
+    costeProveedores,
+    costeMaterial,
+    costeMaquinaria,
+    costeOtros,
+    costeTotal,
+    beneficio,
+    margen,
+    presupuesto,
+    diferenciaPresupuesto,
+    facturasDirectas,
+    repartos
+  } = datos;
+
+
+  const claseBeneficio =
+    beneficio >= 0
+      ? 'rentabilidad-positivo'
+      : 'rentabilidad-negativo';
+
+
+  const porcentajeCoste =
+    totalIngresos > 0
+      ? Math.min(
+          100,
+          Math.max(
+            0,
+            (costeTotal / totalIngresos) * 100
+          )
+        )
+      : 0;
+
+
+  const margenTexto =
+    totalIngresos > 0
+      ? margen.toFixed(2) + '%'
+      : 'Sin ingresos';
+
+
+  const presupuestoHTML =
+    presupuesto != null
+      ? `
+        <div class="rentabilidad-card">
+
+          <span class="rc-label">
+            Presupuesto
+          </span>
+
+          <span class="rc-value">
+            ${fmt(presupuesto)}
+          </span>
+
+          <span class="rc-sub">
+            ${diferenciaPresupuesto >= 0
+              ? `Quedan ${fmt(diferenciaPresupuesto)}`
+              : `Exceso ${fmt(Math.abs(diferenciaPresupuesto))}`
+            }
+          </span>
+
+        </div>
+      `
+      : `
+        <div class="rentabilidad-card">
+
+          <span class="rc-label">
+            Presupuesto
+          </span>
+
+          <span class="rc-value">
+            —
+          </span>
+
+          <span class="rc-sub">
+            No definido
+          </span>
+
+        </div>
+      `;
+
+
+  contenido.innerHTML = `
+
+    <div style="margin-bottom:14px">
+
+      <div style="
+        font-size:.78rem;
+        color:#888;
+        margin-bottom:3px">
+
+        Obra
+
+      </div>
+
+      <strong style="
+        color:#35284f;
+        font-size:1rem">
+
+        ${nombreObra}
+
+      </strong>
+
+    </div>
+
+
+    <!-- RESUMEN -->
+
+    <div class="rentabilidad-resumen">
+
+      <div class="rentabilidad-card">
+
+        <span class="rc-label">
+          Ingresos
+        </span>
+
+        <span class="rc-value">
+          ${fmt(totalIngresos)}
+        </span>
+
+        <span class="rc-sub">
+          Base imponible
+        </span>
+
+      </div>
+
+
+      <div class="rentabilidad-card">
+
+        <span class="rc-label">
+          Costes
+        </span>
+
+        <span class="rc-value">
+          ${fmt(costeTotal)}
+        </span>
+
+        <span class="rc-sub">
+          Todos los costes registrados
+        </span>
+
+      </div>
+
+
+      <div class="rentabilidad-card">
+
+        <span class="rc-label">
+          Beneficio
+        </span>
+
+        <span class="rc-value ${claseBeneficio}">
+          ${fmt(beneficio)}
+        </span>
+
+        <span class="rc-sub">
+          Ingresos − costes
+        </span>
+
+      </div>
+
+
+      <div class="rentabilidad-card">
+
+        <span class="rc-label">
+          Margen
+        </span>
+
+        <span class="rc-value ${claseBeneficio}">
+          ${margenTexto}
+        </span>
+
+        <div class="rentabilidad-barra-wrap">
+
+          <div
+            class="rentabilidad-barra"
+            style="width:${porcentajeCoste}%">
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- BENEFICIO -->
+
+    <div class="rentabilidad-beneficio">
+
+      <div>
+
+        <div class="rb-titulo">
+          Resultado de la obra
+        </div>
+
+        <div style="
+          font-size:.7rem;
+          color:#888;
+          margin-top:3px">
+
+          ${fmt(totalIngresos)}
+          de ingresos −
+          ${fmt(costeTotal)}
+          de costes
+
+        </div>
+
+      </div>
+
+      <div class="rb-valor ${claseBeneficio}">
+        ${fmt(beneficio)}
+      </div>
+
+    </div>
+
+
+    <!-- CATEGORÍAS -->
+
+    <div class="rentabilidad-categorias">
+
+      <div class="rentabilidad-cat">
+
+        <div class="rentabilidad-cat-titulo">
+          <i class="fa-solid fa-file-invoice"></i>
+          Facturas de proveedores
+        </div>
+
+        <div class="rentabilidad-cat-importe">
+          ${fmt(costeProveedores)}
+        </div>
+
+      </div>
+
+
+      <div class="rentabilidad-cat">
+
+        <div class="rentabilidad-cat-titulo">
+          <i class="fa-solid fa-box"></i>
+          Material
+        </div>
+
+        <div class="rentabilidad-cat-importe">
+          ${fmt(costeMaterial)}
+        </div>
+
+      </div>
+
+
+      <div class="rentabilidad-cat">
+
+        <div class="rentabilidad-cat-titulo">
+          <i class="fa-solid fa-truck-monster"></i>
+          Maquinaria
+        </div>
+
+        <div class="rentabilidad-cat-importe">
+          ${fmt(costeMaquinaria)}
+        </div>
+
+      </div>
+
+
+      <div class="rentabilidad-cat">
+
+        <div class="rentabilidad-cat-titulo">
+          <i class="fa-solid fa-ellipsis"></i>
+          Otros
+        </div>
+
+        <div class="rentabilidad-cat-importe">
+          ${fmt(costeOtros)}
+        </div>
+
+      </div>
+
+    </div>
+
+
+    ${presupuesto != null ? `
+
+      <div class="rentabilidad-card"
+           style="margin-bottom:16px">
+
+        <span class="rc-label">
+          Presupuesto vs coste real
+        </span>
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center">
+
+          <strong style="color:#35284f">
+            Presupuesto:
+            ${fmt(presupuesto)}
+          </strong>
+
+          <strong class="${diferenciaPresupuesto >= 0
+            ? 'rentabilidad-positivo'
+            : 'rentabilidad-negativo'}">
+
+            ${diferenciaPresupuesto >= 0
+              ? `Disponible ${fmt(diferenciaPresupuesto)}`
+              : `Exceso ${fmt(Math.abs(diferenciaPresupuesto))}`
+            }
+
+          </strong>
+
+        </div>
+
+      </div>
+
+    ` : ''}
+
+
+    <!-- COSTES MANUALES -->
+
+    <div style="
+      font-weight:700;
+      color:#35284f;
+      margin-top:5px">
+
+      Costes adicionales
+
+    </div>
+
+
+    <div style="
+      font-size:.7rem;
+      color:#999;
+      margin-bottom:8px">
+
+      Añade material, maquinaria u otros costes
+      que no estén ya incluidos en las facturas de proveedores.
+
+    </div>
+
+
+    <div class="rentabilidad-form">
+
+      <div class="rentabilidad-form-grid">
+
+        <div>
+
+          <label>Categoría</label>
+
+          <select id="rentabilidadCategoria">
+
+            <option value="material">
+              Material
+            </option>
+
+            <option value="maquinaria">
+              Maquinaria
+            </option>
+
+            <option value="otros">
+              Otros
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div>
+
+          <label>Concepto</label>
+
+          <input
+            type="text"
+            id="rentabilidadConcepto"
+            placeholder="Ej. Hormigón">
+
+        </div>
+
+
+        <div>
+
+          <label>Importe (€)</label>
+
+          <input
+            type="number"
+            id="rentabilidadImporte"
+            step="0.01"
+            min="0"
+            placeholder="0.00">
+
+        </div>
+
+
+        <button
+          class="btn-guardar"
+          style="height:36px"
+          onclick="guardarCosteRentabilidad()">
+
+          <i class="fa-solid fa-plus"></i>
+          Añadir
+
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- DETALLE DE COSTES -->
+
+    <div style="
+      margin-top:18px;
+      font-weight:700;
+      color:#35284f">
+
+      Detalle de costes adicionales
+
+    </div>
+
+
+    <div style="overflow-x:auto;margin-top:8px">
+
+      ${
+        costes.length
+
+        ? `
+
+          <table class="rentabilidad-tabla">
+
+            <thead>
+
+              <tr>
+
+                <th>Fecha</th>
+                <th>Categoría</th>
+                <th>Concepto</th>
+                <th>Importe</th>
+                <th></th>
+
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              ${costes.map(c => `
+
+                <tr>
+
+                  <td>
+                    ${fmtF(c.fecha)}
+                  </td>
+
+                  <td>
+                    ${c.categoria === 'material'
+                      ? 'Material'
+                      : c.categoria === 'maquinaria'
+                        ? 'Maquinaria'
+                        : 'Otros'}
+                  </td>
+
+                  <td>
+                    ${c.concepto || '—'}
+                  </td>
+
+                  <td class="importe">
+                    ${fmt(c.importe)}
+                  </td>
+
+                  <td>
+
+                    <button
+                      class="btn-eliminar"
+                      onclick="eliminarCosteRentabilidad(${c.id})">
+
+                      <i class="fa-solid fa-trash"></i>
+
+                    </button>
+
+                  </td>
+
+                </tr>
+
+              `).join('')}
+
+            </tbody>
+
+          </table>
+
+        `
+
+        : `
+
+          <div style="
+            text-align:center;
+            padding:18px;
+            color:#aaa;
+            font-size:.78rem">
+
+            No hay costes adicionales registrados.
+
+          </div>
+
+        `
+
+      }
+
+    </div>
+
+
+    <!-- FACTURAS -->
+
+    <div style="
+      margin-top:20px;
+      font-weight:700;
+      color:#35284f">
+
+      Costes de proveedores
+
+    </div>
+
+
+    <div style="
+      font-size:.7rem;
+      color:#999;
+      margin-bottom:8px">
+
+      Facturas asignadas directamente y mediante reparto entre obras.
+
+    </div>
+
+
+    <div style="overflow-x:auto">
+
+      <table class="rentabilidad-tabla">
+
+        <thead>
+
+          <tr>
+            <th>Proveedor</th>
+            <th>Tipo</th>
+            <th>Fecha</th>
+            <th>Importe</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          ${
+            facturasDirectas.length || repartos.length
+
+            ? `
+
+              ${facturasDirectas.map(f => `
+
+                <tr>
+
+                  <td>
+                    ${f.proveedor || '—'}
+                  </td>
+
+                  <td>
+                    Factura
+                  </td>
+
+                  <td>
+                    ${fmtF(f.fecha)}
+                  </td>
+
+                  <td class="importe">
+                    ${fmt(rentabilidadBaseFactura(f))}
+                  </td>
+
+                </tr>
+
+              `).join('')}
+
+
+              ${repartos.map(r => `
+
+                <tr>
+
+                  <td>
+                    Repartida
+                  </td>
+
+                  <td>
+                    Factura compartida
+                  </td>
+
+                  <td>
+                    —
+                  </td>
+
+                  <td class="importe">
+                    ${fmt(r.importe)}
+                  </td>
+
+                </tr>
+
+              `).join('')}
+
+            `
+
+            : `
+
+              <tr>
+
+                <td colspan="4"
+                    style="
+                      text-align:center;
+                      color:#aaa">
+
+                  No hay facturas de proveedores asociadas.
+
+                </td>
+
+              </tr>
+
+            `
+
+          }
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  `;
+}
+
+
+/**
+ * Añadir coste manual.
+ */
+async function guardarCosteRentabilidad() {
+
+  const obra =
+    rentabilidadObraActual;
+
+  if (!obra) return;
+
+
+  const categoria =
+    document.getElementById(
+      'rentabilidadCategoria'
+    )?.value || 'otros';
+
+
+  const concepto =
+    document.getElementById(
+      'rentabilidadConcepto'
+    )?.value.trim() || null;
+
+
+  const importe =
+    rentabilidadNum(
+      document.getElementById(
+        'rentabilidadImporte'
+      )?.value
+    );
+
+
+  if (importe <= 0) {
+
+    toast(
+      'Introduce un importe válido',
+      'err'
+    );
+
+    return;
+  }
+
+
+  try {
+
+    await apiPost(
+      'costes_obra',
+      {
+        nombre_obra: obra,
+        categoria,
+        concepto,
+        importe,
+        fecha: hoy(),
+        creado_por: currentPersona
+      }
+    );
+
+
+    toast(
+      'Coste añadido correctamente',
+      'ok'
+    );
+
+
+    abrirRentabilidadObra(obra);
+
+  } catch (e) {
+
+    toast(
+      'No se pudo guardar el coste: ' +
+      e.message,
+      'err'
+    );
+
+  }
+}
+
+
+/**
+ * Eliminar coste manual.
+ */
+async function eliminarCosteRentabilidad(id) {
+
+  if (
+    !confirm(
+      '¿Eliminar este coste de la obra?'
+    )
+  ) return;
+
+
+  try {
+
+    await apiDelete(
+      'costes_obra',
+      id
+    );
+
+
+    toast(
+      'Coste eliminado',
+      'ok'
+    );
+
+
+    abrirRentabilidadObra(
+      rentabilidadObraActual
+    );
+
+  } catch (e) {
+
+    toast(
+      'No se pudo eliminar: ' +
+      e.message,
+      'err'
+    );
+
+  }
+}
+
+
+
+
+
+
+
     function renderTabla() {
       const q = document.getElementById('searchInput').value.toLowerCase().trim();
       const fEst = document.getElementById('filtroEstado').value;
@@ -10532,9 +11832,15 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     <td class="num-cell">${tienePresupuesto ? fmt(presupuesto) : '—'}</td>
     <td class="num-cell">${fmt(facturado)}</td>
     <td class="num-cell">${tienePresupuesto ? fmt(diferencia) : '—'}</td>
-    <td>${tienePresupuesto
-              ? `<span class="badge-estado ${rentable ? 'badge-pagado' : 'badge-vencido'}">${rentable ? 'RENTABLE' : 'NO RENTABLE'}</span>`
-              : '<span style="color:#ccc;font-size:.78rem">Sin presupuesto</span>'}</td>
+    <td>
+  <span
+    class="link-badge factura"
+    onclick="event.stopPropagation(); abrirRentabilidadObra('${(o.nombre || '').replace(/'/g, "\\'")}')"
+    title="Ver rentabilidad de esta obra">
+    <i class="fa-solid fa-chart-line"></i>
+    Ver rentabilidad
+  </span>
+</td>
     <td><span class="link-badge factura" onclick="verFacturasDeObra('${(o.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-folder-open"></i>Ver facturas${o._num_facturas ? ` (${o._num_facturas})` : ''}</span></td>
     <td><span class="link-badge factura" onclick="verAlbaranesDeObra('${(o.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-file-signature"></i>Ver albaranes${o._num_albaranes ? ` (${o._num_albaranes})` : ''}</span></td>
     <td><span class="link-badge factura" onclick="verMaterialExclusivoDeObra('${(o.nombre || '').replace(/'/g, "\\'")}')"><i class="fa-solid fa-boxes-stacked"></i>Material excl.</span></td>

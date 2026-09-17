@@ -2542,6 +2542,374 @@
     .barra-scroll-fija #barraScrollFijaInner {
       height: 1px;
     }
+
+
+
+
+
+    /* =========================================================
+   ESTADÍSTICAS DE VENTAS
+   ========================================================= */
+
+    #estadisticasVentasWrap {
+      padding: 4px 0 30px;
+    }
+
+    .estadisticas-ventas-cabecera {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 18px;
+    }
+
+    .estadisticas-ventas-cabecera h2 {
+      margin: 0;
+      color: #35284f;
+      font-size: 1.35rem;
+    }
+
+    .estadisticas-ventas-cabecera h2 i {
+      color: #b53987;
+      margin-right: 8px;
+    }
+
+    .estadisticas-ventas-cabecera p {
+      margin: 5px 0 0;
+      color: #888;
+      font-size: .82rem;
+    }
+
+    .estadisticas-ventas-filtros {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .estadisticas-ventas-filtros label {
+      font-size: .8rem;
+      font-weight: 600;
+      color: #555;
+    }
+
+    .estadisticas-ventas-filtros select {
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      padding: 8px 12px;
+      background: #fff;
+      color: #333;
+      font-size: .82rem;
+    }
+
+    /* TARJETAS */
+
+    .ventas-stats-cards {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .ventas-stat-card {
+      background: #fff;
+      border: 1px solid #eee;
+      border-radius: 12px;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 82px;
+      box-shadow: 0 2px 8px rgba(53, 40, 79, .05);
+    }
+
+    .ventas-stat-icon {
+      width: 42px;
+      height: 42px;
+      min-width: 42px;
+      border-radius: 10px;
+      background: #f7edf5;
+      color: #b53987;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05rem;
+    }
+
+    .ventas-stat-card span {
+      display: block;
+      color: #888;
+      font-size: .72rem;
+      margin-bottom: 3px;
+    }
+
+    .ventas-stat-card strong {
+      display: block;
+      color: #35284f;
+      font-size: 1.05rem;
+    }
+
+    .ventas-stat-verde .ventas-stat-icon {
+      background: #e9f6ee;
+      color: #2d7a4f;
+    }
+
+    .ventas-stat-naranja .ventas-stat-icon {
+      background: #fff3e0;
+      color: #c47a00;
+    }
+
+    .ventas-stat-rojo .ventas-stat-icon {
+      background: #fdebed;
+      color: #c0394f;
+    }
+
+    /* PANELES */
+
+    .ventas-stats-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .ventas-stats-panel {
+      background: #fff;
+      border: 1px solid #eee;
+      border-radius: 12px;
+      padding: 17px;
+      box-shadow: 0 2px 8px rgba(53, 40, 79, .05);
+    }
+
+    .ventas-panel-titulo {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .ventas-panel-titulo strong {
+      display: block;
+      color: #35284f;
+      font-size: .92rem;
+    }
+
+    .ventas-panel-titulo small {
+      display: block;
+      color: #999;
+      font-size: .72rem;
+      margin-top: 3px;
+    }
+
+    /* GRÁFICA */
+
+    .ventas-grafica {
+      min-height: 245px;
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      padding: 15px 5px 5px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .ventas-barra-wrap {
+      flex: 1;
+      min-width: 30px;
+      height: 215px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ventas-barra-valor {
+      font-size: .65rem;
+      color: #555;
+      white-space: nowrap;
+    }
+
+    .ventas-barra {
+      width: 100%;
+      max-width: 42px;
+      min-height: 3px;
+      background: #b53987;
+      border-radius: 6px 6px 0 0;
+      transition: height .25s ease;
+    }
+
+    .ventas-barra-mes {
+      font-size: .67rem;
+      color: #888;
+      white-space: nowrap;
+    }
+
+    /* LISTAS */
+
+    .ventas-ranking {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .ventas-ranking-item {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .ventas-ranking-item:last-child {
+      border-bottom: none;
+    }
+
+    .ventas-ranking-pos {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: #f7edf5;
+      color: #b53987;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .7rem;
+      font-weight: 700;
+    }
+
+    .ventas-ranking-nombre {
+      font-size: .8rem;
+      color: #444;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ventas-ranking-sec {
+      font-size: .68rem;
+      color: #aaa;
+      margin-top: 2px;
+    }
+
+    .ventas-ranking-total {
+      font-size: .8rem;
+      font-weight: 700;
+      color: #35284f;
+    }
+
+    /* FORMAS DE COBRO */
+
+    .ventas-cobro-item {
+      margin-bottom: 15px;
+    }
+
+    .ventas-cobro-cabecera {
+      display: flex;
+      justify-content: space-between;
+      font-size: .78rem;
+      margin-bottom: 5px;
+    }
+
+    .ventas-cobro-cabecera strong {
+      color: #35284f;
+    }
+
+    .ventas-cobro-barra {
+      height: 9px;
+      background: #f0edf2;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .ventas-cobro-barra>div {
+      height: 100%;
+      background: #b53987;
+      border-radius: 20px;
+    }
+
+    /* COMPARATIVA */
+
+    .ventas-comparativa-panel {
+      margin-bottom: 20px;
+    }
+
+    .ventas-comparativa {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .ventas-comparativa-item {
+      background: #faf8fb;
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .ventas-comparativa-item span {
+      display: block;
+      font-size: .72rem;
+      color: #888;
+      margin-bottom: 5px;
+    }
+
+    .ventas-comparativa-item strong {
+      display: block;
+      color: #35284f;
+      font-size: 1rem;
+    }
+
+    .ventas-comparativa-delta {
+      margin-top: 5px;
+      font-size: .72rem;
+      font-weight: 600;
+    }
+
+    .ventas-delta-pos {
+      color: #2d7a4f;
+    }
+
+    .ventas-delta-neg {
+      color: #c0394f;
+    }
+
+    .ventas-stats-loading {
+      width: 100%;
+      text-align: center;
+      color: #aaa;
+      padding: 70px 0;
+      font-size: .82rem;
+    }
+
+    @media (max-width: 1200px) {
+      .ventas-stats-cards {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 800px) {
+      .estadisticas-ventas-cabecera {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .ventas-stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .ventas-stats-cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .ventas-comparativa {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .ventas-stats-cards {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 
@@ -2642,6 +3010,9 @@
             class="fa-solid fa-file-invoice-dollar"></i>Facturas Venta</button>
         <button class="btn-nav" onclick="cambiarSeccion('presupuestos_venta')"><i
             class="fa-solid fa-file-lines"></i>Presupuestos</button>
+        <button class="btn-nav" onclick="cambiarSeccion('ventas_estadisticas')">
+          <i class="fa-solid fa-chart-column"></i>Estadísticas Ventas
+        </button>
         <button class="btn-nav" onclick="cambiarSeccion('proveedores')"><i
             class="fa-solid fa-truck-field"></i>Proveedores</button>
         <button class="btn-nav" onclick="cambiarSeccion('clientes')"><i class="fa-solid fa-users"></i>Clientes</button>
@@ -3047,6 +3418,184 @@
         </div>
       </div>
       <div id="calendarioPagosWrap" style="display:none">
+        <!-- =========================================================
+     ESTADÍSTICAS DE VENTAS
+     ========================================================= -->
+        <div id="estadisticasVentasWrap" style="display:none">
+
+          <div class="estadisticas-ventas-cabecera">
+
+            <div>
+              <h2>
+                <i class="fa-solid fa-chart-column"></i>
+                Estadísticas de Ventas
+              </h2>
+              <p>Resumen de las ventas realizadas y evolución comercial.</p>
+            </div>
+
+            <div class="estadisticas-ventas-filtros">
+
+              <label for="ventasStatsPeriodo">Periodo</label>
+
+              <select id="ventasStatsPeriodo" onchange="cargarEstadisticasVentas()">
+                <option value="mes">Este mes</option>
+                <option value="mes_anterior">Mes anterior</option>
+                <option value="anio">Este año</option>
+                <option value="anio_anterior">Año anterior</option>
+                <option value="todo">Todo</option>
+              </select>
+
+            </div>
+
+          </div>
+
+          <!-- TARJETAS -->
+          <div class="ventas-stats-cards">
+
+            <div class="ventas-stat-card">
+              <div class="ventas-stat-icon">
+                <i class="fa-solid fa-euro-sign"></i>
+              </div>
+              <div>
+                <span>Ventas totales</span>
+                <strong id="ventasStatTotal">0,00 €</strong>
+              </div>
+            </div>
+
+            <div class="ventas-stat-card">
+              <div class="ventas-stat-icon">
+                <i class="fa-solid fa-cart-shopping"></i>
+              </div>
+              <div>
+                <span>Nº de ventas</span>
+                <strong id="ventasStatNumero">0</strong>
+              </div>
+            </div>
+
+            <div class="ventas-stat-card">
+              <div class="ventas-stat-icon">
+                <i class="fa-solid fa-receipt"></i>
+              </div>
+              <div>
+                <span>Ticket medio</span>
+                <strong id="ventasStatTicket">0,00 €</strong>
+              </div>
+            </div>
+
+            <div class="ventas-stat-card ventas-stat-verde">
+              <div class="ventas-stat-icon">
+                <i class="fa-solid fa-money-bill-wave"></i>
+              </div>
+              <div>
+                <span>Cobrado al momento</span>
+                <strong id="ventasStatEfectivo">0,00 €</strong>
+              </div>
+            </div>
+
+            <div class="ventas-stat-card ventas-stat-naranja">
+              <div class="ventas-stat-icon">
+                <i class="fa-solid fa-file-invoice"></i>
+              </div>
+              <div>
+                <span>A facturar</span>
+                <strong id="ventasStatFacturar">0,00 €</strong>
+              </div>
+            </div>
+
+            <div class="ventas-stat-card ventas-stat-rojo">
+              <div class="ventas-stat-icon">
+                <i class="fa-solid fa-rotate-left"></i>
+              </div>
+              <div>
+                <span>Devoluciones</span>
+                <strong id="ventasStatDevoluciones">0,00 €</strong>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- GRÁFICAS -->
+          <div class="ventas-stats-grid">
+
+            <div class="ventas-stats-panel">
+
+              <div class="ventas-panel-titulo">
+                <div>
+                  <strong>Evolución de ventas</strong>
+                  <small>Evolución dentro del periodo seleccionado</small>
+                </div>
+              </div>
+
+              <div id="ventasGraficaMensual" class="ventas-grafica">
+                <div class="ventas-stats-loading">
+                  <i class="fa-solid fa-spinner fa-spin"></i>
+                  Cargando...
+                </div>
+              </div>
+
+            </div>
+
+            <div class="ventas-stats-panel">
+
+              <div class="ventas-panel-titulo">
+                <div>
+                  <strong>Formas de cobro</strong>
+                  <small>Distribución de las ventas</small>
+                </div>
+              </div>
+
+              <div id="ventasFormasCobro"></div>
+
+            </div>
+
+          </div>
+
+          <!-- RANKINGS -->
+          <div class="ventas-stats-grid">
+
+            <div class="ventas-stats-panel">
+
+              <div class="ventas-panel-titulo">
+                <div>
+                  <strong>Clientes con más compras</strong>
+                  <small>Ordenados por importe</small>
+                </div>
+              </div>
+
+              <div id="ventasTopClientes"></div>
+
+            </div>
+
+            <div class="ventas-stats-panel">
+
+              <div class="ventas-panel-titulo">
+                <div>
+                  <strong>Productos más vendidos</strong>
+                  <small>Ordenados por unidades</small>
+                </div>
+              </div>
+
+              <div id="ventasTopProductos"></div>
+
+            </div>
+
+          </div>
+
+          <!-- COMPARATIVA -->
+          <div class="ventas-stats-panel ventas-comparativa-panel">
+
+            <div class="ventas-panel-titulo">
+              <div>
+                <strong>Comparativa</strong>
+                <small>Periodo seleccionado frente al periodo anterior</small>
+              </div>
+            </div>
+
+            <div id="ventasComparativa"></div>
+
+          </div>
+
+        </div>
         <div class="cal-header">
           <button onclick="cambiarMesCalendario(-1)"><i class="fa-solid fa-chevron-left"></i></button>
           <span id="calMesTitulo">—</span>
@@ -4256,6 +4805,7 @@
     // (Se comprueba contra 'currentPersona', la identidad real obtenida
     // tras iniciar sesión con Supabase Auth — ver cargarPerfilActual.)
     const ACCESO_SECCIONES = {
+      ventas_estadisticas: ['cynthia', 'emilio'],
       facturas_almacen: ['cynthia', 'emilio'],
       facturas_obra: ['cynthia', 'angel', 'emilio', 'paula'],
       facturas_csg: ['angel', 'emilio', 'cynthia', 'paula'],
@@ -4317,10 +4867,31 @@
 
     // Todas las secciones que existen en el menú.
     const TODAS_LAS_SECCIONES = [
-      'dashboard', 'clasificacion', 'facturas_almacen', 'facturas_obra', 'facturas_csg', 'facturas_gastos_generales',
-      'revisadas_facturadas', 'obras', 'calendario_pagos', 'notificaciones_presupuestos',
-      'albaranes', 'albaranes_venta', 'facturas_venta', 'presupuestos_venta', 'proveedores', 'clientes', 'inventario',
-      'materiales_obra', 'ingresos', 'varios', 'maquinaria', 'consumo_interno', 'estudio_obras', 'obras_estudio'
+      'dashboard',
+      'clasificacion',
+      'facturas_almacen',
+      'facturas_obra',
+      'facturas_csg',
+      'facturas_gastos_generales',
+      'revisadas_facturadas',
+      'obras',
+      'calendario_pagos',
+      'notificaciones_presupuestos',
+      'albaranes',
+      'albaranes_venta',
+      'facturas_venta',
+      'presupuestos_venta',
+      'ventas_estadisticas',
+      'proveedores',
+      'clientes',
+      'inventario',
+      'materiales_obra',
+      'ingresos',
+      'varios',
+      'maquinaria',
+      'consumo_interno',
+      'estudio_obras',
+      'obras_estudio'
     ];
 
     // Qué campos se buscan en cada tabla, y cómo se pinta cada resultado
@@ -4720,6 +5291,7 @@
       albaranes_venta: ['Albaranes de Venta', 'fa-file-invoice', false],
       facturas_venta: ['Facturas de Venta', 'fa-file-invoice-dollar', false],
       presupuestos_venta: ['Presupuestos', 'fa-file-lines', false],
+      ventas_estadisticas: ['Estadísticas de Ventas', 'fa-chart-column', false],
       maquinaria: ['Maquinaria', 'fa-truck-monster', false],
       consumo_interno: ['Consumo Interno', 'fa-user-check', false],
       estudio_obras: ['Estudio de Obras', 'fa-magnifying-glass-dollar', false],
@@ -5947,6 +6519,54 @@
         cerrarVisorPdf();
 
         await cargarDashboard();
+
+        return;
+      }
+      /* =====================================================
+   ESTADÍSTICAS DE VENTAS
+   ===================================================== */
+
+      const estadisticasVentas =
+        document.getElementById('estadisticasVentasWrap');
+
+      if (estadisticasVentas) {
+        estadisticasVentas.style.display =
+          sec === 'ventas_estadisticas'
+            ? 'block'
+            : 'none';
+      }
+
+      if (sec === 'ventas_estadisticas') {
+
+        document.getElementById('statsContenedor').style.display = 'none';
+        document.getElementById('alertasWrap').innerHTML = '';
+        document.getElementById('filtrosBar').style.display = 'none';
+        document.getElementById('splitWrap').style.display = 'none';
+        document.getElementById('calendarioPagosWrap').style.display = 'none';
+        document.getElementById('resumenObra').style.display = 'none';
+
+        document.getElementById('btnExportar').style.display = 'none';
+        document.getElementById('btnDescargarArchivos').style.display = 'none';
+        document.getElementById('btnDuplicados').style.display = 'none';
+        document.getElementById('btnPorRevisar').style.display = 'none';
+        document.getElementById('selPendientesDe').style.display = 'none';
+        document.getElementById('btnAjusteStock').style.display = 'none';
+        document.getElementById('btnNuevoVehiculo').style.display = 'none';
+        document.getElementById('btnSalidaInterna').style.display = 'none';
+        document.getElementById('btnHistorial').style.display = 'none';
+        document.getElementById('btnNuevo').style.display = 'none';
+        document.getElementById('btnEliminarSeleccionados').style.display = 'none';
+
+        const btnFactSel =
+          document.getElementById('btnFacturarSeleccionados');
+
+        if (btnFactSel) {
+          btnFactSel.style.display = 'none';
+        }
+
+        cerrarVisorPdf();
+
+        await cargarEstadisticasVentas();
 
         return;
       }
@@ -8554,6 +9174,823 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     window.addEventListener('load', actualizarAlturaTopbar);
     actualizarAlturaTopbar();
 
+
+
+    /* =========================================================
+   ESTADÍSTICAS DE VENTAS
+   ========================================================= */
+
+    let ventasEstadisticasCache = null;
+
+    function ventasStatsNumero(v) {
+      return parseFloat(v || 0) || 0;
+    }
+
+    function ventasStatsFechaValida(fecha) {
+      return fecha && /^\d{4}-\d{2}-\d{2}/.test(fecha);
+    }
+
+    function ventasStatsFormatearEuros(v) {
+      return ventasStatsNumero(v).toLocaleString('es-ES', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }) + ' €';
+    }
+
+    function ventasStatsPeriodoFechas(periodo) {
+
+      const hoyD = new Date();
+      hoyD.setHours(0, 0, 0, 0);
+
+      let desde = null;
+      let hasta = null;
+
+      if (periodo === 'mes') {
+
+        desde = new Date(
+          hoyD.getFullYear(),
+          hoyD.getMonth(),
+          1
+        );
+
+        hasta = new Date(
+          hoyD.getFullYear(),
+          hoyD.getMonth() + 1,
+          0
+        );
+
+      } else if (periodo === 'mes_anterior') {
+
+        desde = new Date(
+          hoyD.getFullYear(),
+          hoyD.getMonth() - 1,
+          1
+        );
+
+        hasta = new Date(
+          hoyD.getFullYear(),
+          hoyD.getMonth(),
+          0
+        );
+
+      } else if (periodo === 'anio') {
+
+        desde = new Date(
+          hoyD.getFullYear(),
+          0,
+          1
+        );
+
+        hasta = new Date(
+          hoyD.getFullYear(),
+          11,
+          31
+        );
+
+      } else if (periodo === 'anio_anterior') {
+
+        desde = new Date(
+          hoyD.getFullYear() - 1,
+          0,
+          1
+        );
+
+        hasta = new Date(
+          hoyD.getFullYear() - 1,
+          11,
+          31
+        );
+
+      }
+
+      return { desde, hasta };
+    }
+
+
+    function ventasStatsDentroPeriodo(fecha, periodo) {
+
+      if (!ventasStatsFechaValida(fecha)) {
+        return false;
+      }
+
+      if (periodo === 'todo') {
+        return true;
+      }
+
+      const f = new Date(fecha + 'T00:00:00');
+
+      const { desde, hasta } =
+        ventasStatsPeriodoFechas(periodo);
+
+      if (!desde || !hasta) {
+        return true;
+      }
+
+      return f >= desde && f <= hasta;
+    }
+
+
+    async function cargarEstadisticasVentas() {
+
+      const wrap =
+        document.getElementById('estadisticasVentasWrap');
+
+      if (!wrap) return;
+
+      const periodo =
+        document.getElementById('ventasStatsPeriodo')?.value || 'mes';
+
+      const grafica =
+        document.getElementById('ventasGraficaMensual');
+
+      if (grafica) {
+        grafica.innerHTML = `
+      <div class="ventas-stats-loading">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Cargando estadísticas...
+      </div>
+    `;
+      }
+
+      try {
+
+        /*
+         * Utilizamos ALBARANES DE VENTA como fuente principal
+         * para no duplicar las ventas cuando una venta después
+         * se convierte en factura.
+         */
+        const albaranes =
+          await apiGetAll(
+            'albaranes_venta',
+            'select=*,albaranes_venta_items(*),albaranes_venta_items_exclusivos(*)&order=fecha.asc'
+          );
+
+        ventasEstadisticasCache = albaranes || [];
+
+        const ventasPeriodo =
+          ventasEstadisticasCache.filter(v =>
+            ventasStatsDentroPeriodo(v.fecha, periodo)
+          );
+
+        renderEstadisticasVentas(ventasPeriodo);
+
+      } catch (e) {
+
+        console.error(
+          'Error cargando estadísticas de ventas:',
+          e
+        );
+
+        if (grafica) {
+          grafica.innerHTML = `
+        <div class="ventas-stats-loading"
+             style="color:#c0394f">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          No se pudieron cargar las estadísticas
+        </div>
+      `;
+        }
+
+        toast(
+          'Error cargando estadísticas de ventas: ' + e.message,
+          'err'
+        );
+      }
+    }
+
+
+    function renderEstadisticasVentas(ventas) {
+
+      const normales =
+        ventas.filter(v =>
+          ventasStatsNumero(v.total) >= 0
+        );
+
+      const devoluciones =
+        ventas.filter(v =>
+          ventasStatsNumero(v.total) < 0
+        );
+
+      const totalVentas =
+        normales.reduce(
+          (s, v) => s + ventasStatsNumero(v.total),
+          0
+        );
+
+      const totalDevoluciones =
+        Math.abs(
+          devoluciones.reduce(
+            (s, v) => s + ventasStatsNumero(v.total),
+            0
+          )
+        );
+
+      const totalOperaciones =
+        ventas.length;
+
+      const ticketMedio =
+        normales.length
+          ? totalVentas / normales.length
+          : 0;
+
+      const totalEfectivo =
+        normales
+          .filter(v =>
+            (v.forma_cobro || 'facturar') === 'efectivo'
+          )
+          .reduce(
+            (s, v) => s + ventasStatsNumero(v.total),
+            0
+          );
+
+      const totalFacturar =
+        normales
+          .filter(v =>
+            (v.forma_cobro || 'facturar') !== 'efectivo'
+          )
+          .reduce(
+            (s, v) => s + ventasStatsNumero(v.total),
+            0
+          );
+
+      const totalNeto =
+        totalVentas - totalDevoluciones;
+
+
+      const elTotal =
+        document.getElementById('ventasStatTotal');
+
+      const elNumero =
+        document.getElementById('ventasStatNumero');
+
+      const elTicket =
+        document.getElementById('ventasStatTicket');
+
+      const elEfectivo =
+        document.getElementById('ventasStatEfectivo');
+
+      const elFacturar =
+        document.getElementById('ventasStatFacturar');
+
+      const elDevoluciones =
+        document.getElementById('ventasStatDevoluciones');
+
+
+      if (elTotal)
+        elTotal.textContent =
+          ventasStatsFormatearEuros(totalNeto);
+
+      if (elNumero)
+        elNumero.textContent =
+          totalOperaciones.toLocaleString('es-ES');
+
+      if (elTicket)
+        elTicket.textContent =
+          ventasStatsFormatearEuros(ticketMedio);
+
+      if (elEfectivo)
+        elEfectivo.textContent =
+          ventasStatsFormatearEuros(totalEfectivo);
+
+      if (elFacturar)
+        elFacturar.textContent =
+          ventasStatsFormatearEuros(totalFacturar);
+
+      if (elDevoluciones)
+        elDevoluciones.textContent =
+          ventasStatsFormatearEuros(totalDevoluciones);
+
+
+      renderVentasGraficaMensual(ventas);
+
+      renderVentasFormasCobro(
+        totalEfectivo,
+        totalFacturar
+      );
+
+      renderVentasTopClientes(ventas);
+
+      renderVentasTopProductos(ventas);
+
+      renderVentasComparativa(ventas);
+    }
+
+
+    /* =========================================================
+       EVOLUCIÓN MENSUAL
+       ========================================================= */
+
+    function renderVentasGraficaMensual(ventas) {
+
+      const cont =
+        document.getElementById('ventasGraficaMensual');
+
+      if (!cont) return;
+
+      const meses = [
+        'Ene', 'Feb', 'Mar', 'Abr',
+        'May', 'Jun', 'Jul', 'Ago',
+        'Sep', 'Oct', 'Nov', 'Dic'
+      ];
+
+      const datos = meses.map((nombre, mes) => {
+
+        const total =
+          ventas
+            .filter(v => {
+              if (!v.fecha) return false;
+              const f = new Date(v.fecha + 'T00:00:00');
+              return f.getMonth() === mes;
+            })
+            .reduce(
+              (s, v) => s + ventasStatsNumero(v.total),
+              0
+            );
+
+        return {
+          nombre,
+          total: Math.max(0, total)
+        };
+      });
+
+      const max =
+        Math.max(
+          ...datos.map(d => d.total),
+          1
+        );
+
+      cont.innerHTML = datos.map(d => {
+
+        const altura =
+          Math.max(
+            d.total > 0 ? 4 : 1,
+            (d.total / max) * 175
+          );
+
+        return `
+      <div class="ventas-barra-wrap">
+
+        <div class="ventas-barra-valor">
+          ${d.total > 0
+            ? ventasStatsFormatearEuros(d.total)
+            : ''}
+        </div>
+
+        <div class="ventas-barra"
+             style="height:${altura}px"
+             title="${d.nombre}: ${ventasStatsFormatearEuros(d.total)}">
+        </div>
+
+        <div class="ventas-barra-mes">
+          ${d.nombre}
+        </div>
+
+      </div>
+    `;
+
+      }).join('');
+    }
+
+
+    /* =========================================================
+       FORMAS DE COBRO
+       ========================================================= */
+
+    function renderVentasFormasCobro(
+      efectivo,
+      facturar
+    ) {
+
+      const cont =
+        document.getElementById('ventasFormasCobro');
+
+      if (!cont) return;
+
+      const total =
+        efectivo + facturar;
+
+      const pctEfectivo =
+        total > 0
+          ? (efectivo / total) * 100
+          : 0;
+
+      const pctFacturar =
+        total > 0
+          ? (facturar / total) * 100
+          : 0;
+
+      cont.innerHTML = `
+
+    <div class="ventas-cobro-item">
+
+      <div class="ventas-cobro-cabecera">
+        <span>Pagado al momento</span>
+        <strong>
+          ${ventasStatsFormatearEuros(efectivo)}
+          (${pctEfectivo.toFixed(1)}%)
+        </strong>
+      </div>
+
+      <div class="ventas-cobro-barra">
+        <div style="width:${pctEfectivo}%"></div>
+      </div>
+
+    </div>
+
+    <div class="ventas-cobro-item">
+
+      <div class="ventas-cobro-cabecera">
+        <span>A facturar</span>
+        <strong>
+          ${ventasStatsFormatearEuros(facturar)}
+          (${pctFacturar.toFixed(1)}%)
+        </strong>
+      </div>
+
+      <div class="ventas-cobro-barra">
+        <div style="width:${pctFacturar}%"></div>
+      </div>
+
+    </div>
+
+  `;
+    }
+
+
+    /* =========================================================
+       TOP CLIENTES
+       ========================================================= */
+
+    function renderVentasTopClientes(ventas) {
+
+      const cont =
+        document.getElementById('ventasTopClientes');
+
+      if (!cont) return;
+
+      const clientes = {};
+
+      ventas.forEach(v => {
+
+        const nombre =
+          (v.cliente_nombre || 'Sin cliente').trim();
+
+        const total =
+          ventasStatsNumero(v.total);
+
+        if (!clientes[nombre]) {
+          clientes[nombre] = {
+            total: 0,
+            operaciones: 0
+          };
+        }
+
+        clientes[nombre].total += total;
+        clientes[nombre].operaciones++;
+
+      });
+
+      const lista =
+        Object.entries(clientes)
+          .sort((a, b) =>
+            b[1].total - a[1].total
+          )
+          .slice(0, 10);
+
+      if (!lista.length) {
+
+        cont.innerHTML = `
+      <div class="ventas-stats-loading">
+        No hay ventas en este periodo
+      </div>
+    `;
+
+        return;
+      }
+
+      cont.innerHTML = `
+    <div class="ventas-ranking">
+
+      ${lista.map(([nombre, datos], i) => `
+
+        <div class="ventas-ranking-item">
+
+          <div class="ventas-ranking-pos">
+            ${i + 1}
+          </div>
+
+          <div>
+
+            <div class="ventas-ranking-nombre"
+                 title="${nombre}">
+              ${nombre}
+            </div>
+
+            <div class="ventas-ranking-sec">
+              ${datos.operaciones}
+              operación${datos.operaciones !== 1 ? 'es' : ''}
+            </div>
+
+          </div>
+
+          <div class="ventas-ranking-total">
+            ${ventasStatsFormatearEuros(datos.total)}
+          </div>
+
+        </div>
+
+      `).join('')}
+
+    </div>
+  `;
+    }
+
+
+    /* =========================================================
+       TOP PRODUCTOS
+       ========================================================= */
+
+    function renderVentasTopProductos(ventas) {
+
+      const cont =
+        document.getElementById('ventasTopProductos');
+
+      if (!cont) return;
+
+      const productos = {};
+
+      ventas.forEach(v => {
+
+        const items = [
+          ...(v.albaranes_venta_items || []),
+          ...(v.albaranes_venta_items_exclusivos || [])
+        ];
+
+        items.forEach(i => {
+
+          const nombre =
+            (i.producto_nombre || 'Producto sin nombre').trim();
+
+          const cantidad =
+            ventasStatsNumero(i.cantidad);
+
+          if (!productos[nombre]) {
+            productos[nombre] = {
+              cantidad: 0,
+              operaciones: 0
+            };
+          }
+
+          productos[nombre].cantidad += cantidad;
+          productos[nombre].operaciones++;
+
+        });
+
+      });
+
+      const lista =
+        Object.entries(productos)
+          .sort((a, b) =>
+            b[1].cantidad - a[1].cantidad
+          )
+          .slice(0, 10);
+
+      if (!lista.length) {
+
+        cont.innerHTML = `
+      <div class="ventas-stats-loading">
+        No hay productos registrados
+      </div>
+    `;
+
+        return;
+      }
+
+      cont.innerHTML = `
+    <div class="ventas-ranking">
+
+      ${lista.map(([nombre, datos], i) => `
+
+        <div class="ventas-ranking-item">
+
+          <div class="ventas-ranking-pos">
+            ${i + 1}
+          </div>
+
+          <div>
+
+            <div class="ventas-ranking-nombre"
+                 title="${nombre}">
+              ${nombre}
+            </div>
+
+            <div class="ventas-ranking-sec">
+              ${datos.operaciones} venta${datos.operaciones !== 1 ? 's' : ''}
+            </div>
+
+          </div>
+
+          <div class="ventas-ranking-total">
+            ${datos.cantidad.toLocaleString('es-ES')}
+          </div>
+
+        </div>
+
+      `).join('')}
+
+    </div>
+  `;
+    }
+
+
+    /* =========================================================
+       COMPARATIVA
+       ========================================================= */
+
+    function renderVentasComparativa(ventas) {
+
+      const cont =
+        document.getElementById('ventasComparativa');
+
+      if (!cont) return;
+
+      const periodo =
+        document.getElementById('ventasStatsPeriodo')?.value || 'mes';
+
+      let periodoAnterior = [];
+
+      if (ventasEstadisticasCache) {
+
+        if (periodo === 'mes') {
+
+          periodoAnterior =
+            ventasEstadisticasCache.filter(v =>
+              ventasStatsDentroPeriodo(
+                v.fecha,
+                'mes_anterior'
+              )
+            );
+
+        } else if (periodo === 'mes_anterior') {
+
+          const hoyD = new Date();
+
+          const desde =
+            new Date(
+              hoyD.getFullYear(),
+              hoyD.getMonth() - 2,
+              1
+            );
+
+          const hasta =
+            new Date(
+              hoyD.getFullYear(),
+              hoyD.getMonth() - 1,
+              0
+            );
+
+          periodoAnterior =
+            ventasEstadisticasCache.filter(v => {
+
+              if (!v.fecha) return false;
+
+              const f =
+                new Date(v.fecha + 'T00:00:00');
+
+              return f >= desde && f <= hasta;
+            });
+
+        } else if (periodo === 'anio') {
+
+          periodoAnterior =
+            ventasEstadisticasCache.filter(v =>
+              ventasStatsDentroPeriodo(
+                v.fecha,
+                'anio_anterior'
+              )
+            );
+
+        }
+      }
+
+      const totalActual =
+        ventas.reduce(
+          (s, v) => s + ventasStatsNumero(v.total),
+          0
+        );
+
+      const totalAnterior =
+        periodoAnterior.reduce(
+          (s, v) => s + ventasStatsNumero(v.total),
+          0
+        );
+
+      const operacionesActual =
+        ventas.length;
+
+      const operacionesAnterior =
+        periodoAnterior.length;
+
+      const ticketActual =
+        operacionesActual
+          ? totalActual / operacionesActual
+          : 0;
+
+      const ticketAnterior =
+        operacionesAnterior
+          ? totalAnterior / operacionesAnterior
+          : 0;
+
+      function delta(actual, anterior) {
+
+        if (!anterior) {
+          return actual
+            ? '+100%'
+            : '0%';
+        }
+
+        const porcentaje =
+          ((actual - anterior) / Math.abs(anterior)) * 100;
+
+        return (
+          porcentaje >= 0 ? '+' : ''
+        ) + porcentaje.toFixed(1) + '%';
+      }
+
+      cont.innerHTML = `
+
+    <div class="ventas-comparativa">
+
+      <div class="ventas-comparativa-item">
+
+        <span>Ventas</span>
+
+        <strong>
+          ${ventasStatsFormatearEuros(totalActual)}
+        </strong>
+
+        <div class="ventas-comparativa-delta
+          ${totalActual >= totalAnterior
+          ? 'ventas-delta-pos'
+          : 'ventas-delta-neg'}">
+
+          ${delta(totalActual, totalAnterior)}
+          respecto al periodo anterior
+
+        </div>
+
+      </div>
+
+
+      <div class="ventas-comparativa-item">
+
+        <span>Operaciones</span>
+
+        <strong>
+          ${operacionesActual}
+        </strong>
+
+        <div class="ventas-comparativa-delta
+          ${operacionesActual >= operacionesAnterior
+          ? 'ventas-delta-pos'
+          : 'ventas-delta-neg'}">
+
+          ${delta(
+            operacionesActual,
+            operacionesAnterior
+          )}
+
+        </div>
+
+      </div>
+
+
+      <div class="ventas-comparativa-item">
+
+        <span>Ticket medio</span>
+
+        <strong>
+          ${ventasStatsFormatearEuros(ticketActual)}
+        </strong>
+
+        <div class="ventas-comparativa-delta
+          ${ticketActual >= ticketAnterior
+          ? 'ventas-delta-pos'
+          : 'ventas-delta-neg'}">
+
+          ${delta(
+            ticketActual,
+            ticketAnterior
+          )}
+
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+    }
 
     function renderTabla() {
       const q = document.getElementById('searchInput').value.toLowerCase().trim();

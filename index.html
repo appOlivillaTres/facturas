@@ -3418,10 +3418,49 @@
         </div>
       </div>
       <div id="calendarioPagosWrap" style="display:none">
-        <!-- =========================================================
+        
+        
+        <div class="cal-header">
+          <button onclick="cambiarMesCalendario(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+          <span id="calMesTitulo">—</span>
+          <button onclick="cambiarMesCalendario(1)"><i class="fa-solid fa-chevron-right"></i></button>
+          <button class="cal-hoy-btn" onclick="irMesActualCalendario()">Hoy</button>
+          <button class="cal-hoy-btn" id="btnAnadirEvento"
+            style="display:none;background:#b53987;border-color:#b53987;color:white"
+            onclick="abrirModalNuevoEvento()"><i class="fa-solid fa-bell me-1"></i>Añadir evento</button>
+        </div>
+        <div class="cal-grid" id="calGrid">
+          <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i>Cargando...</div>
+        </div>
+
+        <div class="cal-leyenda">
+          <div class="cal-leyenda-grupo">
+            <span class="cal-leyenda-titulo">Facturas</span>
+            <span class="cal-leyenda-item"><span class="cal-leyenda-punto pendiente"></span>Pendiente</span>
+            <span class="cal-leyenda-item"><span class="cal-leyenda-punto vencido"></span>Vencida</span>
+            <span class="cal-leyenda-item"><span class="cal-leyenda-punto pagado"></span>Pagada</span>
+          </div>
+          <div class="cal-leyenda-grupo">
+            <span class="cal-leyenda-titulo">Citas</span>
+            <span class="cal-leyenda-item"><span class="cal-leyenda-punto cita-pendiente"></span>Pendiente</span>
+            <span class="cal-leyenda-item"><span class="cal-leyenda-punto cita-confirmada"></span>Confirmada</span>
+            <span class="cal-leyenda-item"><span class="cal-leyenda-punto cita-reprogramada"></span>Reprogramada</span>
+          </div>
+          <div class="cal-leyenda-grupo" id="leyendaEventos" style="display:none">
+            <span class="cal-leyenda-titulo">Eventos</span>
+            <span class="cal-leyenda-item"><span class="cal-leyenda-punto evento"></span>Angel / Emilio</span>
+          </div>
+          <div class="cal-leyenda-grupo" id="leyendaFacturado" style="display:none">
+            <span class="cal-leyenda-titulo">Facturado</span>
+            <span class="cal-leyenda-item"><span class="cal-leyenda-punto"
+                style="background:#e8f5e9;border:1px solid #2d7a4f"></span>Albaranes venta + Consumo interno</span>
+          </div>
+        </div>
+      </div>
+      <!-- =========================================================
      ESTADÍSTICAS DE VENTAS
      ========================================================= -->
-        <div id="estadisticasVentasWrap" style="display:none">
+      <div id="estadisticasVentasWrap" style="display:none">
 
           <div class="estadisticas-ventas-cabecera">
 
@@ -3596,43 +3635,6 @@
           </div>
 
         </div>
-        <div class="cal-header">
-          <button onclick="cambiarMesCalendario(-1)"><i class="fa-solid fa-chevron-left"></i></button>
-          <span id="calMesTitulo">—</span>
-          <button onclick="cambiarMesCalendario(1)"><i class="fa-solid fa-chevron-right"></i></button>
-          <button class="cal-hoy-btn" onclick="irMesActualCalendario()">Hoy</button>
-          <button class="cal-hoy-btn" id="btnAnadirEvento"
-            style="display:none;background:#b53987;border-color:#b53987;color:white"
-            onclick="abrirModalNuevoEvento()"><i class="fa-solid fa-bell me-1"></i>Añadir evento</button>
-        </div>
-        <div class="cal-grid" id="calGrid">
-          <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i>Cargando...</div>
-        </div>
-
-        <div class="cal-leyenda">
-          <div class="cal-leyenda-grupo">
-            <span class="cal-leyenda-titulo">Facturas</span>
-            <span class="cal-leyenda-item"><span class="cal-leyenda-punto pendiente"></span>Pendiente</span>
-            <span class="cal-leyenda-item"><span class="cal-leyenda-punto vencido"></span>Vencida</span>
-            <span class="cal-leyenda-item"><span class="cal-leyenda-punto pagado"></span>Pagada</span>
-          </div>
-          <div class="cal-leyenda-grupo">
-            <span class="cal-leyenda-titulo">Citas</span>
-            <span class="cal-leyenda-item"><span class="cal-leyenda-punto cita-pendiente"></span>Pendiente</span>
-            <span class="cal-leyenda-item"><span class="cal-leyenda-punto cita-confirmada"></span>Confirmada</span>
-            <span class="cal-leyenda-item"><span class="cal-leyenda-punto cita-reprogramada"></span>Reprogramada</span>
-          </div>
-          <div class="cal-leyenda-grupo" id="leyendaEventos" style="display:none">
-            <span class="cal-leyenda-titulo">Eventos</span>
-            <span class="cal-leyenda-item"><span class="cal-leyenda-punto evento"></span>Angel / Emilio</span>
-          </div>
-          <div class="cal-leyenda-grupo" id="leyendaFacturado" style="display:none">
-            <span class="cal-leyenda-titulo">Facturado</span>
-            <span class="cal-leyenda-item"><span class="cal-leyenda-punto"
-                style="background:#e8f5e9;border:1px solid #2d7a4f"></span>Albaranes venta + Consumo interno</span>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 

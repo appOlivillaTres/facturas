@@ -16405,24 +16405,99 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     function recalcBaseDesdePresupuesto() {
-      let base = 0;
-      document.querySelectorAll('[id^="lpm_desc_"]').forEach(inp => {
-        const idx = inp.id.split('_')[2];
-        const cant = parseFloat(document.getElementById(`lpm_cant_${idx}`)?.value || 0);
-        const precio = parseFloat(document.getElementById(`lpm_precio_${idx}`)?.value || 0);
-        const dto = parseFloat(document.getElementById(`lpm_dto_${idx}`)?.value || 0);
-        const subtotal = cant * precio;
-        const lineaTotal = subtotal - (subtotal * dto / 100);
-        const elLineaTotal = document.getElementById(`lpm_lineatotal_${idx}`);
-        if (elLineaTotal) elLineaTotal.value = lineaTotal.toFixed(2);
-        base += lineaTotal;
-      });
+  let base = 0;
 
-      const baseInput = document.getElementById('f_pr_base');
-      if (baseInput) { baseInput.value = base.toFixed(2); recalcTotalPresupuesto(); }
-      const elTotalImporte = document.getElementById('totalImportePresupuesto');
-      if (elTotalImporte) elTotalImporte.textContent = fmt(base);
+  // ============================
+  // LÍNEAS NORMALES DE PRODUCTOS
+  // ============================
+  document.querySelectorAll('[id^="lp_prod_"]').forEach(inp => {
+    const idx = inp.id.split('_')[2];
+
+    const cant = parseFloat(
+      document.getElementById(`lp_cant_${idx}`)?.value || 0
+    );
+
+    const precio = parseFloat(
+      document.getElementById(`lp_precio_${idx}`)?.value || 0
+    );
+
+    const dto = parseFloat(
+      document.getElementById(`lp_dto_${idx}`)?.value || 0
+    );
+
+    const subtotal = cant * precio;
+
+    const lineaTotal =
+      subtotal - (subtotal * dto / 100);
+
+    const elLineaTotal =
+      document.getElementById(`lp_lineatotal_${idx}`);
+
+    if (elLineaTotal) {
+      elLineaTotal.value = lineaTotal.toFixed(2);
     }
+
+    base += lineaTotal;
+  });
+
+  // ============================
+  // LÍNEAS DE MAQUINARIA
+  // ============================
+  document.querySelectorAll('[id^="lpm_desc_"]').forEach(inp => {
+    const idx = inp.id.split('_')[2];
+
+    const cant = parseFloat(
+      document.getElementById(`lpm_cant_${idx}`)?.value || 0
+    );
+
+    const precio = parseFloat(
+      document.getElementById(`lpm_precio_${idx}`)?.value || 0
+    );
+
+    const dto = parseFloat(
+      document.getElementById(`lpm_dto_${idx}`)?.value || 0
+    );
+
+    const subtotal = cant * precio;
+
+    const lineaTotal =
+      subtotal - (subtotal * dto / 100);
+
+    const elLineaTotal =
+      document.getElementById(`lpm_lineatotal_${idx}`);
+
+    if (elLineaTotal) {
+      elLineaTotal.value = lineaTotal.toFixed(2);
+    }
+
+    base += lineaTotal;
+  });
+
+  // ============================
+  // ACTUALIZAR BASE
+  // ============================
+  const baseInput =
+    document.getElementById('f_pr_base');
+
+  if (baseInput) {
+    baseInput.value = base.toFixed(2);
+  }
+
+  // ============================
+  // ACTUALIZAR TOTAL CON IVA
+  // ============================
+  recalcTotalPresupuesto();
+
+  // ============================
+  // MOSTRAR TOTAL EN EL MODAL
+  // ============================
+  const elTotalImporte =
+    document.getElementById('totalImportePresupuesto');
+
+  if (elTotalImporte) {
+    elTotalImporte.textContent = fmt(base);
+  }
+}
 
     function recalcTotalPresupuesto() {
       const base = parseFloat(document.getElementById('f_pr_base')?.value || 0);

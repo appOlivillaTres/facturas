@@ -14853,6 +14853,10 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
           cargarMaterialesExclusivosCache();
         }
         if (lineasMaquina.length) {
+
+          // ==========================================
+          // GUARDAR LAS MÁQUINAS EN MATERIAL DE OBRA
+          // ==========================================
           await apiPost('materiales_obra_maquinaria_items', lineasMaquina.map(l => ({
             materiales_obra_id: headerId,
             nombre_obra,
@@ -14864,6 +14868,105 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
             devuelto_por: l.devuelto_por,
             obra_devolucion: l.obra_devolucion
           })));
+
+          // ==========================================
+          // ACTUALIZAR ESTADO DE CADA MÁQUINA
+          // ==========================================
+          for (const l of lineasMaquina) {
+
+            try {
+
+              // ----------------------------------------
+              // SI YA TIENE FECHA DE DEVOLUCIÓN
+              // → LA MÁQUINA ESTÁ DISPONIBLE
+              // ----------------------------------------
+              if (l.fecha_devolucion) {
+
+                await apiPatch('maquinaria', l.maquinaria_id, {
+                  estado: 'disponible',
+                  tipo_salida: null,
+                  cliente_actual_nombre: null,
+                  empleado_actual: null,
+                  obra_actual: null,
+                  fecha_alquiler_actual: null,
+                  alquiler_actual_id: null
+                });
+
+                // Cerrar el historial abierto de esta máquina
+                const abiertos = await apiGetAll(
+                  'historial_maquinaria',
+                  `maquinaria_id=eq.${l.maquinaria_id}&fecha_devolucion=is.null&order=fecha_salida.desc`
+                );
+
+                if (abiertos.length) {
+                  await apiPatch('historial_maquinaria', abiertos[0].id, {
+                    fecha_devolucion: l.fecha_devolucion,
+                    devuelto_por: l.devuelto_por || null,
+                    obra_devolucion: l.obra_devolucion || null
+                  });
+                }
+
+              } else {
+
+                // ----------------------------------------
+                // SI NO TIENE DEVOLUCIÓN
+                // → LA MÁQUINA ESTÁ EN LA OBRA
+                // ----------------------------------------
+                await apiPatch('maquinaria', l.maquinaria_id, {
+                  estado: 'alquilada',
+                  tipo_salida: 'obra_propia',
+                  cliente_actual_nombre: null,
+                  empleado_actual: nombre_empleado,
+                  obra_actual: nombre_obra,
+                  fecha_alquiler_actual: l.fecha_salida,
+                  alquiler_actual_id: null,
+                  registrado_por: currentPersona
+                });
+
+                // ----------------------------------------
+                // CREAR HISTORIAL DE LA SALIDA
+                // ----------------------------------------
+                await apiPost('historial_maquinaria', {
+                  maquinaria_id: l.maquinaria_id,
+                  codigo: l.maquina_codigo,
+                  nombre: l.maquina_nombre,
+                  cliente_nombre: null,
+                  empleado: nombre_empleado,
+                  obra: nombre_obra,
+                  tipo_salida: 'obra_propia',
+                  fecha_salida: l.fecha_salida,
+                  registrado_por: currentPersona
+                });
+
+                // Actualizar también la caché local
+                const mCache = maquinariaDB.find(
+                  m => m.id === l.maquinaria_id
+                );
+
+                if (mCache) {
+                  mCache.estado = 'alquilada';
+                  mCache.tipo_salida = 'obra_propia';
+                  mCache.cliente_actual_nombre = null;
+                  mCache.empleado_actual = nombre_empleado;
+                  mCache.obra_actual = nombre_obra;
+                  mCache.fecha_alquiler_actual = l.fecha_salida;
+                  mCache.alquiler_actual_id = null;
+                }
+              }
+
+            } catch (e) {
+
+              console.error(
+                `No se pudo actualizar la máquina ${l.maquina_codigo}:`,
+                e
+              );
+
+              toast(
+                `La máquina ${l.maquina_codigo} se guardó en Material de Obra, pero no se pudo actualizar su estado: ${e.message}`,
+                'err'
+              );
+            }
+          }
         }
 
         toast(modalEditId
@@ -16405,99 +16508,99 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
     }
 
     function recalcBaseDesdePresupuesto() {
-  let base = 0;
+      let base = 0;
 
-  // ============================
-  // LÍNEAS NORMALES DE PRODUCTOS
-  // ============================
-  document.querySelectorAll('[id^="lp_prod_"]').forEach(inp => {
-    const idx = inp.id.split('_')[2];
+      // ============================
+      // LÍNEAS NORMALES DE PRODUCTOS
+      // ============================
+      document.querySelectorAll('[id^="lp_prod_"]').forEach(inp => {
+        const idx = inp.id.split('_')[2];
 
-    const cant = parseFloat(
-      document.getElementById(`lp_cant_${idx}`)?.value || 0
-    );
+        const cant = parseFloat(
+          document.getElementById(`lp_cant_${idx}`)?.value || 0
+        );
 
-    const precio = parseFloat(
-      document.getElementById(`lp_precio_${idx}`)?.value || 0
-    );
+        const precio = parseFloat(
+          document.getElementById(`lp_precio_${idx}`)?.value || 0
+        );
 
-    const dto = parseFloat(
-      document.getElementById(`lp_dto_${idx}`)?.value || 0
-    );
+        const dto = parseFloat(
+          document.getElementById(`lp_dto_${idx}`)?.value || 0
+        );
 
-    const subtotal = cant * precio;
+        const subtotal = cant * precio;
 
-    const lineaTotal =
-      subtotal - (subtotal * dto / 100);
+        const lineaTotal =
+          subtotal - (subtotal * dto / 100);
 
-    const elLineaTotal =
-      document.getElementById(`lp_lineatotal_${idx}`);
+        const elLineaTotal =
+          document.getElementById(`lp_lineatotal_${idx}`);
 
-    if (elLineaTotal) {
-      elLineaTotal.value = lineaTotal.toFixed(2);
+        if (elLineaTotal) {
+          elLineaTotal.value = lineaTotal.toFixed(2);
+        }
+
+        base += lineaTotal;
+      });
+
+      // ============================
+      // LÍNEAS DE MAQUINARIA
+      // ============================
+      document.querySelectorAll('[id^="lpm_desc_"]').forEach(inp => {
+        const idx = inp.id.split('_')[2];
+
+        const cant = parseFloat(
+          document.getElementById(`lpm_cant_${idx}`)?.value || 0
+        );
+
+        const precio = parseFloat(
+          document.getElementById(`lpm_precio_${idx}`)?.value || 0
+        );
+
+        const dto = parseFloat(
+          document.getElementById(`lpm_dto_${idx}`)?.value || 0
+        );
+
+        const subtotal = cant * precio;
+
+        const lineaTotal =
+          subtotal - (subtotal * dto / 100);
+
+        const elLineaTotal =
+          document.getElementById(`lpm_lineatotal_${idx}`);
+
+        if (elLineaTotal) {
+          elLineaTotal.value = lineaTotal.toFixed(2);
+        }
+
+        base += lineaTotal;
+      });
+
+      // ============================
+      // ACTUALIZAR BASE
+      // ============================
+      const baseInput =
+        document.getElementById('f_pr_base');
+
+      if (baseInput) {
+        baseInput.value = base.toFixed(2);
+      }
+
+      // ============================
+      // ACTUALIZAR TOTAL CON IVA
+      // ============================
+      recalcTotalPresupuesto();
+
+      // ============================
+      // MOSTRAR TOTAL EN EL MODAL
+      // ============================
+      const elTotalImporte =
+        document.getElementById('totalImportePresupuesto');
+
+      if (elTotalImporte) {
+        elTotalImporte.textContent = fmt(base);
+      }
     }
-
-    base += lineaTotal;
-  });
-
-  // ============================
-  // LÍNEAS DE MAQUINARIA
-  // ============================
-  document.querySelectorAll('[id^="lpm_desc_"]').forEach(inp => {
-    const idx = inp.id.split('_')[2];
-
-    const cant = parseFloat(
-      document.getElementById(`lpm_cant_${idx}`)?.value || 0
-    );
-
-    const precio = parseFloat(
-      document.getElementById(`lpm_precio_${idx}`)?.value || 0
-    );
-
-    const dto = parseFloat(
-      document.getElementById(`lpm_dto_${idx}`)?.value || 0
-    );
-
-    const subtotal = cant * precio;
-
-    const lineaTotal =
-      subtotal - (subtotal * dto / 100);
-
-    const elLineaTotal =
-      document.getElementById(`lpm_lineatotal_${idx}`);
-
-    if (elLineaTotal) {
-      elLineaTotal.value = lineaTotal.toFixed(2);
-    }
-
-    base += lineaTotal;
-  });
-
-  // ============================
-  // ACTUALIZAR BASE
-  // ============================
-  const baseInput =
-    document.getElementById('f_pr_base');
-
-  if (baseInput) {
-    baseInput.value = base.toFixed(2);
-  }
-
-  // ============================
-  // ACTUALIZAR TOTAL CON IVA
-  // ============================
-  recalcTotalPresupuesto();
-
-  // ============================
-  // MOSTRAR TOTAL EN EL MODAL
-  // ============================
-  const elTotalImporte =
-    document.getElementById('totalImportePresupuesto');
-
-  if (elTotalImporte) {
-    elTotalImporte.textContent = fmt(base);
-  }
-}
 
     function recalcTotalPresupuesto() {
       const base = parseFloat(document.getElementById('f_pr_base')?.value || 0);

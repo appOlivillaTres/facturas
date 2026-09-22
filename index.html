@@ -11582,12 +11582,12 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
       </tr>`;
         }).join('');
       } else if (tablaActual === 'facturas_gastos_generales') {
-        hdr.innerHTML = `<tr>
+    hdr.innerHTML = `<tr>
     <th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th>
     <th>Nº Int. Emp</th><th>Fecha</th><th>Recibido</th><th>Vencimiento</th><th>NIF</th><th>Proveedor</th>
     <th>Nº Factura</th><th>Concepto</th><th>Albaranes</th>
     <th class="num-cell">Base 1</th><th class="pct-cell">%IVA1</th><th class="num-cell">IVA1</th>
-    <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th>Imputar</th><th>Impreso</th><th>Excel</th><th>Mover a</th><th></th>
+    <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th>Imputar</th><th>Impreso</th><th>Excel</th><th>Archivos</th><th>Mover a</th><th></th>
   </tr>`;
         const lista = registros.filter(f => {
           const mQ = [f.numero_factura, f.proveedor, f.nif, f.numero_interno, f.concepto].some(v => (v || '').toLowerCase().includes(q));
@@ -11595,7 +11595,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
           const estReal = f.imputado ? 'imputado' : (esVenc ? 'vencido' : (f.estado || 'pendiente'));
           return mQ && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_gastos_generales'));
         });
-        if (!lista.length) { bdy.innerHTML = emptyRow(21, 'No se encontraron facturas de gastos generales'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(22, 'No se encontraron facturas de gastos generales'); return; }
         bdy.innerHTML = lista.map(f => {
           const est = f.estado || 'pendiente';
           const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
@@ -11629,6 +11629,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
       </td>
       <td>${celdaImpreso(f, 'facturas_gastos_generales')}</td>
       <td>${celdaExportado(f)}</td>
+            <td>${celdaArchivosExportados(f)}</td>
             <td style="white-space:nowrap">
         <button class="btn-toggle-pago pendiente" style="margin-bottom:4px"
           onclick="moverFactura(${f.id},'facturas_gastos_generales','facturas_almacen')">

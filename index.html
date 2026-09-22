@@ -7019,7 +7019,7 @@
 
 
 
-
+    let eventoEditandoId = null;
     let calAnio, calMes;
     let calFacturas = [];
 
@@ -7374,6 +7374,7 @@
 
     function abrirModalNuevoEvento() {   // creamos el evento con el modal
       if (!['angel', 'emilio'].includes(currentPersona)) return;
+      eventoEditandoId = null;
       document.getElementById('eventoModalTitulo').textContent = 'Nuevo evento';
       document.getElementById('eventoModalBody').innerHTML = `
 <div class="form-group"><label>Título *</label><input type="text" id="ev_titulo" placeholder="Ej: Revisar pedido con proveedor"></div>
@@ -7387,6 +7388,24 @@
       document.getElementById('modalEvento').classList.add('visible');
     }
 
+    function abrirModalEditarEvento(id) {
+      if (!['angel', 'emilio'].includes(currentPersona)) return;
+      const ev = calEventos.find(x => String(x.id) === String(id));
+      if (!ev) { toast('No se ha encontrado el evento', 'err'); return; }
+      eventoEditandoId = ev.id;
+      document.getElementById('eventoModalTitulo').textContent = 'Editar evento';
+      document.getElementById('eventoModalBody').innerHTML = `
+<div class="form-group"><label>Título *</label><input type="text" id="ev_titulo" value="${(ev.titulo || '').replace(/"/g, '&quot;')}" placeholder="Ej: Revisar pedido con proveedor"></div>
+<div class="form-group"><label>Fecha *</label><input type="date" id="ev_fecha" value="${ev.fecha || hoy()}"></div>
+<div class="form-group"><label>Hora <span style="font-size:.72rem;color:#888">(opcional)</span></label><input type="time" id="ev_hora" value="${ev.hora || ''}"></div>
+<div class="form-group"><label>Notas <span style="font-size:.72rem;color:#888">(opcional)</span></label><input type="text" id="ev_notas" value="${(ev.notas || '').replace(/"/g, '&quot;')}" placeholder="Detalles adicionales"></div>
+<p style="font-size:.78rem;color:#888;margin-top:6px"><i class="fa-solid fa-circle-info me-1"></i>Añadido por ${NOMBRES_PERSONAS[ev.creado_por] || ev.creado_por}.</p>`;
+      document.getElementById('eventoModalBtns').innerHTML = `
+<button class="btn-cancelar" onclick="cerrarModal('modalEvento')">Cancelar</button>
+<button class="btn-guardar" onclick="guardarEventoCalendario()"><i class="fa-solid fa-floppy-disk me-1"></i>Guardar cambios</button>`;
+      document.getElementById('modalEvento').classList.add('visible');
+    }
+
     function abrirNuevoRegistro() {
       if (tablaActual === 'albaranes_venta') {
         document.getElementById('modalTipoAlbaranVenta').classList.add('visible');
@@ -7395,7 +7414,7 @@
       if (tablaActual === 'consumo_interno') {
         abrirModalConsumoInterno();
         return;
-      } if (tablaActual === 'facturas_venta') {          // 👈 nuevo
+      } if (tablaActual === 'facturas_venta') {
         abrirModalFacturaVenta();
         return;
       }
@@ -7417,6 +7436,25 @@
       const hora = document.getElementById('ev_hora').value || null;
       const notas = document.getElementById('ev_notas').value.trim() || null;
       if (!titulo || !fecha) { toast('Título y fecha son obligatorios', 'err'); return; }
+
+      if (eventoEditandoId) {
+        // EDICIÓN: se borra el evento anterior y se crea uno nuevo con los datos actualizados
+        const evOriginal = calEventos.find(x => String(x.id) === String(eventoEditandoId));
+        const paraPersona = evOriginal ? evOriginal.para_persona : otraPersonaEvento(currentPersona);
+        try {
+          await apiEventos('eliminar', { id: eventoEditandoId });
+          await apiEventos('crear', {
+            evento: { titulo, fecha, hora, notas, para_persona: paraPersona }
+          });
+          toast('Evento actualizado');
+          cerrarModal('modalEvento');
+          eventoEditandoId = null;
+          cargarCalendarioPagos();
+        } catch (e) {
+          toast('No se pudo guardar el evento: ' + e.message, 'err');
+        }
+        return;
+      }
 
       const paraPersona = otraPersonaEvento(currentPersona);  // vemos quien es la persona que ha creado el evento de los dos
       try {
@@ -7441,10 +7479,11 @@
 <p><b>Fecha:</b> ${ev.fecha} &nbsp; <b>Hora:</b> ${ev.hora || '-'}</p>
 <p><b>Añadido por:</b> ${NOMBRES_PERSONAS[ev.creado_por] || ev.creado_por}</p>
 ${ev.notas ? `<p><b>Notas:</b> ${ev.notas}</p>` : ''}`;
-      const puedeBorrar = currentPersona === ev.creado_por;
+      const puedeGestionar = ['angel', 'emilio'].includes(currentPersona);
       document.getElementById('eventoModalBtns').innerHTML = `
 <button class="btn-cancelar" onclick="cerrarModal('modalEvento')">Cerrar</button>
-${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="eliminarEventoCalendario('${ev.id}')"><i class="fa-solid fa-trash me-1"></i>Eliminar</button>` : ''}`;
+${puedeGestionar ? `<button class="btn-toggle-pago pendiente" style="padding:8px 14px" onclick="abrirModalEditarEvento('${ev.id}')"><i class="fa-solid fa-pen me-1"></i>Editar</button>` : ''}
+${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="eliminarEventoCalendario('${ev.id}')"><i class="fa-solid fa-trash me-1"></i>Cancelar</button>` : ''}`;
       document.getElementById('modalEvento').classList.add('visible');
     }
 
@@ -20227,6 +20266,9 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       }
       if (id === 'modalConsumoInterno') {
         consumoInternoEditId = null;
+      }
+      if (id === 'modalEvento') {
+        eventoEditandoId = null;
       }
       if (id === 'modalEnviarAlbaran') {
         albaranEnvioActualId = null;

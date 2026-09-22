@@ -16390,10 +16390,10 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
             if (delta === 0) continue; // nada cambió para este producto: no se toca
             const prod = inventarioDB.find(p => p.id == pid);
             if (prod) {
-
+              const nuevoStockProd = stockAnterior + delta;
               await apiPatch('inventario', pid, { stock: nuevoStockProd });
               const stockAnterior = Number(prod.stock);
-              const nuevoStockProd = stockAnterior + delta;
+
 
               await registrarAuditoria({
                 accion: 'ajuste_stock',

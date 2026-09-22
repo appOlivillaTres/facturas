@@ -17315,12 +17315,12 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
     ${f.notas ? `<p style="margin-top:16px"><b>Notas:</b> ${f.notas}</p>` : ''}
   <button class="btn-imprimir" onclick="window.print()" style="position:fixed;top:16px;right:16px;padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
 <button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'presupuesto_venta')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>  <script>
-  function enviarDesdeVentanaImpresion(btn, id, tipo) {
+  function enviarDesdeVentanaImpresion(btn, id, tipo, emailPredeterminado) {
     if (!window.opener) {
       alert('Abre este documento desde el panel para poder enviarlo por email.');
       return;
     }
-    const email = prompt('Introduce el email del destinatario:');
+    const email = prompt('Introduce el email del destinatario:', emailPredeterminado || '');
     if (!email) return;
     const mensaje = prompt('Mensaje opcional (déjalo en blanco si no quieres añadir nada):') || '';
 
@@ -17856,9 +17856,9 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         if (!reg) { toast('No se ha encontrado el alta', 'err'); return; }
         f = reg;
         f._items = await apiGet('alquileres_items', `alquiler_id=eq.${id}`);
-        const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
+        
       } catch (e) { toast('Error al cargar: ' + e.message, 'err'); return; }
-
+      const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
       const filas = (f._items || []).map(i => `
     <tr>
       <td>${i.articulo_codigo || ''}</td>
@@ -17980,12 +17980,11 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
   <button class="btn-imprimir" onclick="window.print()" style="padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
 <button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'alta_alquiler', '${(cliente.email||'').replace(/'/g,"\\'")}')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
 <script>
-  function enviarDesdeVentanaImpresion(btn, id, tipo) {
-    if (!window.opener) {
+  if (!window.opener) {
       alert('Abre este documento desde el panel para poder enviarlo por email.');
       return;
     }
-    const email = prompt('Introduce el email del destinatario:');
+    const email = prompt('Introduce el email del destinatario:', emailPredeterminado || '');
     if (!email) return;
     const mensaje = prompt('Mensaje opcional (déjalo en blanco si no quieres añadir nada):') || '';
 
@@ -18297,9 +18296,9 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         if (!reg) { toast('No se ha encontrado la baja', 'err'); return; }
         f = reg;
         f._items = await apiGet('alquileres_items', `alquiler_id=eq.${id}`);
-        const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
+        
       } catch (e) { toast('Error al cargar: ' + e.message, 'err'); return; }
-
+const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
       const filas = (f._items || []).map(i => `
     <tr>
       <td>${i.articulo_codigo || ''}</td>
@@ -18396,12 +18395,12 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
   <button class="btn-imprimir" onclick="window.print()" style="padding:10px 20px;background:#c0392b;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
 <button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'baja_alquiler', '${(cliente.email||'').replace(/'/g,"\\'")}')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
 <script>
-  function enviarDesdeVentanaImpresion(btn, id, tipo) {
+  function enviarDesdeVentanaImpresion(btn, id, tipo, emailPredeterminado) {
     if (!window.opener) {
       alert('Abre este documento desde el panel para poder enviarlo por email.');
       return;
     }
-    const email = prompt('Introduce el email del destinatario:');
+    const email = prompt('Introduce el email del destinatario:', emailPredeterminado || '');
     if (!email) return;
     const mensaje = prompt('Mensaje opcional (déjalo en blanco si no quieres añadir nada):') || '';
 
@@ -22252,14 +22251,14 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
     <div style="font-size:.6rem;color:#666;margin-top:2px">Danos tu opinión</div>
   </div>
   <button class="btn-imprimir" onclick="window.print()" style="position:fixed;top:16px;right:16px;padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
-<button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'factura_venta', '${(cliente.email||'').replace(/'/g,"\\'")}')" ...style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
+<button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'factura_venta', '${(cliente.email||'').replace(/'/g,"\\'")}')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
 <script>
-  function enviarDesdeVentanaImpresion(btn, id, tipo) {
+  function enviarDesdeVentanaImpresion(btn, id, tipo, emailPredeterminado) {
     if (!window.opener) {
       alert('Abre este documento desde el panel para poder enviarlo por email.');
       return;
     }
-    const email = prompt('Introduce el email del destinatario:');
+    const email = prompt('Introduce el email del destinatario:', emailPredeterminado || '');
     if (!email) return;
     const mensaje = prompt('Mensaje opcional (déjalo en blanco si no quieres añadir nada):') || '';
     const textoOriginal = btn.textContent;
@@ -23312,12 +23311,12 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
   <button class="btn-imprimir" onclick="window.print()" style="position:fixed;top:16px;right:16px;padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
   <button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'presupuesto_venta', '${(cliente.email||'').replace(/'/g,"\\'")}')" ...style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
   <script>
-  function enviarDesdeVentanaImpresion(btn, id, tipo) {
+  function enviarDesdeVentanaImpresion(btn, id, tipo, emailPredeterminado) {
     if (!window.opener) {
       alert('Abre este documento desde el panel para poder enviarlo por email.');
       return;
     }
-    const email = prompt('Introduce el email del destinatario:');
+    const email = prompt('Introduce el email del destinatario:', emailPredeterminado || '');
     if (!email) return;
     const mensaje = prompt('Mensaje opcional (déjalo en blanco si no quieres añadir nada):') || '';
     const textoOriginal = btn.textContent;

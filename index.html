@@ -16743,13 +16743,13 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
   </div>
 </div>
   <button class="btn-imprimir" onclick="window.print()" style="padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
-<button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'albaran_venta')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>  <script>
-  function enviarDesdeVentanaImpresion(btn, id, tipo) {
+<button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'albaran_venta', '${(cliente.email||'').replace(/'/g,"\\'")}')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>  <script>
+  function enviarDesdeVentanaImpresion(btn, id, tipo, emailPredeterminado) {
     if (!window.opener) {
       alert('Abre este documento desde el panel para poder enviarlo por email.');
       return;
     }
-    const email = prompt('Introduce el email del destinatario:');
+    const email = prompt('Introduce el email del destinatario:', emailPredeterminado || '');
     if (!email) return;
     const mensaje = prompt('Mensaje opcional (déjalo en blanco si no quieres añadir nada):') || '';
 
@@ -17856,6 +17856,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         if (!reg) { toast('No se ha encontrado el alta', 'err'); return; }
         f = reg;
         f._items = await apiGet('alquileres_items', `alquiler_id=eq.${id}`);
+        const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
       } catch (e) { toast('Error al cargar: ' + e.message, 'err'); return; }
 
       const filas = (f._items || []).map(i => `
@@ -17977,7 +17978,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
 <img src="https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=https%3A%2F%2Fg.page%2Fr%2FCdcSctJhgIijEBM%2Freview" style="width:45px;height:45px">    <div style="font-size:.5rem;color:#666;margin-top:1px">Danos tu opinión</div>
   </div>
   <button class="btn-imprimir" onclick="window.print()" style="padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
-<button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'alta_alquiler')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
+<button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'alta_alquiler', '${(cliente.email||'').replace(/'/g,"\\'")}')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
 <script>
   function enviarDesdeVentanaImpresion(btn, id, tipo) {
     if (!window.opener) {
@@ -22174,6 +22175,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         f = items && items[0];
       }
       if (!f) throw new Error('Factura no encontrada');
+      const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
 
       const items = await apiGet('facturas_venta_items', `factura_venta_id=eq.${id}`);
       const filas = items.map(i => `
@@ -22249,7 +22251,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
     <div style="font-size:.6rem;color:#666;margin-top:2px">Danos tu opinión</div>
   </div>
   <button class="btn-imprimir" onclick="window.print()" style="position:fixed;top:16px;right:16px;padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
-<button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'factura_venta')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
+<button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'factura_venta', '${(cliente.email||'').replace(/'/g,"\\'")}')" ...style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
 <script>
   function enviarDesdeVentanaImpresion(btn, id, tipo) {
     if (!window.opener) {
@@ -23214,7 +23216,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         f = items && items[0];
       }
       if (!f) throw new Error('Presupuesto no encontrado');
-
+      const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
       const items = f.presupuestos_venta_items || [];
       const validezDias = f.validez_dias || 8;
       const fechaEmision = new Date(f.fecha);
@@ -23307,7 +23309,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
   </div>
     ${f.notas ? `<p style="margin-top:16px"><b>Notas:</b> ${f.notas}</p>` : ''}
   <button class="btn-imprimir" onclick="window.print()" style="position:fixed;top:16px;right:16px;padding:10px 20px;background:#b53987;color:#fff;border:none;border-radius:8px;cursor:pointer">Imprimir / Guardar PDF</button>
-  <button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'presupuesto_venta')" style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
+  <button class="btn-enviar-email" onclick="enviarDesdeVentanaImpresion(this, ${f.id}, 'presupuesto_venta', '${(cliente.email||'').replace(/'/g,"\\'")}')" ...style="position:fixed;top:16px;right:210px;padding:10px 20px;background:#1565c0;color:#fff;border:none;border-radius:8px;cursor:pointer">✉ Enviar por email</button>
   <script>
   function enviarDesdeVentanaImpresion(btn, id, tipo) {
     if (!window.opener) {

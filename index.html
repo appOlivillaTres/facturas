@@ -9277,7 +9277,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     actualizarAlturaTopbar();
 
 
-  //  ESTADÍSTICAS DE VENTAS
+    //  ESTADÍSTICAS DE VENTAS
 
     let ventasEstadisticasCache = null;
 
@@ -9588,7 +9588,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     }
 
 
-      //  EVOLUCIÓN MENSUAL
+    //  EVOLUCIÓN MENSUAL
 
 
     function renderVentasGraficaMensual(ventas) {
@@ -9663,7 +9663,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     }
 
 
-      // FORMAS DE COBRO
+    // FORMAS DE COBRO
 
 
     function renderVentasFormasCobro(
@@ -9727,7 +9727,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     }
 
 
-      // TOP CLIENTES
+    // TOP CLIENTES
 
     function renderVentasTopClientes(ventas) {
 
@@ -9814,7 +9814,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     }
 
 
-      // TOP PRODUCTOS
+    // TOP PRODUCTOS
 
 
     function renderVentasTopProductos(ventas) {
@@ -9910,7 +9910,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     }
 
 
-      // COMPARATIVA
+    // COMPARATIVA
 
 
     function renderVentasComparativa(ventas) {
@@ -10102,7 +10102,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
 
 
 
-      // RENTABILIDAD REAL DE UNA OBRA
+    // RENTABILIDAD REAL DE UNA OBRA
 
 
     let rentabilidadObraActual = null;
@@ -11585,7 +11585,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
         hdr.innerHTML = `<tr>
     <th style="width:28px"><input type="checkbox" onchange="toggleSeleccionarTodos(this)"></th>
     <th>Nº Int. Emp</th><th>Fecha</th><th>Recibido</th><th>Vencimiento</th><th>NIF</th><th>Proveedor</th>
-    <th>Nº Factura</th><th>Concepto</th>
+    <th>Nº Factura</th><th>Concepto</th><th>Albaranes</th>
     <th class="num-cell">Base 1</th><th class="pct-cell">%IVA1</th><th class="num-cell">IVA1</th>
     <th class="num-cell">Total</th><th>Estado</th><th>Archivo</th><th>Revisión</th><th>Imputar</th><th>Impreso</th><th>Excel</th><th>Mover a</th><th></th>
   </tr>`;
@@ -11595,7 +11595,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
           const estReal = f.imputado ? 'imputado' : (esVenc ? 'vencido' : (f.estado || 'pendiente'));
           return mQ && (!fEst || fEst === estReal || (fEst === 'vencido' && esVenc && !f.imputado)) && (!filtroPorRevisar || faltaPorRevisar(f, 'facturas_gastos_generales'));
         });
-        if (!lista.length) { bdy.innerHTML = emptyRow(20, 'No se encontraron facturas de gastos generales'); return; }
+        if (!lista.length) { bdy.innerHTML = emptyRow(21, 'No se encontraron facturas de gastos generales'); return; }
         bdy.innerHTML = lista.map(f => {
           const est = f.estado || 'pendiente';
           const esVenc = est === 'pendiente' && f.fecha_vencimiento && new Date(f.fecha_vencimiento) < hoyD;
@@ -11609,6 +11609,12 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
       <td class="td-nombre">${f.proveedor || '—'}</td>
       <td><strong>${f.numero_factura || '—'}</strong></td>
       <td class="td-concepto" title="${f.concepto || ''}">${f.concepto || '—'}</td>
+      <td>${(f.numeros_albaran && f.numeros_albaran.length)
+  ? `<select class="select-albaranes" onchange="if(this.value) verAlbaranPorNumero(this.value,'${f.nif || ''}')">
+      <option value="">${f.numeros_albaran.length} albarán${f.numeros_albaran.length > 1 ? 'es' : ''}</option>
+      ${f.numeros_albaran.map(n => `<option value="${n}">${n}</option>`).join('')}
+    </select>`
+  : '—'}</td>
       <td class="num-cell">${fmtN(f.base1)}</td>
       <td class="pct-cell">${f.pct_iva1 != null ? f.pct_iva1 + '%' : '—'}</td>
       <td class="num-cell">${fmtN(f.total_iva1)}</td>
@@ -12030,7 +12036,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
           return cmp * signo;
         });
         bdy.innerHTML = lista.map(f => {
-          const forma = f.forma_cobro || 'facturar'; 
+          const forma = f.forma_cobro || 'facturar';
           const fact = !!f.facturado;
 
           if (f._esAlquiler) {
@@ -14000,6 +14006,8 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
             moneda: document.getElementById('f_moneda').value || 'EUR',
             estado: document.getElementById('f_est').value,
             fecha_vencimiento: document.getElementById('f_venc').value || null,
+            numeros_albaran: document.getElementById('f_num_albaranes').value
+              .split(',').map(s => s.trim()).filter(Boolean),
             ...recogerCamposExcel()
           };
           if (archivosFacturaSeleccionados.length) {
@@ -19617,6 +19625,11 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       </div>
       <div class="form-group ac-wrap"><label>NIF</label><input type="text" id="f_nif" placeholder="Se rellena al elegir proveedor"></div>
       <div class="form-group span3"><label>Concepto</label><input type="text" id="f_concepto" placeholder="Ej: Suministro eléctrico, seguro, gestoría..."></div>
+      <div class="form-group span2">
+  <label>Números de albarán <span style="font-size:.72rem;color:#888">(separados por coma)</span></label>
+  <input type="text" id="f_num_albaranes" placeholder="ALB-001, ALB-002, ALB-003">
+  <div id="albaranesVerWrap" style="margin-top:6px"></div>
+</div>
       <div class="form-group"><label>Total *</label><input type="number" id="f_total" value="0" step="0.01" min="0"></div>
       <div class="form-group"><label>Moneda</label><select id="f_moneda"><option value="EUR">€ Euro</option><option value="USD">$ Dólar</option></select></div>
       <div class="form-group"><label>Vencimiento</label><input type="date" id="f_venc"></div>

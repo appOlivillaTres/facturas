@@ -11610,11 +11610,11 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
       <td><strong>${f.numero_factura || '—'}</strong></td>
       <td class="td-concepto" title="${f.concepto || ''}">${f.concepto || '—'}</td>
       <td>${(f.numeros_albaran && f.numeros_albaran.length)
-  ? `<select class="select-albaranes" onchange="if(this.value) verAlbaranPorNumero(this.value,'${f.nif || ''}')">
+              ? `<select class="select-albaranes" onchange="if(this.value) verAlbaranPorNumero(this.value,'${f.nif || ''}')">
       <option value="">${f.numeros_albaran.length} albarán${f.numeros_albaran.length > 1 ? 'es' : ''}</option>
       ${f.numeros_albaran.map(n => `<option value="${n}">${n}</option>`).join('')}
     </select>`
-  : '—'}</td>
+              : '—'}</td>
       <td class="num-cell">${fmtN(f.base1)}</td>
       <td class="pct-cell">${f.pct_iva1 != null ? f.pct_iva1 + '%' : '—'}</td>
       <td class="num-cell">${fmtN(f.total_iva1)}</td>
@@ -12645,49 +12645,78 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
     async function moverFactura(id, origen, destino) {
       if (_moviendoFactura) return;
       _moviendoFactura = true;
+
       try {
         const factura = await apiGet(origen, `id=eq.${id}`);
+
         if (!factura || !factura.length) {
           toast("Factura no encontrada", "err");
           return;
         }
 
         const nueva = { ...factura[0] };
+
         delete nueva.id;
         delete nueva.created_at;
         delete nueva.updated_at;
 
+        // IMPORTANTE:
+        // La tabla utiliza "numeros_albaran", no "albaranes"
+        delete nueva.albaranes;
+
         // Quitamos todas las columnas que no existen en la tabla destino
         const permitidas = COLUMNAS_ESPECIFICAS_FACTURAS[destino] || [];
+
         TODAS_COLUMNAS_ESPECIFICAS.forEach(col => {
           if (!permitidas.includes(col)) delete nueva[col];
         });
-        // Si el destino sí tiene obra y venimos de una tabla que no la tenía, la dejamos vacía
-        if (permitidas.includes('nombre_obra') && !('nombre_obra' in nueva)) nueva.nombre_obra = '';
+
+        // Si el destino sí tiene obra y venimos de una tabla que no la tenía
+        if (permitidas.includes('nombre_obra') && !('nombre_obra' in nueva)) {
+          nueva.nombre_obra = '';
+        }
 
         // Comprobamos que no exista ya esa factura en destino
         const duplicado = await buscarFacturaDuplicada(
-          nueva.numero_factura, nueva.nif, nueva.proveedor, nueva.fecha, parseFloat(nueva.total || 0), id
+          nueva.numero_factura,
+          nueva.nif,
+          nueva.proveedor,
+          nueva.fecha,
+          parseFloat(nueva.total || 0),
+          id
         );
+
         if (duplicado) {
-          toast('⚠️ Esta factura ya existe en ' + (ETIQUETA_TABLA_FACTURAS[duplicado.tabla] || duplicado.tabla) + ' — no se ha movido para evitar duplicarla', 'err');
+          toast(
+            '⚠️ Esta factura ya existe en ' +
+            (ETIQUETA_TABLA_FACTURAS[duplicado.tabla] || duplicado.tabla) +
+            ' — no se ha movido para evitar duplicarla',
+            'err'
+          );
           return;
         }
 
         await apiPost(destino, nueva);
+
         notificarRevisoresFactura(destino, nueva);
+
         await apiDelete(origen, id);
 
-        toast(`Factura movida a <strong>${ETIQUETA_TABLA_FACTURAS[destino] || destino}</strong>`);
+        toast(
+          `Factura movida a <strong>${ETIQUETA_TABLA_FACTURAS[destino] || destino}</strong>`
+        );
+
         cargarDatos();
 
       } catch (e) {
         console.error("ERROR:", e);
+
         if (e instanceof Error) {
           alert(e.message);
         } else {
           alert(typeof e === "string" ? e : JSON.stringify(e, null, 2));
         }
+
       } finally {
         _moviendoFactura = false;
       }

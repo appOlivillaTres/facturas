@@ -21106,7 +21106,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
     }
 
     async function exportarExcel() {
-      if (tablaActual !== 'facturas_almacen' && tablaActual !== 'facturas_obra' && tablaActual !== 'facturas_csg' && tablaActual !== 'revisadas_facturadas' && tablaActual !== 'ingresos' && tablaActual !== 'albaranes_venta' && tablaActual !== 'facturas_venta') {
+      if (tablaActual !== 'facturas_almacen' && tablaActual !== 'facturas_obra' && tablaActual !== 'facturas_csg' && tablaActual !== 'facturas_gastos_generales' && tablaActual !== 'revisadas_facturadas' && tablaActual !== 'ingresos' && tablaActual !== 'albaranes_venta' && tablaActual !== 'facturas_venta') {
         toast('La exportación solo está disponible en Facturas Almacén, Facturas Obra, Facturas CSG, Revisadas y Facturadas e Ingresos', 'err');
         return;
       }
@@ -21240,6 +21240,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       //     facturas_almacen / facturas_obra / facturas_csg / revisadas_facturadas) ──
       const esObra = tablaActual === 'facturas_obra';
       const esCsg = tablaActual === 'facturas_csg';
+      const esGastos = tablaActual === 'facturas_gastos_generales';
       const esRevisadas = tablaActual === 'revisadas_facturadas';
 
       const origenLabel = { facturas_almacen: 'Almacén', facturas_obra: 'Obra', facturas_csg: 'CSG' };
@@ -21291,12 +21292,11 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       const ws = XLSX.utils.json_to_sheet(filas, { header: cabeceras });
       const anchos = [8, ...(esRevisadas ? [12] : []), 18, 12, 14, 28, 18, 30, 10, 7, 10, 7, 10, 10, 10, 7, 10, 10, 7, 10, 10, 7, 10, 10, 7, 10, 10, 14, 12, 10, 14, 12];
       ws['!cols'] = anchos.map(w => ({ wch: w }));
-      XLSX.utils.book_append_sheet(wb, ws, esRevisadas ? 'Revisadas y Facturadas' : esObra ? 'Facturas Obra' : esCsg ? 'Facturas CSG' : 'Facturas Almacén');
-      const fecha = new Date().toISOString().split('T')[0];
+      XLSX.utils.book_append_sheet(wb, ws, esRevisadas ? 'Revisadas y Facturadas' : esObra ? 'Facturas Obra' : esCsg ? 'Facturas CSG' : esGastos ? 'Gastos Generales' : 'Facturas Almacén'); const fecha = new Date().toISOString().split('T')[0];
       const nombre = `${tablaActual}_${fecha}.xlsx`;
       XLSX.writeFile(wb, nombre);
       // Marcar como exportadas a Excel
-      if (esObra || esCsg || esRevisadas || tablaActual === 'facturas_almacen') {
+      if (esObra || esCsg || esGastos || esRevisadas || tablaActual === 'facturas_almacen') {
         const idsPorTabla = {};
         filtrados.forEach(f => {
           const tablaDest = esRevisadas ? f.origen : tablaActual;
@@ -21313,8 +21313,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
 
     // descargar todos los archivos
     //DESCARGA DE ARCHIVOS ADJUNTOS POR FECHA (ZIP) 
-    const SECCIONES_CON_ARCHIVOS = ['facturas_almacen', 'facturas_obra', 'facturas_csg', 'revisadas_facturadas', 'ingresos', 'albaranes'];
-
+    const SECCIONES_CON_ARCHIVOS = ['facturas_almacen', 'facturas_obra', 'facturas_csg', 'facturas_gastos_generales', 'revisadas_facturadas', 'ingresos', 'albaranes'];
     function _archivosDeRegistro(f) {
       if (f.archivos_urls && f.archivos_urls.length) return f.archivos_urls;
       if (f.archivo_url) return [f.archivo_url];

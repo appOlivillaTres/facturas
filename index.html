@@ -2449,8 +2449,8 @@
     }
 
     .cal-leyenda-punto.evento {
-      background: #fdeef7;
-      border-left: 3px solid #b53987;
+      background: #b53987;
+      border: none;
     }
 
 
@@ -7216,8 +7216,8 @@
           const titulo = ev.titulo || 'Evento';
           return `<div class="cal-chip evento" onclick="abrirEventoCalendario('${ev.id}')"
     title="${titulo} — ${NOMBRES_PERSONAS[ev.creado_por] || ev.creado_por}${ev.hora ? ' — ' + ev.hora : ''}">
-    <span class="cal-chip-prov"><i class="fa-solid fa-bell" style="font-size:.6rem"></i> ${titulo.length > 14 ? titulo.substring(0, 14) + '…' : titulo}</span>
-    <span>${ev.hora || ''}</span>
+    <span class="cal-chip-prov"><i class="fa-solid fa-bell" style="font-size:.72rem"></i> ${titulo.length > 16 ? titulo.substring(0, 16) + '…' : titulo}</span>
+    ${ev.hora ? `<span>${ev.hora}</span>` : ''}
   </div>`;
         }).join('');
         // ponemos en el dia las facturas, citas y eventos

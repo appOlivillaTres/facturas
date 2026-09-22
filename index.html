@@ -2443,18 +2443,64 @@
 
     /* MEDIAQUERIES */
     @media (max-width: 900px) {
+      #calendarioPagosWrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .cal-header {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .cal-header span#calMesTitulo {
+        min-width: auto;
+        font-size: 1rem;
+      }
+
+      .cal-hoy-btn {
+        margin-left: 0;
+      }
+
       .cal-grid {
-        grid-template-columns: repeat(7, minmax(38px, 1fr));
+        grid-template-columns: repeat(7, minmax(84px, 1fr));
+        min-width: 640px;
+        gap: 4px;
+      }
+
+      .cal-diasemana {
+        font-size: .68rem;
       }
 
       .cal-celda {
-        min-height: 74px;
-        font-size: .68rem;
-        padding: 3px;
+        min-height: 90px;
+        font-size: .7rem;
+        padding: 4px;
       }
 
       .cal-chip {
-        font-size: .58rem;
+        font-size: .62rem;
+        padding: 2px 4px;
+      }
+
+      .cal-leyenda {
+        gap: 12px;
+        padding: 10px 12px;
+      }
+
+      .cal-leyenda-grupo {
+        gap: 8px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .cal-grid {
+        grid-template-columns: repeat(7, minmax(70px, 1fr));
+        min-width: 520px;
+      }
+
+      .cal-celda {
+        min-height: 78px;
       }
     }
 
@@ -12193,10 +12239,9 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       <button class="btn-toggle-pago" style="background:#1565c0;color:#fff;border:1.5px solid #1565c0" onclick="abrirModalEnviarAlquiler(${f.id},'${f._tipoAlquiler}')" title="Enviar por email">
         <i class="fa-solid fa-envelope"></i>
       </button>
-      ${!factAlq ? `<button class="btn-toggle-pago" style="background:#b53987;color:#fff;border:1.5px solid #b53987" onclick="abrirModalFacturaVenta(null, ${f.id})" title="Generar factura"><i class="fa-solid fa-file-invoice-dollar"></i></button>` : ''}
-    </td>
+${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b53987;color:#fff;border:1.5px solid #b53987" onclick="abrirModalFacturaVenta(null, ${f.id})" title="Generar factura"><i class="fa-solid fa-file-invoice-dollar"></i></button>` : ''}    </td>
   </tr>`;
-          }                                     // 👈 sin el botón "Facturar" aquí — los alquileres no van a Facturas de Venta
+          }
 
 
           return `<tr data-id="${f.id}" style="cursor:pointer" onclick="filaClicAbrir(event, () => abrirModalEditarAlbaranVenta(${f.id}))">
@@ -20987,7 +21032,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
       }, 60);
     }
 
-        let lineasConsumoInternoExclusivoCount = 0;
+    let lineasConsumoInternoExclusivoCount = 0;
 
     function addLineaConsumoInternoExclusivo() {
       lineasConsumoInternoExclusivoCount++;
@@ -21965,7 +22010,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
         if (!fvAlbaranesCliente.length || fvAlbaranesCliente[0]?.cliente_id !== clienteId) {
           const [ventas, alquileres] = await Promise.all([
             apiGetAll('albaranes_venta', `cliente_id=eq.${clienteId}&facturado=eq.false&select=*,albaranes_venta_items(*)&order=fecha.asc`),
-            apiGetAll('alquileres', `cliente_id=eq.${clienteId}&facturado=eq.false&select=*,alquileres_items(*)&order=fecha.asc`)
+            apiGetAll('alquileres', `cliente_id=eq.${clienteId}&facturado=eq.false&tipo=eq.baja&select=*,alquileres_items(*)&order=fecha.asc`)
           ]);
           fvAlbaranesCliente = [
             ...(ventas || []).map(a => ({ ...a, _fvTipo: 'venta', _fvKey: `venta:${a.id}` })),
@@ -23841,6 +23886,7 @@ ${puedeBorrar ? `<button class="btn-eliminar" style="padding:8px 14px" onclick="
 
     function celdaCheckAV(f) {
       if (f.facturado) return '';
+      if (f._esAlquiler && f._tipoAlquiler !== 'baja') return '';
       const key = f._esAlquiler ? `alquiler:${f.id}` : `venta:${f.id}`;
       return `<input type="checkbox" class="chk-av" data-key="${key}" ${seleccionadosAV.has(key) ? 'checked' : ''} onchange="toggleSeleccionAV('${key}', ${f.cliente_id}, this.checked)">`;
     }

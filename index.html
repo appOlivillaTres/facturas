@@ -7449,6 +7449,7 @@
           toast('Evento actualizado');
           cerrarModal('modalEvento');
           eventoEditandoId = null;
+          avisarTelegramEvento(paraPersona, { titulo, fecha, hora, notas, creado_por: currentPersona }, 'editado');
           cargarCalendarioPagos();
         } catch (e) {
           toast('No se pudo guardar el evento: ' + e.message, 'err');
@@ -7530,17 +7531,22 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
 
     async function eliminarEventoCalendario(id) {  // para eliminar eventos
       if (!confirm('¿Seguro que deseas eliminar este evento?')) return;
+      const ev = calEventos.find(x => String(x.id) === String(id));
       try {
         await apiEventos('eliminar', { id });
         toast('Evento eliminado');
         cerrarModal('modalEvento');
+        if (ev) {
+          const paraPersona = otraPersonaEvento(currentPersona);
+          avisarTelegramEvento(paraPersona, { titulo: ev.titulo, fecha: ev.fecha, hora: ev.hora, notas: ev.notas, creado_por: currentPersona }, 'cancelado');
+        }
         cargarCalendarioPagos();
       } catch (e) {
         toast('No se pudo eliminar el evento: ' + e.message, 'err');
       }
     }
 
-    async function avisarTelegramEvento(paraPersona, evento) {   // con la persona que hemos visto que no era la que creaba el evento y el evento, se envia la notificacion con la información de la cita
+    async function avisarTelegramEvento(paraPersona, evento, accion) {   // con la persona que hemos visto que no era la que creaba el evento y el evento, se envia la notificacion con la información de la cita
       try {
         await fetch(
           'https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker',
@@ -7549,6 +7555,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
             headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
             body: JSON.stringify({
               tipo: 'evento_calendario_whatsapp',
+              accion: accion || 'creado', // 'creado' | 'editado' | 'cancelado' — para que clever-worker pueda adaptar el texto del mensaje
               para_persona: paraPersona,
               evento: {
                 titulo: evento.titulo,

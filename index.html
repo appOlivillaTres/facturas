@@ -5038,7 +5038,7 @@
       }
 
       const canal = supabaseClient.channel('panel-cambios');
-      canalRealtime = canal; // 👈 guardamos la referencia
+      canalRealtime = canal;
 
       TABLAS_REALTIME.forEach(tabla => {
         canal.on(
@@ -5573,8 +5573,8 @@
         const m = (btn.getAttribute('onclick') || '').match(/cambiarSeccion\('([^']+)'\)/);
         if (!m) return;
         const sec = m[1];
-        const enGrupo = !_grupoActual || (GRUPOS_SECCIONES[_grupoActual] || []).includes(sec); // 👈 añadir
-        btn.style.display = (tieneAccesoSeccion(currentPersona, sec) && enGrupo) ? '' : 'none'; // 👈 cambiar
+        const enGrupo = !_grupoActual || (GRUPOS_SECCIONES[_grupoActual] || []).includes(sec);
+        btn.style.display = (tieneAccesoSeccion(currentPersona, sec) && enGrupo) ? '' : 'none';
       });
       const badge = document.getElementById('usuarioConectado');
       if (badge) badge.textContent = currentPersona ? ('Conectado como ' + (NOMBRES_PERSONAS[currentPersona] || currentPersona)) : '';
@@ -5641,7 +5641,7 @@
       cachesIniciales = null;
       realtimeIniciado = false;
 
-      if (canalRealtime) {           // 👈 añadir esto
+      if (canalRealtime) {
         supabaseClient.removeChannel(canalRealtime);
         canalRealtime = null;
       }
@@ -5750,9 +5750,7 @@
 
 
 
-    // =========================================================
     // DASHBOARD PRINCIPAL
-    // =========================================================
 
     let dashboardCargando = false;
 
@@ -5765,9 +5763,9 @@
     }
 
 
-    /**
-     * Ir desde una tarjeta del dashboard a una sección.
-     */
+
+    // Ir desde una tarjeta del dashboard a una sección.
+
     function dashboardIr(sec) {
       if (!dashboardTieneAcceso(sec)) {
         toast('No tienes acceso a esta sección', 'err');
@@ -5778,9 +5776,8 @@
     }
 
 
-    /**
-     * Escapa texto para evitar problemas al pintar HTML.
-     */
+
+    //  Escapa texto para evitar problemas al pintar HTML
     function dashboardEscape(texto) {
       return String(texto ?? '')
         .replace(/&/g, '&amp;')
@@ -5791,9 +5788,9 @@
     }
 
 
-    /**
-     * Formatea euros.
-     */
+
+    // Formatea euros
+
     function dashboardEuros(valor) {
       const n = Number(valor || 0);
 
@@ -5804,9 +5801,9 @@
     }
 
 
-    /**
-     * Obtiene todas las facturas a las que el usuario tiene acceso.
-     */
+
+    // Obtiene todas las facturas a las que el usuario tiene acceso
+
     async function dashboardCargarFacturas() {
 
       const tablas = [
@@ -5855,9 +5852,7 @@
     }
 
 
-    /**
-     * Calcula la situación de las facturas.
-     */
+    // Calcula la situación de las facturas.
     function dashboardCalcularFacturas(facturas) {
 
       const hoy = new Date();
@@ -5908,10 +5903,8 @@
     }
 
 
-    /**
-     * Facturas que todavía tiene que revisar
-     * la persona conectada.
-     */
+
+    //  Facturas que todavía tiene que revisar la persona conectada
     function dashboardCalcularRevisiones(facturas) {
 
       return facturas.filter(f =>
@@ -5923,9 +5916,8 @@
     }
 
 
-    /**
-     * Carga los datos de inventario.
-     */
+
+    // Carga los datos de inventario
     async function dashboardCargarInventario() {
 
       if (!dashboardTieneAcceso('inventario')) {
@@ -5951,9 +5943,8 @@
     }
 
 
-    /**
-     * Calcula productos con stock problemático.
-     */
+
+    //  Calcula productos con stock problemático.
     function dashboardCalcularStock(lista) {
 
       const negativos = lista.filter(p =>
@@ -5982,9 +5973,7 @@
     }
 
 
-    /**
-     * Carga obras activas.
-     */
+    // Carga obras activas
     async function dashboardCargarObras() {
 
       if (!dashboardTieneAcceso('obras')) {
@@ -6014,9 +6003,9 @@
     }
 
 
-    /**
-     * Carga maquinaria problemática.
-     */
+
+    // Carga maquinaria problemática
+
     async function dashboardCargarMaquinaria() {
 
       if (!dashboardTieneAcceso('maquinaria')) {
@@ -6047,9 +6036,8 @@
     }
 
 
-    /**
-     * Pendientes de clasificación.
-     */
+
+    //  Pendientes de clasificación
     async function dashboardCargarClasificacion() {
 
       if (!dashboardTieneAcceso('clasificacion')) {
@@ -6075,9 +6063,9 @@
     }
 
 
-    /**
-     * Pinta los productos con stock bajo.
-     */
+
+    //  Pinta los productos con stock bajo.
+
     function dashboardRenderStock(stock) {
 
       const wrap =
@@ -6175,9 +6163,8 @@
     }
 
 
-    /**
-     * Pinta obras activas.
-     */
+    //  Pinta obras activas
+
     function dashboardRenderObras(obras) {
 
       const wrap =
@@ -6230,9 +6217,8 @@
     }
 
 
-    /**
-     * Pinta maquinaria problemática.
-     */
+    //  Pinta maquinaria problemática
+
     function dashboardRenderMaquinaria(maquinaria) {
 
       const wrap =
@@ -6303,9 +6289,8 @@
     }
 
 
-    /**
-     * Crea las acciones pendientes.
-     */
+
+    //  Crea las acciones pendientes
     function dashboardRenderAcciones(datos) {
 
       const wrap =
@@ -6421,9 +6406,8 @@
     }
 
 
-    /**
-     * Carga todo el dashboard.
-     */
+
+    //  Carga todo el dashboard
     async function cargarDashboard() {
 
       if (dashboardCargando) return;
@@ -6481,9 +6465,8 @@
         }
 
 
-        /*
-         * CARGAMOS TODO EN PARALELO
-         */
+
+        // CARGAMOS TODO EN PARALELO
         const [
           facturas,
           inventario,
@@ -6521,9 +6504,8 @@
           );
 
 
-        /*
-         * TARJETAS
-         */
+        //  TARJETAS
+
 
         const elClasif =
           document.getElementById(
@@ -6603,9 +6585,8 @@
         }
 
 
-        /*
-         * SITUACIÓN FACTURAS
-         */
+        //  SITUACIÓN FACTURAS
+
 
         document.getElementById(
           'dashFactVencidas'
@@ -6633,9 +6614,9 @@
           );
 
 
-        /*
-         * LISTAS
-         */
+
+        //  LISTAS
+
 
         dashboardRenderStock(
           stockCalc
@@ -6743,9 +6724,8 @@
       document.getElementById('txtSeccionTitulo').textContent = tit;   //  pone el titulo en la parte que se llame txtSeccionTitulo
       document.getElementById('iconoSeccion').className = `fa-solid ${ico}`;  // esto igual pero con el icono
       document.getElementById('statsContenedor').style.display = stats ? 'grid' : 'none';   // borra todo lo demas, alertas, busquedas, si hay algún archivo abierto....
-      // =====================================================
+
       // DASHBOARD
-      // =====================================================
 
       const dashboard =
         document.getElementById('dashboardWrap');
@@ -6797,9 +6777,9 @@
 
         return;
       }
-      /* =====================================================
-   ESTADÍSTICAS DE VENTAS
-   ===================================================== */
+
+      //  ESTADÍSTICAS DE VENTAS
+
 
 
 
@@ -7977,6 +7957,45 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
       actualizarDatalistMaquinaria();
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // MAQUINARIA
     function actualizarDatalistMaquinaria() {
       const dl = document.getElementById('dl_maquinaria');
       if (!dl) return;
@@ -8391,6 +8410,42 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
         inp.focus(); // listo para el siguiente escaneo
       });
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // AUTOCOMPLETADO PROVEEDORES
     function setupProveedorAC(inputNombreId, inputNifId) {   // busca la casilla del nombre y del nif del proveedor
@@ -8988,273 +9043,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
         console.error('No se pudo registrar en el historial:', e);
       }
     }
-    // =========================================================
-    // AUDITORÍA GENERAL DEL SISTEMA
-    // =========================================================
 
-    function obtenerReferenciaRegistro(tabla, registro) {
-      if (!registro) return null;
-      switch (tabla) {
-        case 'facturas_almacen':
-        case 'facturas_obra':
-        case 'facturas_csg':
-        case 'facturas_gastos_generales':
-          return registro.numero_factura || registro.numero_interno || null;
-        case 'ingresos':
-          return registro.numero_ingreso || registro.numero_interno || null;
-        case 'albaranes':
-        case 'albaranes_venta':
-          return registro.numero_albaran || null;
-        case 'facturas_venta':
-          return registro.numero_factura || null;
-        case 'presupuestos_venta':
-          return registro.numero_presupuesto || null;
-        case 'clientes':
-        case 'proveedores':
-        case 'obras':
-        case 'obras_estudio':
-        case 'inventario':
-          return registro.nombre || null;
-        case 'maquinaria':
-          return registro.codigo || registro.nombre || null;
-        default:
-          return null;
-      }
-    }
-
-    async function registrarAuditoria({
-      accion,
-      tabla,
-      registroId = null,
-      descripcion = '',
-      cambios = null,
-      seccion = null,
-      referencia = null
-    }) {
-
-      try {
-
-        const datos = {
-          fecha: new Date().toISOString(),
-          persona: currentPersona || 'desconocido',
-          accion,
-          tabla,
-          registro_id: registroId,
-          descripcion,
-          cambios,
-          seccion: seccion || tablaActual || null,
-          referencia
-        };
-
-        await apiPost('auditoria', datos);
-
-      } catch (e) {
-
-        // MUY IMPORTANTE:
-        // Si falla la auditoría NO debemos romper
-        // la operación principal.
-        console.error(
-          'No se pudo registrar la auditoría:',
-          e
-        );
-
-      }
-
-    }
-
-    function obtenerCambiosAuditoria(antes, despues, camposIgnorar = []) {
-
-      const cambios = {};
-
-      if (!antes || !despues) {
-        return cambios;
-      }
-
-      const ignorar = new Set([
-        'updated_at',
-        'created_at',
-        'fecha_modificacion',
-        ...camposIgnorar
-      ]);
-
-      const campos = new Set([
-        ...Object.keys(antes),
-        ...Object.keys(despues)
-      ]);
-
-      campos.forEach(campo => {
-
-        if (ignorar.has(campo)) {
-          return;
-        }
-
-        const valorAntes = antes[campo];
-        const valorDespues = despues[campo];
-
-        let iguales;
-
-        try {
-
-          iguales =
-            JSON.stringify(valorAntes) ===
-            JSON.stringify(valorDespues);
-
-        } catch {
-
-          iguales =
-            valorAntes === valorDespues;
-
-        }
-
-        if (!iguales) {
-
-          cambios[campo] = {
-            antes: valorAntes ?? null,
-            despues: valorDespues ?? null
-          };
-
-        }
-
-      });
-
-      return cambios;
-    }
-
-    function descripcionCambiosAuditoria(cambios) {
-
-      const campos = Object.keys(cambios || {});
-
-      if (!campos.length) {
-        return 'Sin cambios detectados';
-      }
-
-      return campos
-        .map(campo => {
-
-          const cambio = cambios[campo];
-
-          return `${campo}: ${formatearValorAuditoria(cambio.antes)} → ${formatearValorAuditoria(cambio.despues)}`;
-
-        })
-        .join(' | ');
-    }
-
-
-    function formatearValorAuditoria(valor) {
-
-      if (valor === null || valor === undefined) {
-        return 'vacío';
-      }
-
-      if (typeof valor === 'boolean') {
-        return valor ? 'Sí' : 'No';
-      }
-
-      if (typeof valor === 'object') {
-
-        try {
-          return JSON.stringify(valor);
-        } catch {
-          return '[objeto]';
-        }
-
-      }
-
-      return String(valor);
-    }
-
-    async function auditarEdicion(tabla, registroAntes, registroDespues, camposIgnorar = []) {
-      if (!registroAntes || !registroDespues) return;
-      const cambios = obtenerCambiosAuditoria(registroAntes, registroDespues, camposIgnorar);
-      if (!Object.keys(cambios).length) return;
-      await registrarAuditoria({
-        accion: 'editar',
-        tabla,
-        registroId: registroDespues.id ?? registroAntes.id ?? null,
-        descripcion: descripcionCambiosAuditoria(cambios),
-        cambios,
-        seccion: tablaActual,
-        referencia: obtenerReferenciaRegistro(tabla, registroDespues)   // 👈 nuevo
-      });
-    }
-
-    function formatearDetalleHistorial(tipo, d) {
-      if (!d) return '—';
-      if (tipo === 'compra_cliente') {
-        const productos = (d.productos || []).map(p => `${p.nombre} (${p.cantidad})`).join(', ') || '—';
-        return `<strong>${d.cliente || '—'}</strong> — ${productos}${d.total != null ? ` — Total: ${fmt(d.total)}` : ''}`;
-      }
-      if (tipo === 'inventario') {
-        if (d.accion === 'caducidad') {
-          return `<strong>${d.producto || '—'}</strong> — <span style="color:#c47a00;font-weight:700"><i class="fa-solid fa-calendar-xmark"></i> BAJA POR CADUCIDAD</span>: -${fmtStock(d.cantidad)} uds. (stock: ${d.stock_antes} → ${d.stock_despues})${d.motivo ? ' — ' + d.motivo : ''}${d.valor_perdido != null ? ' — Pérdida: ' + fmt(d.valor_perdido) : ''}`;
-        }
-        const signo = d.accion === 'resta' ? '-' : '+';
-        return `<strong>${d.producto || '—'}</strong> — ${signo}${d.cantidad} uds. (stock: ${d.stock_antes} → ${d.stock_despues})`;
-      }
-      if (tipo === 'material_obra') {
-        const materiales = (d.materiales || []).map(m => `${m.nombre} (${m.cantidad})`).join(', ') || '—';
-        return `<strong>${d.obra || '—'}</strong> — Empleado: ${d.empleado || '—'} — ${materiales}`;
-      }
-      return '—';
-    }
-
-    let filtroSoloCaducidad = false;
-
-    async function abrirHistorialMovimientos() {
-      const cfg = TIPO_HISTORIAL_POR_SECCION[tablaActual];
-      if (!cfg) return;
-      filtroSoloCaducidad = false;
-      try {
-        const registrosHist = await apiGetAll('historial_movimientos', `tipo=eq.${cfg.tipo}&order=fecha.desc`);
-        window._historialActual = registrosHist;
-        window._historialTipo = cfg.tipo;
-        window._historialTitulo = cfg.titulo;
-        renderModalHistorial();
-        document.getElementById('modalDetalle').classList.add('visible');
-      } catch (e) { toast('Error al cargar el historial: ' + e.message, 'err'); }
-    }
-
-    function toggleFiltroSoloCaducidad(marcado) {
-      filtroSoloCaducidad = marcado;
-      renderModalHistorial();
-    }
-
-    function renderModalHistorial() {
-      const registrosHist = window._historialActual || [];
-      const tipo = window._historialTipo;
-      const esInventario = tipo === 'inventario';
-
-      const bajasCaducidad = registrosHist.filter(h => h.detalle && h.detalle.accion === 'caducidad');
-      const totalUnidadesCaducadas = bajasCaducidad.reduce((s, h) => s + (parseFloat(h.detalle.cantidad) || 0), 0);
-      const conValor = bajasCaducidad.filter(h => h.detalle.valor_perdido != null);
-      const totalValorPerdido = conValor.reduce((s, h) => s + (parseFloat(h.detalle.valor_perdido) || 0), 0);
-      const sinValor = bajasCaducidad.length - conValor.length;
-
-      const resumenCaducidad = (esInventario && bajasCaducidad.length) ? `
-        <div class="stats-grid" style="margin-bottom:14px">
-          <div class="stat naranja"><div class="slabel">Bajas por caducidad</div><div class="sval">${bajasCaducidad.length}</div></div>
-          <div class="stat naranja"><div class="slabel">Unidades caducadas</div><div class="sval">${fmtStock(totalUnidadesCaducadas)}</div></div>
-          <div class="stat rojo"><div class="slabel">Valor perdido</div><div class="sval">${fmt(totalValorPerdido)}${sinValor ? ` <span style="font-size:.65rem;color:#c47a00;font-weight:400">(+${sinValor} sin coste registrado)</span>` : ''}</div></div>
-        </div>
-        <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;cursor:pointer;margin-bottom:10px">
-          <input type="checkbox" ${filtroSoloCaducidad ? 'checked' : ''} onchange="toggleFiltroSoloCaducidad(this.checked)">
-          Mostrar solo bajas por caducidad
-        </label>` : '';
-
-      const lista = filtroSoloCaducidad ? bajasCaducidad : registrosHist;
-
-      document.getElementById('modalDetalleTitulo').innerHTML =
-        `<i class="fa-solid fa-clock-rotate-left" style="color:#b53987"></i>${window._historialTitulo}`;
-      document.getElementById('modalDetalleContenido').innerHTML = resumenCaducidad + (!lista.length
-        ? `<p style="text-align:center;color:#aaa;padding:2rem">${filtroSoloCaducidad ? 'Sin bajas por caducidad todavía' : 'Todavía no hay movimientos registrados'}</p>`
-        : `<table class="mini-table"><thead><tr><th>Fecha</th><th>Quién</th><th>Detalle</th></tr></thead><tbody>
-        ${lista.map(h => `<tr>
-          <td style="font-size:.78rem;white-space:nowrap">${h.fecha ? new Date(h.fecha).toLocaleString('es-ES') : '—'}</td>
-          <td><strong>${NOMBRES_PERSONAS[h.persona] || h.persona}</strong></td>
-          <td style="font-size:.82rem">${formatearDetalleHistorial(tipo, h.detalle)}</td>
-        </tr>`).join('')}
-      </tbody></table>`);
-    }
 
 
 
@@ -9488,10 +9277,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     actualizarAlturaTopbar();
 
 
-
-    /* =========================================================
-   ESTADÍSTICAS DE VENTAS
-   ========================================================= */
+  //  ESTADÍSTICAS DE VENTAS
 
     let ventasEstadisticasCache = null;
 
@@ -9802,9 +9588,8 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     }
 
 
-    /* =========================================================
-       EVOLUCIÓN MENSUAL
-       ========================================================= */
+      //  EVOLUCIÓN MENSUAL
+
 
     function renderVentasGraficaMensual(ventas) {
 
@@ -9878,9 +9663,8 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     }
 
 
-    /* =========================================================
-       FORMAS DE COBRO
-       ========================================================= */
+      // FORMAS DE COBRO
+
 
     function renderVentasFormasCobro(
       efectivo,
@@ -9943,9 +9727,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     }
 
 
-    /* =========================================================
-       TOP CLIENTES
-       ========================================================= */
+      // TOP CLIENTES
 
     function renderVentasTopClientes(ventas) {
 
@@ -10032,9 +9814,8 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     }
 
 
-    /* =========================================================
-       TOP PRODUCTOS
-       ========================================================= */
+      // TOP PRODUCTOS
+
 
     function renderVentasTopProductos(ventas) {
 
@@ -10129,9 +9910,8 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     }
 
 
-    /* =========================================================
-       COMPARATIVA
-       ========================================================= */
+      // COMPARATIVA
+
 
     function renderVentasComparativa(ventas) {
 
@@ -10322,9 +10102,8 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
 
 
 
-    /* =========================================================
-       RENTABILIDAD REAL DE UNA OBRA
-       ========================================================= */
+      // RENTABILIDAD REAL DE UNA OBRA
+
 
     let rentabilidadObraActual = null;
 
@@ -10386,9 +10165,8 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
 
       try {
 
-        /*
-         * Cargamos todos los datos necesarios.
-         */
+
+        //  Cargamos todos los datos necesarios.
         const [
           obraLista,
           ingresos,
@@ -10434,11 +10212,9 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
         const obra = obraLista?.[0] || null;
 
 
-        /*
-         * =====================================================
-         * INGRESOS
-         * =====================================================
-         */
+
+        //  INGRESOS
+
 
         const totalIngresos =
           (ingresos || []).reduce(
@@ -10448,11 +10224,9 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
           );
 
 
-        /*
-         * =====================================================
-         * COSTES DE FACTURAS DE OBRA
-         * =====================================================
-         */
+
+        //  COSTES DE FACTURAS DE OBRA
+
 
         const facturasDirectas = [
           ...(facturasObra || []),
@@ -10470,11 +10244,9 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
         });
 
 
-        /*
-         * =====================================================
-         * FACTURAS REPARTIDAS
-         * =====================================================
-         */
+
+        //  FACTURAS REPARTIDAS
+
 
         const costeFacturasRepartidas =
           (repartos || []).reduce(
@@ -10484,11 +10256,9 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
           );
 
 
-        /*
-         * =====================================================
-         * COSTES MANUALES
-         * =====================================================
-         */
+
+        // COSTES MANUALES
+
 
         const costes = costesManuales || [];
 
@@ -10523,19 +10293,16 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
             );
 
 
-        /*
-         * Las facturas de obra/CSG se consideran
-         * coste directo de proveedor.
-         */
+
+        //  Las facturas de obra/CSG se consideran coste directo de proveedor
 
         const costeProveedores =
           costeFacturasDirectas +
           costeFacturasRepartidas;
 
 
-        /*
-         * COSTE TOTAL
-         */
+
+        //  COSTE TOTAL
 
         const costeTotal =
           costeProveedores +
@@ -10544,18 +10311,17 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
           costeOtros;
 
 
-        /*
-         * BENEFICIO
-         */
+
+        //  BENEFICIO
+
 
         const beneficio =
           totalIngresos -
           costeTotal;
 
 
-        /*
-         * MARGEN
-         */
+
+        //  MARGEN
 
         const margen =
           totalIngresos > 0
@@ -10563,9 +10329,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
             : 0;
 
 
-        /*
-         * PRESUPUESTO
-         */
+        //  PRESUPUESTO
 
         const presupuesto =
           obra?.presupuesto != null
@@ -10646,9 +10410,9 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     }
 
 
-    /**
-     * Base de un ingreso.
-     */
+
+    //  Base de un ingreso
+
     function rentabilidadBaseIngreso(i) {
 
       if (
@@ -10662,9 +10426,8 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     }
 
 
-    /**
-     * Render completo.
-     */
+
+    //  Render completo
     function renderRentabilidadObra(datos) {
 
       const contenido =
@@ -11307,9 +11070,8 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     }
 
 
-    /**
-     * Añadir coste manual.
-     */
+    //  Añadir coste manual.
+
     async function guardarCosteRentabilidad() {
 
       const obra =
@@ -11384,9 +11146,9 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     }
 
 
-    /**
-     * Eliminar coste manual.
-     */
+
+    //  Eliminar coste manual.
+
     async function eliminarCosteRentabilidad(id) {
 
       if (
@@ -12268,7 +12030,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
           return cmp * signo;
         });
         bdy.innerHTML = lista.map(f => {
-          const forma = f.forma_cobro || 'facturar';   // 👈 mover aquí arriba, antes del if
+          const forma = f.forma_cobro || 'facturar'; 
           const fact = !!f.facturado;
 
           if (f._esAlquiler) {
@@ -24078,7 +23840,272 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
 
 
     // AUDITORIA
+    // AUDITORÍA GENERAL DEL SISTEMA
 
+
+    function obtenerReferenciaRegistro(tabla, registro) {
+      if (!registro) return null;
+      switch (tabla) {
+        case 'facturas_almacen':
+        case 'facturas_obra':
+        case 'facturas_csg':
+        case 'facturas_gastos_generales':
+          return registro.numero_factura || registro.numero_interno || null;
+        case 'ingresos':
+          return registro.numero_ingreso || registro.numero_interno || null;
+        case 'albaranes':
+        case 'albaranes_venta':
+          return registro.numero_albaran || null;
+        case 'facturas_venta':
+          return registro.numero_factura || null;
+        case 'presupuestos_venta':
+          return registro.numero_presupuesto || null;
+        case 'clientes':
+        case 'proveedores':
+        case 'obras':
+        case 'obras_estudio':
+        case 'inventario':
+          return registro.nombre || null;
+        case 'maquinaria':
+          return registro.codigo || registro.nombre || null;
+        default:
+          return null;
+      }
+    }
+
+    async function registrarAuditoria({
+      accion,
+      tabla,
+      registroId = null,
+      descripcion = '',
+      cambios = null,
+      seccion = null,
+      referencia = null
+    }) {
+
+      try {
+
+        const datos = {
+          fecha: new Date().toISOString(),
+          persona: currentPersona || 'desconocido',
+          accion,
+          tabla,
+          registro_id: registroId,
+          descripcion,
+          cambios,
+          seccion: seccion || tablaActual || null,
+          referencia
+        };
+
+        await apiPost('auditoria', datos);
+
+      } catch (e) {
+
+        // MUY IMPORTANTE:
+        // Si falla la auditoría NO debemos romper
+        // la operación principal.
+        console.error(
+          'No se pudo registrar la auditoría:',
+          e
+        );
+
+      }
+
+    }
+
+    function obtenerCambiosAuditoria(antes, despues, camposIgnorar = []) {
+
+      const cambios = {};
+
+      if (!antes || !despues) {
+        return cambios;
+      }
+
+      const ignorar = new Set([
+        'updated_at',
+        'created_at',
+        'fecha_modificacion',
+        ...camposIgnorar
+      ]);
+
+      const campos = new Set([
+        ...Object.keys(antes),
+        ...Object.keys(despues)
+      ]);
+
+      campos.forEach(campo => {
+
+        if (ignorar.has(campo)) {
+          return;
+        }
+
+        const valorAntes = antes[campo];
+        const valorDespues = despues[campo];
+
+        let iguales;
+
+        try {
+
+          iguales =
+            JSON.stringify(valorAntes) ===
+            JSON.stringify(valorDespues);
+
+        } catch {
+
+          iguales =
+            valorAntes === valorDespues;
+
+        }
+
+        if (!iguales) {
+
+          cambios[campo] = {
+            antes: valorAntes ?? null,
+            despues: valorDespues ?? null
+          };
+
+        }
+
+      });
+
+      return cambios;
+    }
+
+    function descripcionCambiosAuditoria(cambios) {
+
+      const campos = Object.keys(cambios || {});
+
+      if (!campos.length) {
+        return 'Sin cambios detectados';
+      }
+
+      return campos
+        .map(campo => {
+
+          const cambio = cambios[campo];
+
+          return `${campo}: ${formatearValorAuditoria(cambio.antes)} → ${formatearValorAuditoria(cambio.despues)}`;
+
+        })
+        .join(' | ');
+    }
+
+
+    function formatearValorAuditoria(valor) {
+
+      if (valor === null || valor === undefined) {
+        return 'vacío';
+      }
+
+      if (typeof valor === 'boolean') {
+        return valor ? 'Sí' : 'No';
+      }
+
+      if (typeof valor === 'object') {
+
+        try {
+          return JSON.stringify(valor);
+        } catch {
+          return '[objeto]';
+        }
+
+      }
+
+      return String(valor);
+    }
+
+    async function auditarEdicion(tabla, registroAntes, registroDespues, camposIgnorar = []) {
+      if (!registroAntes || !registroDespues) return;
+      const cambios = obtenerCambiosAuditoria(registroAntes, registroDespues, camposIgnorar);
+      if (!Object.keys(cambios).length) return;
+      await registrarAuditoria({
+        accion: 'editar',
+        tabla,
+        registroId: registroDespues.id ?? registroAntes.id ?? null,
+        descripcion: descripcionCambiosAuditoria(cambios),
+        cambios,
+        seccion: tablaActual,
+        referencia: obtenerReferenciaRegistro(tabla, registroDespues)   // 👈 nuevo
+      });
+    }
+
+    function formatearDetalleHistorial(tipo, d) {
+      if (!d) return '—';
+      if (tipo === 'compra_cliente') {
+        const productos = (d.productos || []).map(p => `${p.nombre} (${p.cantidad})`).join(', ') || '—';
+        return `<strong>${d.cliente || '—'}</strong> — ${productos}${d.total != null ? ` — Total: ${fmt(d.total)}` : ''}`;
+      }
+      if (tipo === 'inventario') {
+        if (d.accion === 'caducidad') {
+          return `<strong>${d.producto || '—'}</strong> — <span style="color:#c47a00;font-weight:700"><i class="fa-solid fa-calendar-xmark"></i> BAJA POR CADUCIDAD</span>: -${fmtStock(d.cantidad)} uds. (stock: ${d.stock_antes} → ${d.stock_despues})${d.motivo ? ' — ' + d.motivo : ''}${d.valor_perdido != null ? ' — Pérdida: ' + fmt(d.valor_perdido) : ''}`;
+        }
+        const signo = d.accion === 'resta' ? '-' : '+';
+        return `<strong>${d.producto || '—'}</strong> — ${signo}${d.cantidad} uds. (stock: ${d.stock_antes} → ${d.stock_despues})`;
+      }
+      if (tipo === 'material_obra') {
+        const materiales = (d.materiales || []).map(m => `${m.nombre} (${m.cantidad})`).join(', ') || '—';
+        return `<strong>${d.obra || '—'}</strong> — Empleado: ${d.empleado || '—'} — ${materiales}`;
+      }
+      return '—';
+    }
+
+    let filtroSoloCaducidad = false;
+
+    async function abrirHistorialMovimientos() {
+      const cfg = TIPO_HISTORIAL_POR_SECCION[tablaActual];
+      if (!cfg) return;
+      filtroSoloCaducidad = false;
+      try {
+        const registrosHist = await apiGetAll('historial_movimientos', `tipo=eq.${cfg.tipo}&order=fecha.desc`);
+        window._historialActual = registrosHist;
+        window._historialTipo = cfg.tipo;
+        window._historialTitulo = cfg.titulo;
+        renderModalHistorial();
+        document.getElementById('modalDetalle').classList.add('visible');
+      } catch (e) { toast('Error al cargar el historial: ' + e.message, 'err'); }
+    }
+
+    function toggleFiltroSoloCaducidad(marcado) {
+      filtroSoloCaducidad = marcado;
+      renderModalHistorial();
+    }
+
+    function renderModalHistorial() {
+      const registrosHist = window._historialActual || [];
+      const tipo = window._historialTipo;
+      const esInventario = tipo === 'inventario';
+
+      const bajasCaducidad = registrosHist.filter(h => h.detalle && h.detalle.accion === 'caducidad');
+      const totalUnidadesCaducadas = bajasCaducidad.reduce((s, h) => s + (parseFloat(h.detalle.cantidad) || 0), 0);
+      const conValor = bajasCaducidad.filter(h => h.detalle.valor_perdido != null);
+      const totalValorPerdido = conValor.reduce((s, h) => s + (parseFloat(h.detalle.valor_perdido) || 0), 0);
+      const sinValor = bajasCaducidad.length - conValor.length;
+
+      const resumenCaducidad = (esInventario && bajasCaducidad.length) ? `
+        <div class="stats-grid" style="margin-bottom:14px">
+          <div class="stat naranja"><div class="slabel">Bajas por caducidad</div><div class="sval">${bajasCaducidad.length}</div></div>
+          <div class="stat naranja"><div class="slabel">Unidades caducadas</div><div class="sval">${fmtStock(totalUnidadesCaducadas)}</div></div>
+          <div class="stat rojo"><div class="slabel">Valor perdido</div><div class="sval">${fmt(totalValorPerdido)}${sinValor ? ` <span style="font-size:.65rem;color:#c47a00;font-weight:400">(+${sinValor} sin coste registrado)</span>` : ''}</div></div>
+        </div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;cursor:pointer;margin-bottom:10px">
+          <input type="checkbox" ${filtroSoloCaducidad ? 'checked' : ''} onchange="toggleFiltroSoloCaducidad(this.checked)">
+          Mostrar solo bajas por caducidad
+        </label>` : '';
+
+      const lista = filtroSoloCaducidad ? bajasCaducidad : registrosHist;
+
+      document.getElementById('modalDetalleTitulo').innerHTML =
+        `<i class="fa-solid fa-clock-rotate-left" style="color:#b53987"></i>${window._historialTitulo}`;
+      document.getElementById('modalDetalleContenido').innerHTML = resumenCaducidad + (!lista.length
+        ? `<p style="text-align:center;color:#aaa;padding:2rem">${filtroSoloCaducidad ? 'Sin bajas por caducidad todavía' : 'Todavía no hay movimientos registrados'}</p>`
+        : `<table class="mini-table"><thead><tr><th>Fecha</th><th>Quién</th><th>Detalle</th></tr></thead><tbody>
+        ${lista.map(h => `<tr>
+          <td style="font-size:.78rem;white-space:nowrap">${h.fecha ? new Date(h.fecha).toLocaleString('es-ES') : '—'}</td>
+          <td><strong>${NOMBRES_PERSONAS[h.persona] || h.persona}</strong></td>
+          <td style="font-size:.82rem">${formatearDetalleHistorial(tipo, h.detalle)}</td>
+        </tr>`).join('')}
+      </tbody></table>`);
+    }
     async function abrirAuditoria() {
 
       const modal =

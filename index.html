@@ -17729,7 +17729,12 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       try {
         const [reg] = await apiGet('alquileres', `id=eq.${id}`);
         if (!reg) { toast('No se ha encontrado el alta de alquiler', 'err'); return; }
+        if (reg.facturado) {
+      mostrarAvisoAlquilerFacturado(reg);
+      return;
+    }
         const items = await apiGet('alquileres_items', `alquiler_id=eq.${id}&order=id`);
+        
 
         altaAlquilerEditId = id;
         clienteAltaSelId = reg.cliente_id || null;
@@ -17776,10 +17781,90 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       }
     }
 
+    function mostrarAvisoAlquilerFacturado(reg) {
+  const tipoTexto = reg.tipo === 'baja' ? 'Baja de alquiler' : 'Alta de alquiler';
+  document.getElementById('modalDetalleTitulo').innerHTML =
+    `<i class="fa-solid fa-triangle-exclamation" style="color:#c47a00"></i>${tipoTexto} ya facturada`;
+  document.getElementById('modalDetalleContenido').innerHTML = `
+    <div style="background:#fff3e0;border:1.5px solid #f0c060;border-radius:10px;padding:16px 18px;font-size:.88rem;color:#7a4a00;line-height:1.5">
+      <p style="margin:0 0 10px"><i class="fa-solid fa-circle-info me-1"></i>
+        El albarán <strong>${reg.numero_albaran || 's/n'}</strong> (${tipoTexto.toLowerCase()}) ya está vinculado a una factura de venta y no se puede editar directamente.
+      </p>
+      <p style="margin:0">Si necesitas corregirlo, primero hay que <strong>desvincularlo de la factura</strong>. Esto:</p>
+      <ul style="margin:8px 0 0;padding-left:20px">
+        <li>Quitará este albarán de la factura a la que está vinculado</li>
+        <li>Restará su importe de esa factura</li>
+        <li>Volverá a marcarlo como "sin facturar"</li>
+        <li>Después podrás editarlo con normalidad</li>
+      </ul>
+      <p style="margin:12px 0 0;font-size:.8rem;color:#a56a1a">
+        <i class="fa-solid fa-circle-exclamation me-1"></i>Si la factura ya se envió al cliente, tendrás que revisarla, regenerarla y volver a enviarla tras corregir este albarán.
+      </p>
+    </div>`;
+  document.querySelector('#modalDetalle .modal-btns').innerHTML = `
+    <button class="btn-cancelar" onclick="cerrarModal('modalDetalle')">Cancelar</button>
+    <button class="btn-guardar" style="background:#c47a00" onclick="desvincularAlquilerYEditar(${reg.id}, '${reg.tipo}')">
+      <i class="fa-solid fa-link-slash me-1"></i>Desvincular y editar
+    </button>`;
+  document.querySelector('#modalDetalle .modal-box').style.maxWidth = '520px';
+  document.getElementById('modalDetalle').classList.add('visible');
+}
+
+async function desvincularAlquilerYEditar(alquilerId, tipo) {
+  if (!confirm('¿Seguro que quieres desvincular este albarán de su factura? Tendrás que revisar y volver a generar/enviar esa factura después de corregirlo.')) return;
+
+  try {
+    const vinculos = await apiGet('facturas_venta_albaranes', `alquiler_id=eq.${alquilerId}`);
+
+    if (!vinculos.length) {
+      await apiPatch('alquileres', alquilerId, { facturado: false });
+      toast('Albarán desmarcado como facturado', 'ok');
+      cerrarModal('modalDetalle');
+      await cargarDatos();
+      setTimeout(() => tipo === 'baja' ? abrirModalEditarBajaAlquiler(alquilerId) : abrirModalEditarAltaAlquiler(alquilerId), 300);
+      return;
+    }
+
+    for (const v of vinculos) {
+      const [factura] = await apiGet('facturas_venta', `id=eq.${v.factura_venta_id}`);
+      const [alquiler] = await apiGet('alquileres', `id=eq.${alquilerId}`);
+
+      if (factura && alquiler) {
+        const baseARestar = parseFloat(alquiler.base_imponible || 0);
+        const nuevaBase = Math.max(0, parseFloat(factura.base_imponible || 0) - baseARestar);
+        const nuevoIva = +(nuevaBase * (factura.pct_iva || 0) / 100).toFixed(2);
+        const nuevoTotal = +(nuevaBase + nuevoIva).toFixed(2);
+
+        await apiPatch('facturas_venta', factura.id, {
+          base_imponible: nuevaBase, importe_iva: nuevoIva, total: nuevoTotal
+        });
+      }
+
+      const itemsDeEsteAlquiler = await apiGet('facturas_venta_items', `factura_venta_id=eq.${v.factura_venta_id}&alquiler_id=eq.${alquilerId}`);
+      for (const it of itemsDeEsteAlquiler) await apiDelete('facturas_venta_items', it.id);
+
+      await apiDelete('facturas_venta_albaranes', v.id);
+    }
+
+    await apiPatch('alquileres', alquilerId, { facturado: false });
+
+    toast('Albarán desvinculado — se han eliminado sus líneas de la factura', 'ok');
+    cerrarModal('modalDetalle');
+    await cargarDatos();
+    setTimeout(() => tipo === 'baja' ? abrirModalEditarBajaAlquiler(alquilerId) : abrirModalEditarAltaAlquiler(alquilerId), 300);
+  } catch (e) {
+    toast('Error al desvincular: ' + e.message, 'err');
+  }
+}
+
     async function abrirModalEditarBajaAlquiler(id) {
       try {
         const [reg] = await apiGet('alquileres', `id=eq.${id}`);
         if (!reg) { toast('No se ha encontrado la baja de alquiler', 'err'); return; }
+        if (reg.facturado) {
+      mostrarAvisoAlquilerFacturado(reg);
+      return;
+    }
         const items = await apiGet('alquileres_items', `alquiler_id=eq.${id}&order=id`);
 
         bajaAlquilerEditId = id;

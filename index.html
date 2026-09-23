@@ -16516,9 +16516,92 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       }
     }
 
+    function mostrarAvisoAlbaranFacturado(f) {
+      document.getElementById('modalDetalleTitulo').innerHTML =
+        `<i class="fa-solid fa-triangle-exclamation" style="color:#c47a00"></i>Albarán ya facturado`;
+      document.getElementById('modalDetalleContenido').innerHTML = `
+    <div style="background:#fff3e0;border:1.5px solid #f0c060;border-radius:10px;padding:16px 18px;font-size:.88rem;color:#7a4a00;line-height:1.5">
+      <p style="margin:0 0 10px"><i class="fa-solid fa-circle-info me-1"></i>
+        El albarán <strong>${f.numero_albaran || 's/n'}</strong> ya está vinculado a una factura de venta y no se puede editar directamente.
+      </p>
+      <p style="margin:0">Si necesitas corregirlo, primero hay que <strong>desvincularlo de la factura</strong>. Esto:</p>
+      <ul style="margin:8px 0 0;padding-left:20px">
+        <li>Quitará este albarán de la factura a la que está vinculado</li>
+        <li>Restará su importe de esa factura</li>
+        <li>Volverá a marcar el albarán como "sin facturar"</li>
+        <li>Después podrás editarlo con normalidad</li>
+      </ul>
+      <p style="margin:12px 0 0;font-size:.8rem;color:#a56a1a">
+        <i class="fa-solid fa-circle-exclamation me-1"></i>Si la factura ya se envió al cliente, tendrás que revisarla, regenerarla y volver a enviarla tras corregir el albarán.
+      </p>
+    </div>`;
+      document.querySelector('#modalDetalle .modal-btns').innerHTML = `
+    <button class="btn-cancelar" onclick="cerrarModal('modalDetalle')">Cancelar</button>
+    <button class="btn-guardar" style="background:#c47a00" onclick="desvincularAlbaranYEditar(${f.id})">
+      <i class="fa-solid fa-link-slash me-1"></i>Desvincular y editar
+    </button>`;
+      document.querySelector('#modalDetalle .modal-box').style.maxWidth = '520px';
+      document.getElementById('modalDetalle').classList.add('visible');
+    }
+
+    async function desvincularAlbaranYEditar(albaranId) {
+      if (!confirm('¿Seguro que quieres desvincular este albarán de su factura? Tendrás que revisar y volver a generar/enviar esa factura después de corregir el albarán.')) return;
+
+      try {
+        const vinculos = await apiGet('facturas_venta_albaranes', `albaran_venta_id=eq.${albaranId}`);
+
+        if (!vinculos.length) {
+          await apiPatch('albaranes_venta', albaranId, { facturado: false });
+          toast('Albarán desmarcado como facturado', 'ok');
+          cerrarModal('modalDetalle');
+          await cargarDatos();
+          setTimeout(() => abrirModalEditarAlbaranVenta(albaranId), 300);
+          return;
+        }
+
+        for (const v of vinculos) {
+          const [factura] = await apiGet('facturas_venta', `id=eq.${v.factura_venta_id}`);
+          const [albaran] = await apiGet('albaranes_venta', `id=eq.${albaranId}`);
+
+          if (factura && albaran) {
+            // La base del albarán ya incluye tanto sus líneas normales como las
+            // exclusivas, así que restar su total es suficiente para cuadrar la factura
+            const baseARestar = parseFloat(albaran.base_imponible || 0);
+            const nuevaBase = Math.max(0, parseFloat(factura.base_imponible || 0) - baseARestar);
+            const nuevoIva = +(nuevaBase * (factura.pct_iva || 0) / 100).toFixed(2);
+            const nuevoTotal = +(nuevaBase + nuevoIva).toFixed(2);
+
+            await apiPatch('facturas_venta', factura.id, {
+              base_imponible: nuevaBase, importe_iva: nuevoIva, total: nuevoTotal
+            });
+          }
+
+          // ahora sí podemos borrar SOLO las líneas de material exclusivo
+          // que pertenecen a este albarán concreto, gracias a albaran_venta_id
+          const itemsDeEsteAlbaran = await apiGet('facturas_venta_items', `factura_venta_id=eq.${v.factura_venta_id}&albaran_venta_id=eq.${albaranId}`);
+          for (const it of itemsDeEsteAlbaran) await apiDelete('facturas_venta_items', it.id);
+
+          await apiDelete('facturas_venta_albaranes', v.id);
+        }
+
+        await apiPatch('albaranes_venta', albaranId, { facturado: false });
+
+        toast('Albarán desvinculado — se han eliminado sus líneas de la factura', 'ok');
+        cerrarModal('modalDetalle');
+        await cargarDatos();
+        setTimeout(() => abrirModalEditarAlbaranVenta(albaranId), 300);
+      } catch (e) {
+        toast('Error al desvincular: ' + e.message, 'err');
+      }
+    }
+
     function abrirModalEditarAlbaranVenta(id) {
       const f = registros.find(r => r.id === id);
       if (!f) { toast('No se ha encontrado el albarán', 'err'); return; }
+      if (f.facturado) {
+        mostrarAvisoAlbaranFacturado(f);
+        return;
+      }
       modalEditId = id;
       abrirModalNuevo('albaranes_venta');
       setTimeout(() => {
@@ -22098,6 +22181,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
             if (reg?.albaranes_venta_items_exclusivos?.length) {
               await apiPost('facturas_venta_items', reg.albaranes_venta_items_exclusivos.map(it => ({
                 factura_venta_id: facturaId,
+                albaran_venta_id: id,
                 producto_nombre: it.producto_nombre,
                 cantidad: it.cantidad,
                 precio_unitario: it.precio_unitario,
@@ -22113,6 +22197,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
             if (reg?.alquileres_items?.length) {
               await apiPost('facturas_venta_items', reg.alquileres_items.map(it => ({
                 factura_venta_id: facturaId,
+                alquiler_id: id,
                 producto_nombre: it.descripcion,
                 cantidad: it.cantidad,
                 precio_unitario: it.precio_unitario,

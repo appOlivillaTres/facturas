@@ -22314,7 +22314,7 @@ async function desvincularAlquilerYEditar(alquilerId, tipo) {
         clienteSeleccionAV = null;
         actualizarBarraSeleccionAV();
         cerrarModal('modalFacturaVenta');
-        cargarDatos();
+        await cargarDatos();
         imprimirFacturaVenta(idParaImprimir);
       } catch (e) {
         toast('Error al guardar la factura: ' + e.message, 'err');

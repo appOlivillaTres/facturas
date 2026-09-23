@@ -22263,16 +22263,30 @@ async function desvincularAlquilerYEditar(alquilerId, tipo) {
               factura_venta_id: facturaId, albaran_venta_id: id, numero_albaran: reg?.numero_albaran || null
             }]);
             await apiPatch('albaranes_venta', id, { facturado: true });
-            if (reg?.albaranes_venta_items_exclusivos?.length) {
-              await apiPost('facturas_venta_items', reg.albaranes_venta_items_exclusivos.map(it => ({
-                factura_venta_id: facturaId,
-                albaran_venta_id: id,
-                producto_nombre: it.producto_nombre,
-                cantidad: it.cantidad,
-                precio_unitario: it.precio_unitario,
-                dto_pct: it.dto_pct || 0,
-                importe_total: it.importe_total
-              })));
+
+            const itemsNormales = (reg?.albaranes_venta_items || []).map(it => ({
+              factura_venta_id: facturaId,
+              albaran_venta_id: id,
+              producto_nombre: it.producto_nombre,
+              cantidad: it.cantidad,
+              precio_unitario: it.precio_unitario,
+              dto_pct: it.dto_pct || 0,
+              importe_total: it.importe_total
+            }));
+
+            const itemsExclusivos = (reg?.albaranes_venta_items_exclusivos || []).map(it => ({
+              factura_venta_id: facturaId,
+              albaran_venta_id: id,
+              producto_nombre: it.producto_nombre,
+              cantidad: it.cantidad,
+              precio_unitario: it.precio_unitario,
+              dto_pct: it.dto_pct || 0,
+              importe_total: it.importe_total
+            }));
+
+            const todosLosItems = [...itemsNormales, ...itemsExclusivos];
+            if (todosLosItems.length) {
+              await apiPost('facturas_venta_items', todosLosItems);
             }
           } else if (tipo === 'alquiler') {
             await apiPost('facturas_venta_albaranes', [{

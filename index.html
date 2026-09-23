@@ -3637,7 +3637,7 @@
         <button class="btn-historial" id="btnHistorial" onclick="abrirHistorialMovimientos()" style="display:none">
           <i class="fa-solid fa-clock-rotate-left"></i>Historial
         </button>
-        <button class="btn btn-outline-secondary" onclick="abrirAuditoria()">
+        <button class="btn btn-outline-secondary" id="btnAuditoria" onclick="abrirAuditoria()">
 
           <i class="fa-solid fa-user-clock"></i>
           Auditoría
@@ -5577,6 +5577,8 @@
       proveedores: ['Proveedores', 'fa-truck-field', false],
     };
 
+    const PERSONAS_CON_AUDITORIA = ['cynthia', 'emilio', 'natalia'];
+
     function aplicarPermisosMenu() {
       document.querySelectorAll('.btn-nav').forEach(btn => {
         const m = (btn.getAttribute('onclick') || '').match(/cambiarSeccion\('([^']+)'\)/);
@@ -5587,6 +5589,9 @@
       });
       const badge = document.getElementById('usuarioConectado');
       if (badge) badge.textContent = currentPersona ? ('Conectado como ' + (NOMBRES_PERSONAS[currentPersona] || currentPersona)) : '';
+
+      const btnAud = document.getElementById('btnAuditoria');
+      if (btnAud) btnAud.style.display = PERSONAS_CON_AUDITORIA.includes(currentPersona) ? '' : 'none';
     }
 
     let cachesIniciales = null; // Promise compartida para no recargar cachés al volver al selector

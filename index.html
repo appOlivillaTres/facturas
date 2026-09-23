@@ -22061,6 +22061,9 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
           const antiguos = await apiGet('facturas_venta_albaranes', `factura_venta_id=eq.${facturaId}`);
           for (const a of antiguos) await apiDelete('facturas_venta_albaranes', a.id);
 
+          const itemsAntiguos = await apiGet('facturas_venta_items', `factura_venta_id=eq.${facturaId}`);
+          for (const it of itemsAntiguos) await apiDelete('facturas_venta_items', it.id);
+
           const liberar = antiguos.filter(a => {
             const clave = a.albaran_venta_id ? `venta:${a.albaran_venta_id}` : `alquiler:${a.alquiler_id}`;
             return !clavesSeleccionadas.includes(clave);

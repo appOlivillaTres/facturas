@@ -16390,36 +16390,25 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
             if (delta === 0) continue; // nada cambió para este producto: no se toca
             const prod = inventarioDB.find(p => p.id == pid);
             if (prod) {
-
-              await apiPatch('inventario', pid, { stock: nuevoStockProd });
               const stockAnterior = Number(prod.stock);
               const nuevoStockProd = stockAnterior + delta;
+
+              await apiPatch('inventario', pid, { stock: nuevoStockProd });
 
               await registrarAuditoria({
                 accion: 'ajuste_stock',
                 tabla: 'inventario',
                 registroId: prod.id,
                 descripcion: `Ajuste de stock: ${stockAnterior} → ${nuevoStockProd}`,
-                cambios: {
-                  stock: {
-                    antes: stockAnterior,
-                    despues: nuevoStockProd
-                  }
-                },
+                cambios: { stock: { antes: stockAnterior, despues: nuevoStockProd } },
                 seccion: 'inventario'
               });
-
-              await apiPatch('inventario', pid, { stock: nuevoStockProd });
 
               prod.stock = nuevoStockProd;
 
               if (nuevoStockProd < 0) {
-                avisosStockNegativoAV.push(
-                  `${prod.nombre} (${fmtStock(nuevoStockProd)} ${unidadCorta(prod)})`
-                );
+                avisosStockNegativoAV.push(`${prod.nombre} (${fmtStock(nuevoStockProd)} ${unidadCorta(prod)})`);
               }
-              prod.stock = nuevoStockProd;
-              if (nuevoStockProd < 0) avisosStockNegativoAV.push(`${prod.nombre} (${fmtStock(nuevoStockProd)} ${unidadCorta(prod)})`);
             }
           }
 

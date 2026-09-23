@@ -4237,6 +4237,15 @@
           <input type="text" id="ba_cliente" placeholder="Escribe el nombre para buscar...">
           <input type="hidden" id="ba_cliente_id">
         </div>
+        <div class="form-group span3" id="ba_selector_alta_wrap"
+          style="display:none;background:#f7f0f5;border:1.5px solid #ede5f5;border-radius:8px;padding:10px 14px;margin-top:-4px">
+          <label style="color:#6a1b9a"><i class="fa-solid fa-toolbox me-1"></i>Alta de alquiler de este cliente</label>
+          <select id="ba_selector_alta" onchange="onSeleccionarAltaParaBaja()">
+            <option value="">— Sin seleccionar (rellenar a mano) —</option>
+          </select>
+          <p style="font-size:.72rem;color:#888;margin-top:4px">Al elegir una, se copian sus mismos artículos a la baja.
+            Puedes dejarlo en "Sin seleccionar" y rellenar la baja tú mismo.</p>
+        </div>
         <div class="form-group"><label>NIF</label><input type="text" id="ba_nif" readonly style="background:#f7f0f5">
         </div>
         <div class="form-group span2"><label>Dirección</label><input type="text" id="ba_direccion"
@@ -16017,12 +16026,18 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         inpN.value = c.nombre || '';
         inpF.value = c.nif || '';
         inpId.value = c.id;
-        clienteAltaSelId = c.id;
-        document.getElementById('aa_direccion').value = c.domicilio || '';
-        document.getElementById('aa_poblacion').value = c.poblacion || '';
-        document.getElementById('aa_cp').value = c.codigo_postal || '';
-        document.getElementById('aa_provincia').value = c.provincia || '';
+        clienteBajaSelId = c.id;
+        document.getElementById('ba_direccion').value = c.domicilio || '';
+        document.getElementById('ba_poblacion').value = c.poblacion || '';
+        document.getElementById('ba_cp').value = c.codigo_postal || '';
+        document.getElementById('ba_provincia').value = c.provincia || '';
         lista.style.display = 'none';
+
+        // Solo en baja NUEVA (no al editar una ya existente): muestra el
+        // selector con las altas abiertas de este cliente.
+        if (!bajaAlquilerEditId) {
+          cargarAltasClienteParaBaja(c.id);
+        }
       }
       function render(items, textoEscrito) {
         if (!items.length) {
@@ -18403,12 +18418,74 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       addLineaBaja();
       recalcTotalBaja();
       document.getElementById('ba_num').value = '';
-
+      document.getElementById('ba_selector_alta_wrap').style.display = 'none';
+      document.getElementById('ba_selector_alta').innerHTML = `<option value="">— Sin seleccionar (rellenar a mano) —</option>`;
       document.getElementById('modalBajaAlquiler').classList.add('visible');
       setTimeout(() => {
         setupClienteBajaAC('ba_cliente', 'ba_nif', 'ba_cliente_id');
         setupMunicipioAC('ba_poblacion', 'ba_cp');
       }, 50);
+    }
+
+    let altasClienteBaja = []; // altas abiertas del cliente actual, para elegir en la baja
+
+    async function cargarAltasClienteParaBaja(clienteId) {
+      const wrap = document.getElementById('ba_selector_alta_wrap');
+      const sel = document.getElementById('ba_selector_alta');
+      if (!wrap || !sel) return;
+      altasClienteBaja = [];
+      sel.innerHTML = `<option value="">— Sin seleccionar (rellenar a mano) —</option>`;
+      sel.value = '';
+      wrap.style.display = 'none';
+      if (!clienteId) return;
+
+      try {
+        const altas = await apiGetAll(
+          'alquileres',
+          `cliente_id=eq.${clienteId}&tipo=is.null&select=*,alquileres_items(*)&order=fecha.desc`
+        );
+        altasClienteBaja = altas || [];
+        if (!altasClienteBaja.length) return; // el selector se queda oculto
+
+        sel.innerHTML = `<option value="">— Sin seleccionar (rellenar a mano) —</option>` +
+          altasClienteBaja.map(a =>
+            `<option value="${a.id}">${a.numero_albaran || 's/n'} — ${fmtF(a.fecha)}${a.obra ? ' — ' + a.obra : ''}</option>`
+          ).join('');
+        wrap.style.display = 'block';
+      } catch (e) {
+        console.error('No se pudieron cargar las altas del cliente para la baja:', e);
+      }
+    }
+
+    function onSeleccionarAltaParaBaja() {
+      const sel = document.getElementById('ba_selector_alta');
+      const altaId = parseInt(sel.value);
+      if (!altaId) return; // "Sin seleccionar" — no se toca nada, sigue el flujo manual de siempre
+
+      const alta = altasClienteBaja.find(a => a.id === altaId);
+      if (!alta) return;
+      const items = alta.alquileres_items || [];
+      if (!items.length) { toast('Esa alta no tiene artículos', 'err'); return; }
+
+      document.getElementById('lineasBaja').innerHTML = '';
+      lineasBajaCount = 0;
+      const fechaBaja = document.getElementById('ba_fecha')?.value || hoy();
+
+      items.forEach(it => {
+        addLineaBaja();
+        const idx = lineasBajaCount;
+        document.getElementById(`bal_cod_${idx}`).value = it.articulo_codigo || '';
+        document.getElementById(`bal_desc_${idx}`).value = it.descripcion || '';
+        document.getElementById(`bal_precio_${idx}`).value = it.precio_unitario != null ? it.precio_unitario : 0;
+        document.getElementById(`bal_dto_${idx}`).value = it.dto_pct || 0;
+        document.getElementById(`bal_cant_${idx}`).value = diasAlquiler(alta.fecha, fechaBaja);
+      });
+
+      const obraInput = document.getElementById('ba_obra');
+      if (obraInput && !obraInput.value.trim()) obraInput.value = alta.obra || '';
+
+      recalcTotalBaja();
+      toast(`Cargados los productos de la alta ${alta.numero_albaran || ''} (${fmtF(alta.fecha)})`, 'ok');
     }
 
     async function guardarBajaAlquiler() {

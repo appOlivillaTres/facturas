@@ -3951,6 +3951,19 @@
       </div>
     </div>
   </div>
+  <!-- MODAL GESTIÓN DE USUARIOS -->
+<div class="modal-overlay" id="modalGestionUsuarios">
+  <div class="modal-box" style="max-width:640px">
+    <h3><i class="fa-solid fa-user-gear" style="color:#b53987"></i>Usuarios</h3>
+    <div id="listaUsuariosGestion"></div>
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="cerrarModal('modalGestionUsuarios')">Cerrar</button>
+      <button class="btn-guardar" onclick="cerrarModal('modalGestionUsuarios'); abrirModalNuevoUsuario()">
+        <i class="fa-solid fa-user-plus me-1"></i>Nuevo usuario
+      </button>
+    </div>
+  </div>
+</div>
 
   <!-- MODAL DETALLE -->
   <div class="modal-overlay" id="modalDetalle">
@@ -25052,6 +25065,69 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         toast('Error al crear el usuario: ' + e.message, 'err');
       }
     }
+    async function abrirModalGestionUsuarios() {
+  if (currentPersona !== 'emilio') { toast('Solo Emilio puede gestionar usuarios', 'err'); return; }
+  await cargarUsuariosPermisosCache();
+  renderListaUsuariosGestion();
+  document.getElementById('modalGestionUsuarios').classList.add('visible');
+}
+
+function renderListaUsuariosGestion() {
+  const cont = document.getElementById('listaUsuariosGestion');
+  if (!usuariosPermisosDB.length) {
+    cont.innerHTML = `<p style="text-align:center;color:#aaa;padding:1.5rem">No hay usuarios</p>`;
+    return;
+  }
+  cont.innerHTML = `<table class="mini-table"><thead><tr><th>Nombre</th><th>Clave</th><th>Estado</th><th></th></tr></thead><tbody>
+    ${usuariosPermisosDB.map(u => `<tr>
+      <td><strong>${dashboardEscape(u.nombre || u.persona)}</strong></td>
+      <td>${dashboardEscape(u.persona)}</td>
+      <td><span class="badge-estado ${u.activo ? 'badge-pagado' : 'badge-vencido'}">${u.activo ? 'ACTIVO' : 'DESACTIVADO'}</span></td>
+      <td style="white-space:nowrap">
+        ${u.persona === 'emilio' ? '' : `
+          <button class="btn-toggle-pago pendiente" onclick="toggleActivoUsuario('${u.persona}', ${!!u.activo})">
+            ${u.activo ? 'Desactivar' : 'Activar'}
+          </button>
+          <button class="btn-eliminar" title="Eliminar definitivamente" onclick="eliminarUsuario('${u.persona}')">
+            <i class="fa-solid fa-trash"></i>
+          </button>`}
+      </td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+async function toggleActivoUsuario(persona, activo) {
+  const u = usuariosPermisosDB.find(x => x.persona === persona);
+  if (!u) return;
+  try {
+    await apiPatch('usuarios_permisos', u.id, { activo: !activo });
+    await cargarUsuariosPermisosCache();
+    renderListaUsuariosGestion();
+    toast(!activo ? 'Usuario activado' : 'Usuario desactivado');
+  } catch (e) { toast('Error: ' + e.message, 'err'); }
+}
+
+async function eliminarUsuario(persona) {
+  if (currentPersona !== 'emilio' || persona === 'emilio') return;
+  if (!confirm(`¿Eliminar definitivamente a "${persona}"? Perderá el acceso y no se puede deshacer.`)) return;
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/eliminar-usuario`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + session.access_token
+      },
+      body: JSON.stringify({ persona })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error desconocido');
+    toast('Usuario eliminado');
+    await cargarUsuariosPermisosCache();
+    renderListaUsuariosGestion();
+  } catch (e) { toast('Error al eliminar: ' + e.message, 'err'); }
+}
   </script>
 
 

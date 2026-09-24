@@ -12669,19 +12669,19 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
           nif: a.nif || null,
           fecha: a.fecha || hoy(),
           total: a.total != null ? a.total : 0,
-          numeros_albaran: a.numero_albaran ? [a.numero_albaran] : [],
-          estado: 'pendiente',
-          archivo_url: a.archivo_url || null,
-          archivos_urls: a.archivos_urls || []
+          nombre_obra: a.nombre_obra || null,
+          numero_factura: null
         };
-        if (destino === 'facturas_obra' || destino === 'facturas_csg') {
-          payload.nombre_obra = a.nombre_obra || '';
-        }
 
         await asegurarProveedor(payload.proveedor, payload.nif);
-        await apiPost(destino, payload);
+
+        const { error } = await supabaseClient.rpc('mover_albaran_a_factura', {
+          p_albaran_id: id,
+          p_destino: destino
+        });
+        if (error) throw new Error(error.message);
+
         notificarRevisoresFactura(destino, payload);
-        await apiDelete('albaranes', id);
 
         toast(`Albarán movido a <strong>${ETIQUETA_TABLA_FACTURAS[destino] || destino}</strong>`);
         cargarDatos();

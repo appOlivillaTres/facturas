@@ -7542,29 +7542,37 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
 
     async function avisarTelegramEvento(paraPersona, evento, accion) {   // con la persona que hemos visto que no era la que creaba el evento y el evento, se envia la notificacion con la información de la cita
       try {
-        await fetch(
-          'https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
-            body: JSON.stringify({
-              tipo: 'evento_calendario_whatsapp',
-              accion: accion || 'creado', // 'creado' | 'editado' | 'cancelado' — para que clever-worker pueda adaptar el texto del mensaje
-              para_persona: paraPersona,
-              evento: {
-                titulo: evento.titulo,
-                fecha: evento.fecha,
-                hora: evento.hora,
-                notas: evento.notas,
-                creado_por: NOMBRES_PERSONAS[evento.creado_por] || evento.creado_por
-              }
-            })
+    await fetch(
+      'https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + SUPABASE_KEY
+        },
+        body: JSON.stringify({
+          tipo: 'evento_calendario_whatsapp',
+          accion: accion || 'creado',
+
+          // Ahora el backend enviará el mensaje a los DOS
+          notificar_a_todos: true,
+
+          para_persona: paraPersona,
+
+          evento: {
+            titulo: evento.titulo,
+            fecha: evento.fecha,
+            hora: evento.hora,
+            notas: evento.notas,
+            creado_por: evento.creado_por || currentPersona
           }
-        );
-      } catch (e) {
-        console.error('No se pudo avisar por Telegram:', e);
+        })
       }
-    }
+    );
+  } catch (e) {
+    console.error('No se pudo avisar por Telegram:', e);
+  }
+}
 
 
 

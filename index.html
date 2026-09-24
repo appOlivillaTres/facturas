@@ -3242,6 +3242,9 @@
         </div>
       </div>
       <div class="nav-principal">
+        <button class="btn-nav" id="btnNavUsuarios" onclick="cambiarSeccion('usuarios')" style="display:none">
+          <i class="fa-solid fa-user-gear"></i>Usuarios
+        </button>
         <button class="btn-nav" onclick="cambiarSeccion('dashboard')">
           <i class="fa-solid fa-chart-line"></i>Inicio
         </button>
@@ -3921,6 +3924,30 @@
         </div>
         <div class="modal-pdf-tabs" id="modalPdfTabs" style="display:none"></div>
         <div id="modalPdfPanelContenido" class="visor-contenido"></div>
+      </div>
+    </div>
+  </div>
+  <!-- MODAL NUEVO USUARIO -->
+  <div class="modal-overlay" id="modalNuevoUsuario">
+    <div class="modal-box" style="max-width:640px">
+      <h3><i class="fa-solid fa-user-plus" style="color:#b53987"></i>Nuevo Usuario</h3>
+      <div class="form-grid-2">
+        <div class="form-group"><label>Nombre *</label><input type="text" id="nu_nombre" placeholder="Ej: Marta García">
+        </div>
+        <div class="form-group"><label>Clave interna (sin espacios) *</label><input type="text" id="nu_persona"
+            placeholder="marta"></div>
+        <div class="form-group span2"><label>Email *</label><input type="email" id="nu_email"
+            placeholder="marta@olivillatres.com"></div>
+        <div class="form-group span2"><label>Contraseña *</label><input type="password" id="nu_password"
+            placeholder="Mínimo 6 caracteres"></div>
+      </div>
+      <div class="form-seccion">Secciones a las que tendrá acceso</div>
+      <div id="nu_secciones_grid"
+        style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:280px;overflow-y:auto;padding:8px"></div>
+      <div class="modal-btns">
+        <button class="btn-cancelar" onclick="cerrarModal('modalNuevoUsuario')">Cancelar</button>
+        <button class="btn-guardar" onclick="guardarNuevoUsuario()"><i class="fa-solid fa-floppy-disk me-1"></i>Crear
+          usuario</button>
       </div>
     </div>
   </div>
@@ -5114,12 +5141,11 @@
     const PERSONAS_ACCESO_TOTAL = ['natalia'];
 
     function tieneAccesoSeccion(persona, sec) {
-      if (PERSONAS_ACCESO_TOTAL.includes(persona)) return true; // Mira si la persona que ha entrado, esta en esa lista o no
-      if (ACCESO_EXCLUSIVO[persona]) return ACCESO_EXCLUSIVO[persona].includes(sec); // mira si estas en la lista de exclusivos, si estas, y mira si esa persona puede entrar en esa seccion o no
-      const restringida = ACCESO_SECCIONES[sec]; //guarda en restringido las secciones y las personas correspondientes a esas secciones 
-      return !restringida || restringida.includes(persona); // si la sala no esta restringida, o si lo esta pero eres una de las personas que esta en esa lista, devuelve true, si no estas en la lista o es restringida, devuelve false y no tienes acceso
+      const perfil = usuariosPermisosDB.find(u => u.persona === persona);
+      if (!perfil || !perfil.activo) return false;
+      if (perfil.secciones.includes('__todo__')) return true;
+      return perfil.secciones.includes(sec) || !ACCESO_SECCIONES[sec]; // mantiene tu lógica de "sin restricción = acceso libre" si quieres conservarla
     }
-
 
 
 
@@ -5170,6 +5196,12 @@
       'estudio_obras',
       'obras_estudio'
     ];
+
+    let usuariosPermisosDB = [];
+
+    async function cargarUsuariosPermisosCache() {
+      usuariosPermisosDB = await apiGetAll('usuarios_permisos', 'order=nombre');
+    }
 
     // Qué campos se buscan en cada tabla, y cómo se pinta cada resultado
     const TABLAS_BUSQUEDA_GLOBAL = [
@@ -5592,6 +5624,12 @@
 
       const btnAud = document.getElementById('btnAuditoria');
       if (btnAud) btnAud.style.display = PERSONAS_CON_AUDITORIA.includes(currentPersona) ? '' : 'none';
+      const btnUsu = document.getElementById('btnNavUsuarios');
+      if (btnUsu) {
+        btnUsu.style.display = currentPersona === 'emilio' ? '' : 'none';
+        btnUsu.setAttribute('onclick', 'abrirModalNuevoUsuario()');
+      }
+
     }
 
     let cachesIniciales = null; // Promise compartida para no recargar cachés al volver al selector
@@ -5605,6 +5643,7 @@
           cargarInventarioCache(), cargarClientesCache(), cargarProveedoresCache(),
           cargarObrasCache(), cargarMaterialesExclusivosCache(),
           cargarMaquinariaCache(), cargarMunicipiosCache(), cargarTemasFasesEstudioCache(),
+          cargarUsuariosPermisosCache(),
           cargarObrasEstudioCache()
         ]);
 
@@ -7542,37 +7581,37 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
 
     async function avisarTelegramEvento(paraPersona, evento, accion) {   // con la persona que hemos visto que no era la que creaba el evento y el evento, se envia la notificacion con la información de la cita
       try {
-    await fetch(
-      'https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + SUPABASE_KEY
-        },
-        body: JSON.stringify({
-          tipo: 'evento_calendario_whatsapp',
-          accion: accion || 'creado',
+        await fetch(
+          'https://ppezngdpumbbqpkalpyx.supabase.co/functions/v1/clever-worker',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + SUPABASE_KEY
+            },
+            body: JSON.stringify({
+              tipo: 'evento_calendario_whatsapp',
+              accion: accion || 'creado',
 
-          // Ahora el backend enviará el mensaje a los DOS
-          notificar_a_todos: true,
+              // Ahora el backend enviará el mensaje a los DOS
+              notificar_a_todos: true,
 
-          para_persona: paraPersona,
+              para_persona: paraPersona,
 
-          evento: {
-            titulo: evento.titulo,
-            fecha: evento.fecha,
-            hora: evento.hora,
-            notas: evento.notas,
-            creado_por: evento.creado_por || currentPersona
+              evento: {
+                titulo: evento.titulo,
+                fecha: evento.fecha,
+                hora: evento.hora,
+                notas: evento.notas,
+                creado_por: evento.creado_por || currentPersona
+              }
+            })
           }
-        })
+        );
+      } catch (e) {
+        console.error('No se pudo avisar por Telegram:', e);
       }
-    );
-  } catch (e) {
-    console.error('No se pudo avisar por Telegram:', e);
-  }
-}
+    }
 
 
 
@@ -24914,6 +24953,93 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         await apiPost('auditoria', datos);
       } catch (e) {
         console.error('No se pudo registrar la auditoría:', e);
+      }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // NUEVO USUARIO
+    function abrirModalNuevoUsuario() {
+      if (currentPersona !== 'emilio') { toast('Solo Emilio puede crear usuarios', 'err'); return; }
+      document.getElementById('nu_nombre').value = '';
+      document.getElementById('nu_persona').value = '';
+      document.getElementById('nu_email').value = '';
+      document.getElementById('nu_password').value = '';
+      document.getElementById('nu_secciones_grid').innerHTML = SECCIONES_INFO
+        ? Object.entries(SECCIONES_INFO).filter(([k]) => k !== 'dashboard').map(([k, [tit]]) =>
+          `<label style="display:flex;gap:6px;align-items:center;font-size:.85rem"><input type="checkbox" class="nu-seccion" value="${k}"> ${tit}</label>`
+        ).join('') : '';
+      document.getElementById('modalNuevoUsuario').classList.add('visible');
+    }
+
+    async function guardarNuevoUsuario() {
+      if (currentPersona !== 'emilio') return;
+      const nombre = document.getElementById('nu_nombre').value.trim();
+      const persona = document.getElementById('nu_persona').value.trim().toLowerCase();
+      const email = document.getElementById('nu_email').value.trim();
+      const password = document.getElementById('nu_password').value;
+      const secciones = [...document.querySelectorAll('.nu-seccion:checked')].map(c => c.value);
+
+      if (!nombre || !persona || !email || !password) { toast('Rellena todos los campos obligatorios', 'err'); return; }
+      if (!/^[a-z0-9]+$/.test(persona)) { toast('La clave interna solo puede tener letras minúsculas y números, sin espacios', 'err'); return; }
+      if (password.length < 6) { toast('La contraseña debe tener al menos 6 caracteres', 'err'); return; }
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/crear-usuario`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+          body: JSON.stringify({ persona, nombre, email, password, secciones, solicitado_por: currentPersona })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error desconocido');
+
+        toast(`Usuario "${nombre}" creado correctamente`);
+        cerrarModal('modalNuevoUsuario');
+        await cargarUsuariosPermisosCache();
+      } catch (e) {
+        toast('Error al crear el usuario: ' + e.message, 'err');
       }
     }
   </script>

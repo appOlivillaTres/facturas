@@ -5141,10 +5141,20 @@
     const PERSONAS_ACCESO_TOTAL = ['natalia'];
 
     function tieneAccesoSeccion(persona, sec) {
+      // Fallback de seguridad: si la tabla de permisos no ha cargado
+      // (tabla no creada aún, error de red, etc.), usamos la lógica antigua
+      // para no dejar a nadie sin acceso.
+      if (!usuariosPermisosDB || !usuariosPermisosDB.length) {
+        if (PERSONAS_ACCESO_TOTAL.includes(persona)) return true;
+        if (ACCESO_EXCLUSIVO[persona]) return ACCESO_EXCLUSIVO[persona].includes(sec);
+        const restringida = ACCESO_SECCIONES[sec];
+        return !restringida || restringida.includes(persona);
+      }
+
       const perfil = usuariosPermisosDB.find(u => u.persona === persona);
       if (!perfil || !perfil.activo) return false;
       if (perfil.secciones.includes('__todo__')) return true;
-      return perfil.secciones.includes(sec) || !ACCESO_SECCIONES[sec]; // mantiene tu lógica de "sin restricción = acceso libre" si quieres conservarla
+      return perfil.secciones.includes(sec);
     }
 
 

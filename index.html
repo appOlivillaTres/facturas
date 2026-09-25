@@ -13581,6 +13581,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
             proveedor: prov,
             nif: document.getElementById('f_nif').value.trim() || null,
             concepto: document.getElementById('f_concepto').value.trim() || null,
+            observaciones: document.getElementById('f_observaciones').value.trim() || null,
             total: parseFloat(document.getElementById('f_total').value || 0),
             moneda: document.getElementById('f_moneda').value || 'EUR',
             estado: document.getElementById('f_est').value,
@@ -14125,6 +14126,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
             proveedor: prov,
             nif: nifCampo,
             concepto: document.getElementById('f_concepto').value.trim() || null,
+            observaciones: document.getElementById('f_observaciones').value.trim() || null,
             total: totalCampo,
             moneda: document.getElementById('f_moneda').value || 'EUR',
             estado: document.getElementById('f_est').value,
@@ -14453,19 +14455,19 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
 
     function unidadProducto(p) { return (p && p.unidad === 'metros') ? 'metros' : 'unidades'; }
     function recalcPrecioDesdeMargen() {
-  const costoReal = parseFloat(document.getElementById('f_costo')?.value || 0);
-  const descuento = parseFloat(document.getElementById('f_descuento')?.value || 0);
-  const margen = parseFloat(document.getElementById('f_margen')?.value || 0);
+      const costoReal = parseFloat(document.getElementById('f_costo')?.value || 0);
+      const descuento = parseFloat(document.getElementById('f_descuento')?.value || 0);
+      const margen = parseFloat(document.getElementById('f_margen')?.value || 0);
 
-  const costeEfectivo = costoReal * (1 - descuento / 100);
-  const precio = costeEfectivo * (1 + margen / 100);
+      const costeEfectivo = costoReal * (1 - descuento / 100);
+      const precio = costeEfectivo * (1 + margen / 100);
 
-  const inpCosteEfectivo = document.getElementById('f_coste_efectivo');
-  if (inpCosteEfectivo) inpCosteEfectivo.value = costeEfectivo.toFixed(2);
+      const inpCosteEfectivo = document.getElementById('f_coste_efectivo');
+      if (inpCosteEfectivo) inpCosteEfectivo.value = costeEfectivo.toFixed(2);
 
-  const inpPrecio = document.getElementById('f_precio');
-  if (inpPrecio) inpPrecio.value = precio.toFixed(2);
-}
+      const inpPrecio = document.getElementById('f_precio');
+      if (inpPrecio) inpPrecio.value = precio.toFixed(2);
+    }
     function unidadCorta(p) { return unidadProducto(p) === 'metros' ? 'm' : 'uds.'; }
     function fmtStock(v) {
       const n = parseFloat(v || 0);
@@ -19421,6 +19423,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         set('f_prov', f.proveedor);
         set('f_nif', f.nif);
         set('f_concepto', f.concepto);
+        set('f_observaciones', f.observaciones);
         set('f_total', f.total);
         set('f_moneda', f.moneda || 'EUR');
         set('f_venc', f.fecha_vencimiento);
@@ -19749,8 +19752,9 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
           <input type="text" id="f_nif" placeholder="Se rellena al elegir proveedor">
         </div>
 
-        <div class="form-group span3"><label>Concepto</label><input type="text" id="f_concepto" placeholder="Descripción de la factura"></div>
-<div class="form-group span2">
+                <div class="form-group span3"><label>Concepto</label><input type="text" id="f_concepto" placeholder="Descripción de la factura"></div>
+        <div class="form-group span3"><label>Observaciones <span style="font-size:.72rem;color:#888">(apunte interno — no sale en Excel ni impresiones)</span></label><input type="text" id="f_observaciones" placeholder="Nota interna..."></div>
+        <div class="form-group span2">
   <label>Números de albarán <span style="font-size:.72rem;color:#888">(separados por coma)</span></label>
   <input type="text" id="f_num_albaranes" placeholder="ALB-001, ALB-002, ALB-003">
   <div id="albaranesVerWrap" style="margin-top:6px"></div>
@@ -19839,8 +19843,9 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
 
         <div class="form-group span3" id="obraUnicaWrap"><label>Nombre de la obra *</label>${htmlSelectObras('f_obra', 'Selecciona una obra...')}<p style="font-size:.72rem;color:#888;margin-top:4px">Si la obra no existe todavía, créala primero en la pestaña Obras.</p></div>
         ${htmlRepartoObras()}
-        <div class="form-group span3"><label>Concepto</label><input type="text" id="f_concepto" placeholder="Descripción de la factura"></div>
-<div class="form-group span2">
+                <div class="form-group span3"><label>Concepto</label><input type="text" id="f_concepto" placeholder="Descripción de la factura"></div>
+        <div class="form-group span3"><label>Observaciones <span style="font-size:.72rem;color:#888">(apunte interno — no sale en Excel ni impresiones)</span></label><input type="text" id="f_observaciones" placeholder="Nota interna..."></div>
+        <div class="form-group span2">
   <label>Números de albarán <span style="font-size:.72rem;color:#888">(separados por coma)</span></label>
   <input type="text" id="f_num_albaranes" placeholder="ALB-001, ALB-002, ALB-003">
   <div id="albaranesVerWrap" style="margin-top:6px"></div>
@@ -19937,8 +19942,9 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
 
         <div class="form-group span3" id="obraUnicaWrap"><label>Nombre de la obra <span style="font-size:.72rem;color:#888">(opcional)</span></label>${htmlSelectObras('f_obra', 'Sin obra')}</div>
         ${htmlRepartoObras()}
-<div class="form-group span3"><label>Concepto</label><input type="text" id="f_concepto" placeholder="Descripción de la factura"></div>
-<div class="form-group span2">
+        <div class="form-group span3"><label>Concepto</label><input type="text" id="f_concepto" placeholder="Descripción de la factura"></div>
+        <div class="form-group span3"><label>Observaciones <span style="font-size:.72rem;color:#888">(apunte interno — no sale en Excel ni impresiones)</span></label><input type="text" id="f_observaciones" placeholder="Nota interna..."></div>
+        <div class="form-group span2">
   <label>Números de albarán <span style="font-size:.72rem;color:#888">(separados por coma)</span></label>
   <input type="text" id="f_num_albaranes" placeholder="ALB-001, ALB-002, ALB-003">
   <div id="albaranesVerWrap" style="margin-top:6px"></div>
@@ -20051,6 +20057,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       </div>
       <div class="form-group ac-wrap"><label>NIF</label><input type="text" id="f_nif" placeholder="Se rellena al elegir proveedor"></div>
       <div class="form-group span3"><label>Concepto</label><input type="text" id="f_concepto" placeholder="Ej: Suministro eléctrico, seguro, gestoría..."></div>
+      <div class="form-group span3"><label>Observaciones <span style="font-size:.72rem;color:#888">(apunte interno — no sale en Excel ni impresiones)</span></label><input type="text" id="f_observaciones" placeholder="Nota interna..."></div>
       <div class="form-group span2">
   <label>Números de albarán <span style="font-size:.72rem;color:#888">(separados por coma)</span></label>
   <input type="text" id="f_num_albaranes" placeholder="ALB-001, ALB-002, ALB-003">

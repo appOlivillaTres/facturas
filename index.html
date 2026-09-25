@@ -14452,6 +14452,13 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
     }
 
     function unidadProducto(p) { return (p && p.unidad === 'metros') ? 'metros' : 'unidades'; }
+    function recalcPrecioDesdeMargen() {
+  const costo = parseFloat(document.getElementById('f_costo')?.value || 0);
+  const margen = parseFloat(document.getElementById('f_margen')?.value || 0);
+  const precio = costo * (1 + margen / 100);
+  const inpPrecio = document.getElementById('f_precio');
+  if (inpPrecio) inpPrecio.value = precio.toFixed(2);
+}
     function unidadCorta(p) { return unidadProducto(p) === 'metros' ? 'm' : 'uds.'; }
     function fmtStock(v) {
       const n = parseFloat(v || 0);
@@ -19215,7 +19222,11 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
           document.getElementById("f_stock_minimo").value = f.stock_minimo != null ? f.stock_minimo : 5;
           document.getElementById("f_pts").value = f.puntos_por_unidad || 0;
           document.getElementById("f_costo").value = f.costo != null ? f.costo : 0;
-          document.getElementById("f_precio").value = f.precio != null ? f.precio : 0;
+          const costoExistente = parseFloat(f.costo || 0);
+          const precioExistente = parseFloat(f.precio != null ? f.precio : 0);
+          const margenExistente = costoExistente > 0 ? ((precioExistente - costoExistente) / costoExistente * 100) : 0;
+          document.getElementById("f_margen").value = margenExistente.toFixed(2);
+          document.getElementById("f_precio").value = precioExistente.toFixed(2);
           document.getElementById("f_descuento").value = f.descuento != null ? f.descuento : 0;
           document.getElementById("f_codigo_barras").value = f.codigo_barras || "";
 
@@ -20236,8 +20247,9 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
   <div class="form-group"><label>Stock inicial</label><input type="number" id="f_stock" value="0" step="0.01" min="0"></div>
   <div class="form-group"><label>Stock mínimo (aviso) <span style="font-size:.72rem;color:#888">— avisa a Cynthia y Jose</span></label><input type="number" id="f_stock_minimo" value="5" step="0.01" min="0"></div>
   <div class="form-group"><label>Puntos por unidad</label><input type="number" id="f_pts" value="0" min="0"></div>
-  <div class="form-group"><label>Costo (€)</label><input type="number" id="f_costo" value="0" step="0.01" min="0"></div>
-    <div class="form-group"><label>Precio de venta (€)</label><input type="number" id="f_precio" value="0" step="0.01" min="0"></div>
+  <div class="form-group"><label>Costo (€)</label><input type="number" id="f_costo" value="0" step="0.01" min="0" oninput="recalcPrecioDesdeMargen()"></div>
+  <div class="form-group"><label>Margen (%)</label><input type="number" id="f_margen" value="0" step="0.01" oninput="recalcPrecioDesdeMargen()"></div>
+  <div class="form-group"><label>Precio de venta (€) <span style="font-size:.72rem;color:#888">(calculado)</span></label><input type="number" id="f_precio" value="0" step="0.01" readonly style="background:#f7f0f5;font-weight:600"></div>
   <div class="form-group"><label>Descuento (%)</label><input type="number" id="f_descuento" value="0" step="0.01" min="0" max="100"></div>
 </div>
 <div class="form-group span2">

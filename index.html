@@ -4188,6 +4188,14 @@
         style="max-height:220px;overflow-y:auto;border:1.5px solid #ede5f5;border-radius:8px;padding:8px 10px">
         <p style="color:#aaa;font-size:.82rem;text-align:center;margin:10px 0">Selecciona primero un cliente</p>
       </div>
+      <div class="form-seccion">Líneas directas <span style="font-weight:400;font-size:.75rem;color:#888">(sin
+          albarán)</span></div>
+      <p style="font-size:.78rem;color:#888;margin-top:-8px"><i class="fa-solid fa-info-circle me-1"></i>Para facturar
+        directamente sin albaranes. No afecta al stock. Puedes combinarlo con albaranes.</p>
+      <div id="fvLineasDirectas"></div>
+      <button type="button" class="btn-add-linea" onclick="addLineaFacturaDirecta()">
+        <i class="fa-solid fa-plus me-1"></i>Añadir línea
+      </button>
 
       <div class="form-grid" style="margin-top:14px;padding-top:12px;border-top:1.5px solid #ede5f5">
         <div class="form-group"><label>Base imponible (€)</label><input type="number" id="fv_base" step="0.01" readonly
@@ -22348,6 +22356,19 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
     function recalcTotalFacturaVenta() {
       let base = 0;
       document.querySelectorAll('.fv-chk-alb:checked').forEach(chk => base += parseFloat(chk.dataset.base || 0));
+
+      document.querySelectorAll('[id^="fvl_desc_"]').forEach(inp => {
+        const idx = inp.id.split('_')[2];
+        const cant = parseFloat(document.getElementById(`fvl_cant_${idx}`)?.value || 0);
+        const precio = parseFloat(document.getElementById(`fvl_precio_${idx}`)?.value || 0);
+        const dto = parseFloat(document.getElementById(`fvl_dto_${idx}`)?.value || 0);
+        const subtotal = cant * precio;
+        const lineaTotal = subtotal - subtotal * dto / 100;
+        const el = document.getElementById(`fvl_total_${idx}`);
+        if (el) el.value = lineaTotal.toFixed(2);
+        if (inp.value.trim()) base += lineaTotal;
+      });
+
       document.getElementById('fv_base').value = base.toFixed(2);
       const pct = parseFloat(document.getElementById('fv_pct_iva').value || 0);
       document.getElementById('fv_total').value = (base + base * pct / 100).toFixed(2);
@@ -22371,6 +22392,9 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       document.getElementById('fv_marcar_todos').checked = false;
       document.getElementById('fvAlbaranesLista').innerHTML = `<p style="text-align:center;color:#aaa;font-size:.82rem">Selecciona primero un cliente</p>`;
 
+      document.getElementById('fvLineasDirectas').innerHTML = '';
+      lineasFvCount = 0;
+      addLineaFacturaDirecta();
       document.getElementById('modalFacturaVenta').classList.add('visible');
       setTimeout(async () => {
         setupClienteFacturaAC('fv_cliente', 'fv_nif', 'fv_cliente_id');
@@ -22420,6 +22444,15 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         setupClienteFacturaAC('fv_cliente', 'fv_nif', 'fv_cliente_id');
         const vinculados = (f.facturas_venta_albaranes || []).map(v => v.albaran_venta_id ? `venta:${v.albaran_venta_id}` : `alquiler:${v.alquiler_id}`);
         await cargarAlbaranesSinFacturarCliente(f.cliente_id, vinculados);
+        document.getElementById('fvLineasDirectas').innerHTML = '';
+        lineasFvCount = 0;
+        try {
+          const directas = await apiGet('facturas_venta_items',
+            `factura_venta_id=eq.${id}&albaran_venta_id=is.null&alquiler_id=is.null&order=id.asc`);
+          directas.forEach(it => addLineaFacturaDirecta(it));
+        } catch (e) { console.error('No se pudieron cargar las líneas directas', e); }
+        if (!document.querySelector('[id^="fvl_desc_"]')) addLineaFacturaDirecta();
+        recalcTotalFacturaVenta();
       }, 50);
     }
 
@@ -22438,7 +22471,10 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       if (!fvClienteSelId) { toast('Selecciona un cliente de la lista', 'err'); return; }
 
       const clavesSeleccionadas = [...document.querySelectorAll('.fv-chk-alb:checked')].map(chk => chk.value);
-      if (!clavesSeleccionadas.length) { toast('Selecciona al menos un albarán a facturar', 'err'); return; }
+      const lineasDirectas = _leerLineasFacturaDirecta();
+      if (!clavesSeleccionadas.length && !lineasDirectas.length) {
+        toast('Selecciona al menos un albarán o añade una línea directa', 'err'); return;
+      }
 
       const cliente_nombre = document.getElementById('fv_cliente').value.trim();
       const nif = document.getElementById('fv_nif').value.trim() || null;
@@ -22548,6 +22584,17 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
           }
         }
 
+        if (lineasDirectas.length) {
+          await apiPost('facturas_venta_items', lineasDirectas.map(l => ({
+            factura_venta_id: facturaId,
+            producto_nombre: l.producto_nombre,
+            cantidad: l.cantidad,
+            precio_unitario: l.precio_unitario,
+            dto_pct: l.dto_pct,
+            importe_total: l.importe_total
+          })));
+        }
+
         toast(fvEditId ? 'Factura actualizada correctamente' : `Factura ${payload.numero_factura || ''} guardada correctamente`);
         const idParaImprimir = facturaId;
         fvEditId = null;
@@ -22572,6 +22619,69 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         if (reg) reg.estado = nuevo;
         renderTablaConScroll();
       } catch (e) { toast('Error: ' + e.message, 'err'); }
+    }
+
+    let lineasFvCount = 0;
+
+    function addLineaFacturaDirecta(item) {
+      lineasFvCount++;
+      const idx = lineasFvCount;
+      const div = document.createElement('div');
+      div.id = `fvl_${idx}`;
+      div.className = 'linea-prod';
+      div.style.gridTemplateColumns = '1fr 90px 100px 80px 100px auto';
+      div.innerHTML = `
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Descripción</label>
+      <input type="text" id="fvl_desc_${idx}" list="dl_productos" value="${dashboardEscape(item?.producto_nombre || '')}"
+        placeholder="Producto o concepto..." oninput="autocompletarPrecioLineaFV(${idx})">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Cantidad</label>
+      <input type="number" id="fvl_cant_${idx}" value="${item?.cantidad ?? 1}" min="0.01" step="0.01" oninput="recalcTotalFacturaVenta()">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Precio Ud. (€)</label>
+      <input type="number" id="fvl_precio_${idx}" value="${item?.precio_unitario ?? 0}" step="0.01" min="0" style="text-align:right" oninput="recalcTotalFacturaVenta()">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Dto. %</label>
+      <input type="number" id="fvl_dto_${idx}" value="${item?.dto_pct ?? 0}" step="0.01" min="0" max="100" style="text-align:right" oninput="recalcTotalFacturaVenta()">
+    </div>
+    <div class="form-group" style="margin:0">
+      <label style="font-size:.75rem">Total (€)</label>
+      <input type="number" id="fvl_total_${idx}" readonly value="0.00" style="background:#f7f0f5;font-weight:600;text-align:right">
+    </div>
+    <button type="button" onclick="document.getElementById('fvl_${idx}').remove(); recalcTotalFacturaVenta();"
+      style="background:transparent;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:8px 2px;align-self:flex-end">
+      <i class="fa-solid fa-xmark"></i>
+    </button>`;
+      document.getElementById('fvLineasDirectas').appendChild(div);
+    }
+
+    function autocompletarPrecioLineaFV(idx) {
+      const prod = buscarProductoPorNombre(document.getElementById(`fvl_desc_${idx}`)?.value);
+      if (prod && prod.precio != null) document.getElementById(`fvl_precio_${idx}`).value = prod.precio;
+      recalcTotalFacturaVenta();
+    }
+
+    function _leerLineasFacturaDirecta() {
+      const lineas = [];
+      document.querySelectorAll('[id^="fvl_desc_"]').forEach(inp => {
+        const nombre = inp.value.trim();
+        if (!nombre) return;
+        const idx = inp.id.split('_')[2];
+        const cant = parseFloat(document.getElementById(`fvl_cant_${idx}`)?.value || 0);
+        const precio = parseFloat(document.getElementById(`fvl_precio_${idx}`)?.value || 0);
+        const dto = parseFloat(document.getElementById(`fvl_dto_${idx}`)?.value || 0);
+        if (cant <= 0) return;
+        const subtotal = cant * precio;
+        lineas.push({
+          producto_nombre: nombre, cantidad: cant, precio_unitario: precio, dto_pct: dto,
+          importe_total: +(subtotal - subtotal * dto / 100).toFixed(2)
+        });
+      });
+      return lineas;
     }
 
     async function eliminarFacturaVenta(id) {
@@ -24244,6 +24354,9 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       document.getElementById('fv_notas').value = '';
       document.getElementById('fv_filtro_mes').value = '';
 
+      document.getElementById('fvLineasDirectas').innerHTML = '';
+      lineasFvCount = 0;
+      addLineaFacturaDirecta();
       document.getElementById('modalFacturaVenta').classList.add('visible');
       setTimeout(async () => {
         setupClienteFacturaAC('fv_cliente', 'fv_nif', 'fv_cliente_id');

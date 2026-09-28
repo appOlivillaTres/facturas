@@ -4190,8 +4190,9 @@
       </div>
       <div class="form-seccion">Líneas directas <span style="font-weight:400;font-size:.75rem;color:#888">(sin
           albarán)</span></div>
-      <p style="font-size:.78rem;color:#888;margin-top:-8px"><i class="fa-solid fa-info-circle me-1"></i>Para facturar
-        directamente sin albaranes. No afecta al stock. Puedes combinarlo con albaranes.</p>
+      <p style="font-size:.78rem;color:#888;margin-top:-8px"><i class="fa-solid fa-info-circle me-1"></i>Los productos
+        que existan en el inventario descuentan stock automáticamente. Los conceptos libres (servicios, portes...) no.
+        Los albaranes ya descontaron su stock al crearse.</p>
       <div id="fvLineasDirectas"></div>
       <button type="button" class="btn-add-linea" onclick="addLineaFacturaDirecta()">
         <i class="fa-solid fa-plus me-1"></i>Añadir línea
@@ -4340,7 +4341,7 @@
     <div class="modal-box-sm">
       <h3><i class="fa-solid fa-barcode" style="color:#2d7a4f"></i>Ajuste rápido de stock</h3>
 
-      <!-- 👇 AQUÍ va el bloque que me preguntaste, sustituyendo al input suelto de antes -->
+
       <div class="form-group" style="margin:0 0 12px">
         <label style="font-size:.78rem;color:#2d7a4f"><i class="fa-solid fa-barcode me-1"></i>Escanea el
           producto</label>
@@ -22498,14 +22499,14 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       btn.disabled = true;
       try {
         let facturaId;
-
+        let directasAntiguas = [];
         if (fvEditId) {
           await apiPatch('facturas_venta', fvEditId, payload);
           facturaId = fvEditId;
 
           const antiguos = await apiGet('facturas_venta_albaranes', `factura_venta_id=eq.${facturaId}`);
           for (const a of antiguos) await apiDelete('facturas_venta_albaranes', a.id);
-
+          directasAntiguas = itemsAntiguos.filter(it => !it.albaran_venta_id && !it.alquiler_id && it.producto_id);
           const itemsAntiguos = await apiGet('facturas_venta_items', `factura_venta_id=eq.${facturaId}`);
           for (const it of itemsAntiguos) await apiDelete('facturas_venta_items', it.id);
 
@@ -22584,15 +22585,19 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
           }
         }
 
-        if (lineasDirectas.length) {
-          await apiPost('facturas_venta_items', lineasDirectas.map(l => ({
-            factura_venta_id: facturaId,
-            producto_nombre: l.producto_nombre,
-            cantidad: l.cantidad,
-            precio_unitario: l.precio_unitario,
-            dto_pct: l.dto_pct,
-            importe_total: l.importe_total
-          })));
+        if (lineasDirectas.length || directasAntiguas.length) {
+          if (lineasDirectas.length) {
+            await apiPost('facturas_venta_items', lineasDirectas.map(l => ({
+              factura_venta_id: facturaId,
+              producto_id: l.producto_id,
+              producto_nombre: l.producto_nombre,
+              cantidad: l.cantidad,
+              precio_unitario: l.precio_unitario,
+              dto_pct: l.dto_pct,
+              importe_total: l.importe_total
+            })));
+          }
+          await ajustarStockFacturaDirecta(directasAntiguas, lineasDirectas);
         }
 
         toast(fvEditId ? 'Factura actualizada correctamente' : `Factura ${payload.numero_factura || ''} guardada correctamente`);
@@ -22676,12 +22681,53 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         const dto = parseFloat(document.getElementById(`fvl_dto_${idx}`)?.value || 0);
         if (cant <= 0) return;
         const subtotal = cant * precio;
+        const prod = buscarProductoPorNombre(nombre);
         lineas.push({
+          producto_id: prod ? prod.id : null,
           producto_nombre: nombre, cantidad: cant, precio_unitario: precio, dto_pct: dto,
           importe_total: +(subtotal - subtotal * dto / 100).toFixed(2)
         });
       });
       return lineas;
+    }
+    // Aplica sólo la DIFERENCIA de stock entre lo que había y lo que hay ahora.
+    // antiguas: items ya guardados en la BD (con producto_id). nuevas: líneas del formulario.
+    async function ajustarStockFacturaDirecta(antiguas, nuevas) {
+      const delta = {};
+      antiguas.forEach(it => {
+        if (!it.producto_id) return;
+        delta[it.producto_id] = (delta[it.producto_id] || 0) + Number(it.cantidad);   // se devuelve
+      });
+      nuevas.forEach(l => {
+        if (!l.producto_id) return;
+        delta[l.producto_id] = (delta[l.producto_id] || 0) - Number(l.cantidad);      // se descuenta
+      });
+
+      const negativos = [];
+      for (const [pid, d] of Object.entries(delta)) {
+        if (!d) continue;
+        const prod = inventarioDB.find(p => p.id == pid);
+        if (!prod) continue;
+        const stockAntes = parseFloat(prod.stock) || 0;
+        const stockDespues = +(stockAntes + d).toFixed(2);
+
+        const patch = { stock: stockDespues };
+        if (d > 0 && stockDespues > (prod.stock_minimo ?? 5)) patch.aviso_stock_enviado = false;
+        await apiPatch('inventario', prod.id, patch);
+        prod.stock = stockDespues;
+        if (patch.aviso_stock_enviado === false) prod.aviso_stock_enviado = false;
+
+        registrarHistorial('inventario', {
+          producto: prod.nombre,
+          accion: d > 0 ? 'suma' : 'resta',
+          cantidad: Math.abs(d),
+          stock_antes: stockAntes,
+          stock_despues: stockDespues
+        });
+
+        if (stockDespues < 0) negativos.push(`${prod.nombre} (${fmtStock(stockDespues)} ${unidadCorta(prod)})`);
+      }
+      if (negativos.length) toast(`⚠️ Stock en negativo: ${negativos.join(', ')}`, 'err');
     }
 
     async function eliminarFacturaVenta(id) {
@@ -22694,6 +22740,8 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
           await apiDelete('facturas_venta_albaranes', v.id);
         }
         const items = await apiGet('facturas_venta_items', `factura_venta_id=eq.${id}`);
+        const directas = items.filter(it => !it.albaran_venta_id && !it.alquiler_id && it.producto_id);
+        await ajustarStockFacturaDirecta(directas, []);   // repone el stock de las líneas directas
         for (const it of items) await apiDelete('facturas_venta_items', it.id);
         await apiDelete('facturas_venta', id);
         toast('Factura eliminada, albaranes liberados');

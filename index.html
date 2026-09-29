@@ -11527,6 +11527,13 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     <i class="fa-solid fa-file-signature"></i>
     Albarán
   </button>
+    <button
+    class="btn-toggle-pago"
+    style="background:#607d8b;color:#fff;border:1.5px solid #546570;margin-top:4px"
+    onclick="moverFacturaAVarios(${f.id},'facturas_almacen')">
+    <i class="fa-solid fa-ellipsis"></i>
+    Varios
+  </button>
 
 </td>
 
@@ -11650,6 +11657,13 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     <i class="fa-solid fa-file-signature"></i>
     Albarán
   </button>
+    <button
+    class="btn-toggle-pago"
+    style="background:#607d8b;color:#fff;border:1.5px solid #546570;margin-top:4px"
+    onclick="moverFacturaAVarios(${f.id},'facturas_obra')">
+    <i class="fa-solid fa-ellipsis"></i>
+    Varios
+  </button>
 </td>
 
 <td>
@@ -11770,6 +11784,13 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     <i class="fa-solid fa-file-signature"></i>
     Albarán
   </button>
+    <button
+    class="btn-toggle-pago"
+    style="background:#607d8b;color:#fff;border:1.5px solid #546570;margin-top:4px"
+    onclick="moverFacturaAVarios(${f.id},'facturas_csg')">
+    <i class="fa-solid fa-ellipsis"></i>
+    Varios
+  </button>
 </td>
 
 <td>
@@ -11859,6 +11880,13 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
           onclick="moverFacturaAAlbaran(${f.id},'facturas_gastos_generales')">
           <i class="fa-solid fa-file-signature"></i> Albarán
         </button>
+          <button
+    class="btn-toggle-pago"
+    style="background:#607d8b;color:#fff;border:1.5px solid #546570;margin-top:4px"
+    onclick="moverFacturaAVarios(${f.id},'facturas_gastos_generales')">
+    <i class="fa-solid fa-ellipsis"></i>
+    Varios
+  </button>
       </td>
       <td><button class="btn-eliminar" onclick="eliminar(${f.id})"><i class="fa-solid fa-trash"></i></button></td>
     </tr>`;
@@ -12771,6 +12799,41 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         cargarDatos();
       } catch (e) {
         toast('Error al mover a Albarán: ' + e.message, 'err');
+      }
+    }
+    // MOVER UNA FACTURA (almacén/obra/CSG/gastos) A VARIOS
+    async function moverFacturaAVarios(id, origen) {
+      if (!confirm('¿Mover esta factura a Varios? Se eliminará de la tabla de facturas.')) return;
+      try {
+        const encontrada = await apiGet(origen, `id=eq.${id}`);
+        if (!encontrada || !encontrada.length) { toast('Factura no encontrada', 'err'); return; }
+        const f = encontrada[0];
+
+        const mensaje = [
+          f.numero_factura ? `Factura ${f.numero_factura}` : 'Factura',
+          f.concepto
+        ].filter(Boolean).join(' — ');
+
+        await apiPost('varios', {
+          remitente: f.proveedor || null,
+          mensaje: mensaje || null,
+          archivo_url: f.archivo_url || (f.archivos_urls && f.archivos_urls[0]) || null,
+          fecha_recibido: f.fecha_recibido ? f.fecha_recibido + 'T00:00:00' : new Date().toISOString()
+        });
+
+        // Si estaba repartida entre varias obras, se limpia el reparto para no dejar filas huérfanas
+        if (origen === 'facturas_obra' || origen === 'facturas_csg') {
+          const reparto = await apiGet('facturas_reparto_obras', `factura_tabla=eq.${origen}&factura_id=eq.${id}`);
+          for (const r of reparto) await apiDelete('facturas_reparto_obras', r.id);
+        }
+
+        await apiDelete(origen, id);
+
+        cerrarModal('modalNueva');
+        toast('Movido a Varios correctamente');
+        cargarDatos();
+      } catch (e) {
+        toast('Error al mover a Varios: ' + e.message, 'err');
       }
     }
 
@@ -19694,7 +19757,10 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
     ${otras.map(([dest, label]) => `<button class="btn-toggle-pago pendiente" onclick="moverFactura(${f.id},'${tabla}','${dest}')">${label}</button>`).join('')}
     <button class="btn-toggle-pago" style="background:#f3e5f5;color:#6a1b9a;border:1.5px solid #d9b8e8" onclick="moverFacturaAAlbaran(${f.id},'${tabla}')">
       <i class="fa-solid fa-file-signature"></i> Albarán
-    </button>`;
+    </button>    <button class="btn-toggle-pago" style="background:#607d8b;color:#fff;border:1.5px solid #546570" onclick="moverFacturaAVarios(${f.id},'${tabla}')">
+      <i class="fa-solid fa-ellipsis"></i> Varios
+    </button>`
+        ;
     }
 
 

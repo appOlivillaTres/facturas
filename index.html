@@ -4897,11 +4897,6 @@
       <h3><i class="fa-solid fa-user-check" style="color:#b53987"></i>Consumo Interno</h3>
 
       <div class="ci-scroll">
-        <div class="form-group ac-wrap">
-          <label>Cliente *</label>
-          <input type="text" id="ci_empleado" placeholder="Escribe el nombre para buscar en Clientes...">
-          <input type="hidden" id="ci_cliente_id">
-        </div>
 
         <div class="form-group">
           <label>Fecha *</label>
@@ -21038,7 +21033,6 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
     @media print{.btn-imprimir{display:none}}
   </style></head><body>
   <div class="linea"></div>
-  <p><b>Nombre:</b> ${f.empleado || '—'}</p>
   <p><b>Fecha:</b> ${fmtF(f.fecha)}</p>
   <div class="linea"></div>
   <table>

@@ -1823,6 +1823,15 @@
       margin: auto;
     }
 
+    /* El detalle del albarán siempre por encima del formulario de factura */
+    #modalDetalle {
+      z-index: 1100;
+    }
+
+    #modalVisorArchivo {
+      z-index: 1200;
+    }
+
     #modalDetalle .modal-box {
       display: flex;
       flex-direction: column;
@@ -4948,6 +4957,23 @@
     </div> <!-- Cierre de modal-box-sm -->
   </div> <!-- Cierre de modalConsumoInterno -->
 
+  <!-- MODAL VISOR DE ARCHIVOS (encima de cualquier otro modal) -->
+  <div class="modal-overlay" id="modalVisorArchivo" onclick="if(event.target===this) cerrarVisorArchivoModal()">
+    <div class="modal-box" data-sin-x="1"
+      style="max-width:1000px;height:90vh;display:flex;flex-direction:column;padding:0">
+      <div class="visor-pdf-header" style="border-radius:14px 14px 0 0">
+        <span id="modalVisorArchivoTitulo">Archivo</span>
+        <div class="visor-pdf-acciones">
+          <a id="modalVisorArchivoNueva" href="#" target="_blank" title="Abrir en pestaña nueva">
+            <i class="fa-solid fa-up-right-from-square"></i>
+          </a>
+          <button onclick="cerrarVisorArchivoModal()" title="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+      <div id="modalVisorArchivoContenido" class="visor-contenido"></div>
+    </div>
+  </div>
+
   <div class="toast-wrap" id="toastWrap"></div>
 
   <!-- Datalists -->
@@ -7913,6 +7939,11 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
         return;
       }
 
+      // Si hay algún modal abierto (factura, albarán...), el archivo se abre encima, no en la página de fondo
+      if (document.querySelector('.modal-overlay.visible')) {
+        abrirVisorArchivoModal(url, titulo);
+        return;
+      }
       if (window.innerWidth <= 1100) {  // si no, ajusta el visor
         mostrarVisorPdfMovil(url, titulo);
         return;
@@ -20453,7 +20484,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       if (!cont) return;
       const numeros = (f && f.numeros_albaran) || [];
       if (!numeros.length) { cont.innerHTML = ''; return; }
-      cont.innerHTML = `<select class="select-albaranes" onchange="if(this.value) verAlbaranPorNumero(this.value,'${(f.nif || '').replace(/'/g, "\\'")}')">
+      cont.innerHTML = `<select class="select-albaranes" onchange="if(this.value){ verAlbaranPorNumero(this.value,'${(f.nif || '').replace(/'/g, "\\'")}'); this.value=''; }">
     <option value="">${numeros.length} albarán${numeros.length > 1 ? 'es' : ''} — ver</option>
     ${numeros.map(n => `<option value="${n}">${n}</option>`).join('')}
   </select>`;
@@ -25251,7 +25282,8 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
     const CIERRE_MODAL_ESPECIAL = {
       modalCita: 'cerrarModalCita',
       modalAjusteStock: 'cerrarModalAjusteStock',
-      modalCamaraLector: 'cerrarLectorCamara'
+      modalCamaraLector: 'cerrarLectorCamara',
+      modalVisorArchivo: 'cerrarVisorArchivoModal'
     };
 
     function cerrarModalPorId(id) {
@@ -25264,7 +25296,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
     function anadirBotonCerrarModales() {
       document.querySelectorAll('.modal-overlay').forEach(overlay => {
         const box = overlay.querySelector('.modal-box, .modal-box-sm');
-        if (!box || box.querySelector(':scope > .modal-x-wrap')) return;
+        if (!box || box.dataset.sinX || box.querySelector(':scope > .modal-x-wrap')) return;
 
         const wrap = document.createElement('div');
         wrap.className = 'modal-x-wrap';
@@ -25281,6 +25313,54 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       const abiertos = [...document.querySelectorAll('.modal-overlay.visible')];
       if (abiertos.length) cerrarModalPorId(abiertos[abiertos.length - 1].id);
     });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    function abrirVisorArchivoModal(url, titulo) {
+      document.getElementById('modalVisorArchivoTitulo').textContent = titulo || 'Archivo';
+      document.getElementById('modalVisorArchivoNueva').href = url;
+      renderVisorContenido('modalVisorArchivoContenido', url);
+      document.getElementById('modalVisorArchivo').classList.add('visible');
+    }
+
+    function cerrarVisorArchivoModal() {
+      document.getElementById('modalVisorArchivo').classList.remove('visible');
+      limpiarVisorContenido('modalVisorArchivoContenido');
+    }
   </script>
 
 

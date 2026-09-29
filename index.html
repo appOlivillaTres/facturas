@@ -4756,33 +4756,21 @@
       </div>
 
 
-      <div style="
-      display:grid;
-      grid-template-columns:
-        1fr 1fr 1fr 1fr;
-      gap:10px;
-      margin-bottom:15px;
-    ">
-
-        <input id="auditoriaBuscar" class="form-control" placeholder="Buscar...">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:15px">
+        <input id="auditoriaBuscar" class="form-control" placeholder="Buscar por nombre, factura, cliente, producto...">
 
         <select id="auditoriaAccion" class="form-select">
-
           <option value="">Todas las acciones</option>
-          <option value="editar">Editar</option>
-          <option value="crear">Crear</option>
-          <option value="eliminar">Eliminar</option>
+          <option value="crear">Creado</option>
+          <option value="editar">Modificado</option>
+          <option value="eliminar">Eliminado</option>
           <option value="ajuste_stock">Ajuste de stock</option>
-          <option value="marcar_revisado">Marcar revisado</option>
-          <option value="desmarcar_revisado">Desmarcar revisado</option>
-
+          <option value="marcar_revisado">Marcado revisado</option>
+          <option value="desmarcar_revisado">Revisión quitada</option>
         </select>
 
-
         <select id="auditoriaPersona" class="form-select">
-
           <option value="">Todas las personas</option>
-
           <option value="cynthia">Cynthia</option>
           <option value="angel">Angel</option>
           <option value="emilio">Emilio</option>
@@ -4790,40 +4778,34 @@
           <option value="natalia">Natalia</option>
           <option value="paula">Paula</option>
           <option value="juandavid">Juan David</option>
-
+          <option value="sistema">Sistema (automático)</option>
         </select>
-
 
         <select id="auditoriaTabla" class="form-select">
-
           <option value="">Todas las secciones</option>
-
-          <option value="facturas_almacen">
-            Facturas almacén
-          </option>
-
-          <option value="facturas_obra">
-            Facturas obra
-          </option>
-
-          <option value="inventario">
-            Inventario
-          </option>
-
-          <option value="clientes">
-            Clientes
-          </option>
-
-          <option value="obras">
-            Obras
-          </option>
-
-          <option value="maquinaria">
-            Maquinaria
-          </option>
-
+          <option value="facturas_pendientes">Clasificación</option>
+          <option value="facturas_almacen">Facturas almacén</option>
+          <option value="facturas_obra">Facturas obra</option>
+          <option value="facturas_csg">Facturas CSG</option>
+          <option value="facturas_gastos_generales">Gastos generales</option>
+          <option value="ingresos">Ingresos</option>
+          <option value="albaranes">Albaranes</option>
+          <option value="albaranes_venta">Albaranes de venta</option>
+          <option value="alquileres">Alquileres</option>
+          <option value="facturas_venta">Facturas de venta</option>
+          <option value="presupuestos_venta">Presupuestos</option>
+          <option value="clientes">Clientes</option>
+          <option value="proveedores">Proveedores</option>
+          <option value="obras">Obras</option>
+          <option value="inventario">Inventario</option>
+          <option value="maquinaria">Maquinaria</option>
+          <option value="materiales_obra">Material de obra</option>
+          <option value="consumo_interno">Consumo interno</option>
+          <option value="usuarios_permisos">Usuarios</option>
         </select>
 
+        <input type="date" id="auditoriaDesde" class="form-control" title="Desde">
+        <input type="date" id="auditoriaHasta" class="form-control" title="Hasta">
       </div>
 
 
@@ -24591,45 +24573,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       }
     }
 
-    async function registrarAuditoria({
-      accion,
-      tabla,
-      registroId = null,
-      descripcion = '',
-      cambios = null,
-      seccion = null,
-      referencia = null
-    }) {
 
-      try {
-
-        const datos = {
-          fecha: new Date().toISOString(),
-          persona: currentPersona || 'desconocido',
-          accion,
-          tabla,
-          registro_id: registroId,
-          descripcion,
-          cambios,
-          seccion: seccion || tablaActual || null,
-          referencia
-        };
-
-        await apiPost('auditoria', datos);
-
-      } catch (e) {
-
-        // MUY IMPORTANTE:
-        // Si falla la auditoría NO debemos romper
-        // la operación principal.
-        console.error(
-          'No se pudo registrar la auditoría:',
-          e
-        );
-
-      }
-
-    }
 
     function obtenerCambiosAuditoria(antes, despues, camposIgnorar = []) {
 
@@ -24850,345 +24794,187 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
     }
 
 
-    async function cargarAuditoria() {
+    // ── AUDITORÍA ────────────────────────────────────────────
+    const NOMBRES_TABLAS_AUDITORIA = {
+      facturas_pendientes: 'Clasificación', facturas_almacen: 'Facturas almacén', facturas_obra: 'Facturas obra',
+      facturas_csg: 'Facturas CSG', facturas_gastos_generales: 'Gastos generales', ingresos: 'Ingresos',
+      albaranes: 'Albaranes', albaranes_venta: 'Albaranes de venta', alquileres: 'Alquileres',
+      facturas_venta: 'Facturas de venta', presupuestos_venta: 'Presupuestos', clientes: 'Clientes',
+      proveedores: 'Proveedores', obras: 'Obras', obras_estudio: 'Obras en estudio', inventario: 'Inventario',
+      maquinaria: 'Maquinaria', materiales_obra: 'Material de obra', consumo_interno: 'Consumo interno',
+      presupuestos_seguimiento: 'Notificaciones presupuestos', estudio_obras_envios: 'Estudio de obras',
+      varios: 'Varios', usuarios_permisos: 'Usuarios', costes_obra: 'Costes de obra'
+    };
 
-      const cont =
-        document.getElementById(
-          'auditoriaContenedor'
-        );
+    const ETIQUETAS_CAMPOS_AUDITORIA = {
+      numero_factura: 'Nº factura', numero_interno: 'Nº interno', numero_albaran: 'Nº albarán',
+      numero_ingreso: 'Nº ingreso', numero_presupuesto: 'Nº presupuesto', numeros_albaran: 'Albaranes asociados',
+      fecha: 'Fecha', fecha_recibido: 'Fecha de recepción', fecha_vencimiento: 'Vencimiento',
+      proveedor: 'Proveedor', cliente: 'Cliente', cliente_nombre: 'Cliente', empresa: 'Empresa', nif: 'NIF',
+      concepto: 'Concepto', observaciones: 'Observaciones', nombre_obra: 'Obra', obra: 'Obra',
+      total: 'Total', moneda: 'Moneda', estado: 'Estado', imputado: 'Imputada', impreso: 'Impresa',
+      facturado: 'Facturado', forma_cobro: 'Forma de cobro', metodo_pago: 'Método de pago', iban: 'IBAN',
+      base1: 'Base 1', pct_iva1: '% IVA 1', total_iva1: 'IVA 1', base2: 'Base 2', pct_iva2: '% IVA 2',
+      total_iva2: 'IVA 2', base3: 'Base 3', pct_iva3: '% IVA 3', total_iva3: 'IVA 3',
+      base_imponible: 'Base imponible', pct_iva: '% IVA', importe_iva: 'Importe IVA',
+      exento: 'Exento', descuento: 'Descuento', tasas: 'Tasas',
+      base_retencion: 'Base retención', pct_retencion: '% retención', total_retencion: 'Total retención',
+      archivo_url: 'Archivo', archivos_urls: 'Archivos', productos_recibidos: 'Productos recibidos',
+      cobros_parciales: 'Cobros parciales', exportado_excel: 'Exportada a Excel', archivos_exportados: 'Archivos exportados',
+      nombre: 'Nombre', email: 'Email', telefono: 'Teléfono', domicilio: 'Domicilio', poblacion: 'Población',
+      codigo_postal: 'Código postal', provincia: 'Provincia', puntos: 'Puntos', aviso_albaran: 'Aviso de albarán',
+      stock: 'Stock', stock_minimo: 'Stock mínimo', costo: 'Coste', precio: 'Precio de venta',
+      codigo_barras: 'Código de barras', unidad: 'Unidad', puntos_por_unidad: 'Puntos por unidad',
+      codigo: 'Código', precio_dia: 'Precio/día', obra_actual: 'Obra actual',
+      cliente_actual_nombre: 'Cliente actual', empleado_actual: 'Empleado actual',
+      presupuesto: 'Presupuesto', direccion: 'Dirección', matricula: 'Matrícula', notas: 'Notas',
+      respondido: 'Respondido', activo: 'Activo', secciones: 'Secciones con acceso'
+    };
 
+    function etiquetaCampoAuditoria(c) {
+      if (ETIQUETAS_CAMPOS_AUDITORIA[c]) return ETIQUETAS_CAMPOS_AUDITORIA[c];
+      let m;
+      if ((m = c.match(/^revisado_(.+)$/))) return 'Revisado por ' + (NOMBRES_PERSONAS[m[1]] || m[1]);
+      if ((m = c.match(/^no_corresponde_(.+)$/))) return 'No le corresponde a ' + (NOMBRES_PERSONAS[m[1]] || m[1]);
+      const t = c.replace(/_/g, ' ');
+      return t.charAt(0).toUpperCase() + t.slice(1);
+    }
+
+    function valorAuditoriaLegible(campo, v) {
+      if (v === null || v === undefined || v === '') return 'vacío';
+      if (typeof v === 'boolean') return v ? 'Sí' : 'No';
+      if (Array.isArray(v)) {
+        if (!v.length) return 'vacío';
+        if (/urls?$/.test(campo)) return v.length + ' archivo(s)';
+        return v.map(x => {
+          if (x && typeof x === 'object') {
+            if (x.cantidad != null && x.fecha) return `${fmt(x.cantidad)} (${fmtF(x.fecha)})`;
+            return x.producto_nombre ? `${x.producto_nombre} (${x.cantidad})` : (x.nombre || JSON.stringify(x));
+          }
+          return x;
+        }).join(', ');
+      }
+      if (typeof v === 'object') return JSON.stringify(v);
+      if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)) return fmtF(v);
+      if (typeof v === 'string' && /^https?:\/\//.test(v)) return 'Archivo adjunto';
+      return String(v);
+    }
+
+    function htmlCambiosAuditoria(a) {
+      const e = dashboardEscape;
+      const c = a.cambios || {};
+      const claves = Object.keys(c);
+      if (!claves.length) return e(a.descripcion || '—');
+
+      if (a.accion === 'crear' || a.accion === 'eliminar') {
+        const lado = a.accion === 'crear' ? 'despues' : 'antes';
+        return `<details><summary style="cursor:pointer;color:#6a1b9a;font-size:.75rem">Ver ${claves.length} datos</summary>` +
+          claves.map(k => `<div class="auditoria-cambio"><span class="auditoria-campo">${e(etiquetaCampoAuditoria(k))}:</span> ${e(valorAuditoriaLegible(k, c[k]?.[lado]))}</div>`).join('') +
+          `</details>`;
+      }
+
+      return claves.map(k => `
+    <div class="auditoria-cambio">
+      <div class="auditoria-campo">${e(etiquetaCampoAuditoria(k))}</div>
+      <span class="auditoria-antes">${e(valorAuditoriaLegible(k, c[k]?.antes))}</span>
+      <i class="fa-solid fa-arrow-right" style="margin:0 5px;color:#aaa"></i>
+      <span class="auditoria-despues">${e(valorAuditoriaLegible(k, c[k]?.despues))}</span>
+    </div>`).join('');
+    }
+
+    const AUDITORIA_PAGINA = 100;
+    let _auditoriaDatos = [];
+    let _auditoriaHayMas = false;
+    let _auditoriaTimer = null;
+
+    function _filtrosAuditoria() {
+      const v = id => (document.getElementById(id)?.value || '').trim();
+      const f = [];
+      if (v('auditoriaAccion')) f.push(`accion=eq.${encodeURIComponent(v('auditoriaAccion'))}`);
+      if (v('auditoriaPersona')) f.push(`persona=eq.${encodeURIComponent(v('auditoriaPersona'))}`);
+      if (v('auditoriaTabla')) f.push(`tabla=eq.${encodeURIComponent(v('auditoriaTabla'))}`);
+      if (v('auditoriaDesde')) f.push(`fecha=gte.${v('auditoriaDesde')}T00:00:00`);
+      if (v('auditoriaHasta')) f.push(`fecha=lte.${v('auditoriaHasta')}T23:59:59`);
+      const q = v('auditoriaBuscar').replace(/[,()*]/g, ' ').trim();
+      if (q) {
+        const t = encodeURIComponent(q);
+        f.push(`or=(referencia.ilike.*${t}*,descripcion.ilike.*${t}*)`);
+      }
+      return f;
+    }
+
+    async function cargarAuditoria(masResultados = false) {
+      const cont = document.getElementById('auditoriaContenedor');
       if (!cont) return;
-
-      cont.innerHTML = `
-    <div class="dashboard-loading">
-      <i class="fa-solid fa-spinner fa-spin"></i>
-      Cargando auditoría...
-    </div>
-  `;
-
+      if (!masResultados) {
+        _auditoriaDatos = [];
+        cont.innerHTML = `<div class="dashboard-loading"><i class="fa-solid fa-spinner fa-spin"></i> Cargando auditoría...</div>`;
+      }
       try {
-
-        let filtros = [];
-
-        const accion =
-          document.getElementById(
-            'auditoriaAccion'
-          )?.value;
-
-        const persona =
-          document.getElementById(
-            'auditoriaPersona'
-          )?.value;
-
-        const tabla =
-          document.getElementById(
-            'auditoriaTabla'
-          )?.value;
-
-        if (accion) {
-          filtros.push(
-            `accion=eq.${encodeURIComponent(accion)}`
-          );
-        }
-
-        if (persona) {
-          filtros.push(
-            `persona=eq.${encodeURIComponent(persona)}`
-          );
-        }
-
-        if (tabla) {
-          filtros.push(
-            `tabla=eq.${encodeURIComponent(tabla)}`
-          );
-        }
-
-        filtros.push(
-          'order=fecha.desc'
-        );
-
-        filtros.push(
-          'limit=200'
-        );
-
-        const datos =
-          await apiGetAll(
-            'auditoria',
-            filtros.join('&')
-          );
-
-        renderAuditoria(datos || []);
-
+        const params = [..._filtrosAuditoria(), 'order=fecha.desc', `limit=${AUDITORIA_PAGINA}`, `offset=${_auditoriaDatos.length}`].join('&');
+        const lote = await apiGet('auditoria', params);
+        _auditoriaDatos = _auditoriaDatos.concat(lote || []);
+        _auditoriaHayMas = (lote || []).length === AUDITORIA_PAGINA;
+        renderAuditoria();
       } catch (e) {
-
         console.error(e);
-
-        cont.innerHTML = `
-      <div style="
-        text-align:center;
-        color:#c62828;
-        padding:30px">
-
-        <i class="fa-solid fa-circle-exclamation"></i>
-
-        Error cargando auditoría
-
-      </div>
-    `;
-
+        cont.innerHTML = `<div style="text-align:center;color:#c62828;padding:30px"><i class="fa-solid fa-circle-exclamation"></i> Error cargando auditoría</div>`;
       }
-
     }
 
-
-
-    function renderAuditoria(lista) {
-
-      const cont =
-        document.getElementById(
-          'auditoriaContenedor'
-        );
-
+    function renderAuditoria() {
+      const cont = document.getElementById('auditoriaContenedor');
       if (!cont) return;
+      const e = dashboardEscape;
 
-      const busqueda =
-        (
-          document.getElementById(
-            'auditoriaBuscar'
-          )?.value || ''
-        )
-          .toLowerCase()
-          .trim();
-
-
-      const filtrada =
-        lista.filter(a => {
-
-          if (!busqueda) {
-            return true;
-          }
-
-          return (
-            String(a.descripcion || '')
-              .toLowerCase()
-              .includes(busqueda)
-            ||
-            String(a.tabla || '')
-              .toLowerCase()
-              .includes(busqueda)
-            ||
-            String(a.registro_id || '')
-              .toLowerCase()
-              .includes(busqueda)
-            ||
-            String(a.persona || '')
-              .toLowerCase()
-              .includes(busqueda)
-          );
-
-        });
-
-
-      if (!filtrada.length) {
-
-        cont.innerHTML = `
-      <div class="dashboard-loading">
-
-        <i class="fa-solid fa-clock-rotate-left"></i>
-
-        No hay movimientos de auditoría.
-
-      </div>
-    `;
-
+      if (!_auditoriaDatos.length) {
+        cont.innerHTML = `<div class="dashboard-loading"><i class="fa-solid fa-clock-rotate-left"></i> No hay movimientos con esos filtros.</div>`;
         return;
-
       }
 
+      const estilos = {
+        crear: ['Creado', '#e8f5e9', '#2d7a4f'],
+        editar: ['Modificado', '#f3e5f5', '#6a1b9a'],
+        eliminar: ['Eliminado', '#fdeaea', '#c62828'],
+        ajuste_stock: ['Ajuste de stock', '#fff3e0', '#c47a00'],
+        marcar_revisado: ['Revisado', '#e3f2fd', '#1565c0'],
+        desmarcar_revisado: ['Revisión quitada', '#f0f0f0', '#666']
+      };
 
       cont.innerHTML = `
-
     <div style="overflow:auto">
-
       <table class="auditoria-tabla">
-
-        <thead>
-
-          <tr>
-
-            <th>Fecha</th>
-            <th>Persona</th>
-            <th>Acción</th>
-            <th>Sección</th>
-            <th>Registro</th>
-            <th>Cambios</th>
-
-          </tr>
-
-        </thead>
-
+        <thead><tr>
+          <th>Fecha</th><th>Persona</th><th>Acción</th><th>Sección</th><th>Qué se ha tocado</th><th>Cambios</th>
+        </tr></thead>
         <tbody>
-
-          ${filtrada.map(a => {
-
-        const cambios =
-          a.cambios || {};
-
-        const cambiosHtml =
-          Object.entries(cambios)
-            .map(([campo, valores]) => `
-
-                  <div class="auditoria-cambio">
-
-                    <div class="auditoria-campo">
-                      ${dashboardEscape(campo)}
-                    </div>
-
-                    <span class="auditoria-antes">
-                      ${dashboardEscape(
-              formatearValorAuditoria(
-                valores?.antes
-              )
-            )}
-                    </span>
-
-                    <i
-                      class="fa-solid fa-arrow-right"
-                      style="margin:0 5px;color:#aaa">
-                    </i>
-
-                    <span class="auditoria-despues">
-                      ${dashboardEscape(
-              formatearValorAuditoria(
-                valores?.despues
-              )
-            )}
-                    </span>
-
-                  </div>
-
-                `)
-            .join('');
-
-        return `
-
-              <tr>
-
-                <td class="auditoria-fecha">
-
-                  ${a.fecha
-            ? new Date(
-              a.fecha
-            ).toLocaleString(
-              'es-ES'
-            )
-            : '—'}
-
-                </td>
-
-
-                <td class="auditoria-persona">
-
-                  ${NOMBRES_PERSONAS[
-          a.persona
-          ] ||
-          dashboardEscape(
-            a.persona
-          )
-          }
-
-                </td>
-
-
-                <td>
-
-                  <span
-                    class="auditoria-accion">
-
-                    ${dashboardEscape(
-            a.accion
-          )}
-
-                  </span>
-
-                </td>
-
-
-                <td>
-                  ${dashboardEscape(
-            a.seccion ||
-            a.tabla ||
-            '—'
-          )}
-                </td>
-
-
-                <td>
-                  ${a.referencia
-            ? dashboardEscape(a.referencia)
-            : '#' + dashboardEscape(a.registro_id || '—')}
-                </td>
-
-
-                <td>
-
-                  ${cambiosHtml ||
-          dashboardEscape(
-            a.descripcion ||
-            '—'
-          )
-          }
-
-                </td>
-
-              </tr>
-
-            `;
-
+          ${_auditoriaDatos.map(a => {
+        const [txt, bg, col] = estilos[a.accion] || [a.accion, '#f3e5f5', '#6a1b9a'];
+        const persona = a.persona === 'sistema' ? 'Sistema (automático)' : (NOMBRES_PERSONAS[a.persona] || a.persona);
+        return `<tr>
+              <td class="auditoria-fecha">${a.fecha ? new Date(a.fecha).toLocaleString('es-ES') : '—'}</td>
+              <td class="auditoria-persona">${e(persona)}</td>
+              <td><span class="auditoria-accion" style="background:${bg};color:${col}">${e(txt)}</span></td>
+              <td>${e(NOMBRES_TABLAS_AUDITORIA[a.tabla] || a.seccion || a.tabla || '—')}</td>
+              <td><strong>${e(a.referencia || ('#' + (a.registro_id ?? '—')))}</strong></td>
+              <td>${htmlCambiosAuditoria(a)}</td>
+            </tr>`;
       }).join('')}
-
         </tbody>
-
       </table>
-
     </div>
-  `;
-
+    ${_auditoriaHayMas ? `<div style="text-align:center;margin-top:12px">
+      <button class="btn-cancelar" onclick="cargarAuditoria(true)"><i class="fa-solid fa-angles-down me-1"></i>Cargar más</button>
+    </div>` : ''}`;
     }
 
+    ['auditoriaAccion', 'auditoriaPersona', 'auditoriaTabla', 'auditoriaDesde', 'auditoriaHasta'].forEach(id =>
+      document.getElementById(id)?.addEventListener('change', () => cargarAuditoria()));
 
-    document
-      .getElementById('auditoriaAccion')
-      ?.addEventListener(
-        'change',
-        cargarAuditoria
-      );
-
-    document
-      .getElementById('auditoriaPersona')
-      ?.addEventListener(
-        'change',
-        cargarAuditoria
-      );
-
-    document
-      .getElementById('auditoriaTabla')
-      ?.addEventListener(
-        'change',
-        cargarAuditoria
-      );
-
-
-    document
-      .getElementById('auditoriaBuscar')
-      ?.addEventListener(
-        'input',
-        async function () {
-
-          await cargarAuditoria();
-
-        }
-      );
+    document.getElementById('auditoriaBuscar')?.addEventListener('input', () => {
+      clearTimeout(_auditoriaTimer);
+      _auditoriaTimer = setTimeout(() => cargarAuditoria(), 350);
+    });
 
 
 
@@ -25247,29 +25033,9 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       }
     }
 
-    async function registrarAuditoria({
-      accion, tabla, registroId = null, descripcion = '',
-      cambios = null, seccion = null, referencia = null
-    }) {
-      try {
-        const datos = {
-          fecha: new Date().toISOString(),
-          persona: currentPersona || 'desconocido',
-          accion,
-          tabla,
-          registro_id: registroId,
-          descripcion,
-          cambios,
-          seccion: seccion || tablaActual || null,
-          referencia
-        };
-        await apiPost('auditoria', datos);
-      } catch (e) {
-        console.error('No se pudo registrar la auditoría:', e);
-      }
-    }
 
-
+    // La auditoría la registra la base de datos (trigger auditar_cambio).
+    async function registrarAuditoria() { }
 
 
 

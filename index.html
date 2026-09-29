@@ -4378,12 +4378,48 @@
         </div>
         <button type="button" class="btn-toggle-pago"
           style="width:100%;justify-content:center;margin-top:8px;background:#fff3e0;color:#c47a00;border:1.5px solid #f0c060"
-          onclick="confirmarAjusteStock('caducidad')"><i class="fa-solid fa-calendar-xmark me-1"></i>Baja por
-          caducidad</button>
+          onclick="if(ajusteStockProductoActual){ abrirModalBajaStock(ajusteStockProductoActual.id); }">
+          <i class="fa-solid fa-box-open me-1"></i>Baja de stock (robo, regalo, caducidad...)
+        </button>
       </div>
       <div id="ajusteStockHistorial" style="margin-top:16px;max-height:180px;overflow-y:auto"></div>
       <div class="modal-btns">
         <button class="btn-cancelar" onclick="cerrarModalAjusteStock()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- MODAL BAJA DE STOCK (robo, regalo, caducidad...) -->
+  <div class="modal-overlay" id="modalBajaStock">
+    <div class="modal-box-sm">
+      <h3><i class="fa-solid fa-box-open" style="color:#c47a00"></i>Baja de stock</h3>
+
+      <div style="background:#f7f0f5;border:1.5px solid #ede5f5;border-radius:8px;padding:10px 14px;margin-bottom:12px">
+        <div style="font-weight:700;color:#4a3b68" id="bs_nombre">—</div>
+        <div style="font-size:.82rem;color:#888">Stock actual: <strong id="bs_stock">—</strong></div>
+      </div>
+
+      <div class="form-group">
+        <label>Motivo *</label>
+        <select id="bs_motivo" onchange="actualizarMotivoBajaStock()"></select>
+      </div>
+      <div class="form-group">
+        <label>Cantidad *</label>
+        <input type="number" id="bs_cantidad" value="1" min="0.01" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Detalle <span id="bs_detalle_obl" style="font-size:.72rem;color:#b53987"></span></label>
+        <input type="text" id="bs_detalle" placeholder="Ej: Regalo a cliente X / Robo detectado en inventario...">
+      </div>
+      <p id="bs_perdida" style="font-size:.8rem;color:#c47a00;font-weight:600;margin-top:6px"></p>
+
+      <div class="modal-btns">
+        <button class="btn-cancelar" onclick="cerrarModal('modalBajaStock')">Cancelar</button>
+        <button class="btn-guardar" style="background:#c47a00" onclick="confirmarBajaStock()">
+          <i class="fa-solid fa-check me-1"></i>Confirmar baja
+        </button>
       </div>
     </div>
   </div>
@@ -12064,8 +12100,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
     <td>
 <button class="btn-toggle-pago pagado" onclick="sumarStock(${p.id})"><i class="fa-solid fa-plus"></i></button>
 <button class="btn-toggle-pago vencido" onclick="restarStock(${p.id})"><i class="fa-solid fa-minus"></i></button>
-<button class="btn-toggle-pago" style="background:#fff3e0;color:#c47a00;border:1.5px solid #f0c060" onclick="darDeBajaPorCaducidad(${p.id})" title="Baja por caducidad"><i class="fa-solid fa-calendar-xmark"></i></button>
-<button class="btn-eliminar" onclick="eliminar(${p.id})"><i class="fa-solid fa-trash"></i></button>
+<button class="btn-toggle-pago" style="background:#fff3e0;color:#c47a00;border:1.5px solid #f0c060" onclick="abrirModalBajaStock(${p.id})" title="Baja de stock (robo, regalo, caducidad...)"><i class="fa-solid fa-box-open"></i></button><button class="btn-eliminar" onclick="eliminar(${p.id})"><i class="fa-solid fa-trash"></i></button>
 </td>
 </td>
   </tr>`;
@@ -14303,34 +14338,89 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       cargarDatos();
     }
     // DAR DE BAJA UN PROUCTO POR CADUCIDAD Y ASÍ VER LA PERDIDA
-    async function darDeBajaPorCaducidad(id) {
+    const MOTIVOS_BAJA_STOCK = {
+      caducidad: { label: 'Caducidad', icono: 'fa-calendar-xmark', color: '#c47a00', detalleObligatorio: false },
+      robo: { label: 'Robo / pérdida', icono: 'fa-user-secret', color: '#c0392b', detalleObligatorio: true },
+      regalo: { label: 'Regalo / obsequio', icono: 'fa-gift', color: '#b53987', detalleObligatorio: true },
+      rotura: { label: 'Rotura / deterioro', icono: 'fa-burst', color: '#607d8b', detalleObligatorio: false },
+      otro: { label: 'Otro motivo', icono: 'fa-ellipsis', color: '#4a3b68', detalleObligatorio: true }
+    };
+
+    let bajaStockProductoActual = null;
+
+    function abrirModalBajaStock(id, motivoInicial) {
       const p = inventarioDB.find(x => x.id == id);
-      const entrada = prompt(`Cantidad CADUCADA a dar de baja (${unidadCorta(p)})`);
-      const cantidad = parseFloat((entrada || '').replace(',', '.'));
-      if (!cantidad || cantidad <= 0) return;
-      const motivo = prompt('Motivo / lote (opcional):') || null;
+      if (!p) { toast('Producto no encontrado', 'err'); return; }
+      bajaStockProductoActual = p;
+
+      document.getElementById('bs_nombre').textContent = p.nombre;
+      document.getElementById('bs_stock').textContent = `${fmtStock(p.stock)} ${unidadCorta(p)}`;
+      document.getElementById('bs_motivo').innerHTML = Object.entries(MOTIVOS_BAJA_STOCK)
+        .map(([k, m]) => `<option value="${k}">${m.label}</option>`).join('');
+      document.getElementById('bs_motivo').value = motivoInicial || 'robo';
+      document.getElementById('bs_cantidad').value = 1;
+      document.getElementById('bs_detalle').value = '';
+      actualizarMotivoBajaStock();
+      document.getElementById('modalBajaStock').classList.add('visible');
+      setTimeout(() => document.getElementById('bs_cantidad').select(), 60);
+    }
+
+    function actualizarMotivoBajaStock() {
+      const m = MOTIVOS_BAJA_STOCK[document.getElementById('bs_motivo').value];
+      document.getElementById('bs_detalle_obl').textContent = m.detalleObligatorio ? '(obligatorio)' : '(opcional)';
+    }
+
+    async function confirmarBajaStock() {
+      const p = bajaStockProductoActual;
+      if (!p) return;
+
+      const motivoKey = document.getElementById('bs_motivo').value;
+      const motivo = MOTIVOS_BAJA_STOCK[motivoKey];
+      const cantidad = parseFloat(document.getElementById('bs_cantidad').value || 0);
+      const detalle = document.getElementById('bs_detalle').value.trim() || null;
+
+      if (!cantidad || cantidad <= 0) { toast('Indica una cantidad válida', 'err'); return; }
+      if (motivo.detalleObligatorio && !detalle) { toast(`Indica el detalle para "${motivo.label}"`, 'err'); return; }
 
       const stockAntes = parseFloat(p.stock) || 0;
-      let stock = stockAntes - cantidad;
-      if (stock < 0) stock = 0;
-      const cantidadReal = stockAntes - stock;
+      if (cantidad > stockAntes) {
+        toast(`No puedes dar de baja más de lo que hay (${fmtStock(stockAntes)} ${unidadCorta(p)})`, 'err');
+        return;
+      }
+      const stockDespues = +(stockAntes - cantidad).toFixed(2);
+      const valorPerdido = p.costo != null ? +(cantidad * parseFloat(p.costo)).toFixed(2) : undefined;
 
       try {
-        await apiPatch("inventario", id, { stock });
-        p.stock = stock;
+        await apiPatch('inventario', p.id, { stock: stockDespues });
+        p.stock = stockDespues;
+
         registrarHistorial('inventario', {
           producto: p.nombre,
-          accion: 'caducidad',
-          cantidad: cantidadReal,
+          accion: motivoKey === 'caducidad' ? 'caducidad' : 'baja',   // 'caducidad' se mantiene por compatibilidad
+          motivo_tipo: motivoKey,
+          cantidad,
           stock_antes: stockAntes,
-          stock_despues: stock,
-          motivo,
-          valor_perdido: p.costo != null ? +(cantidadReal * parseFloat(p.costo)).toFixed(2) : undefined
+          stock_despues: stockDespues,
+          motivo: detalle,
+          valor_perdido: valorPerdido
         });
-        toast(`<i class="fa-solid fa-calendar-xmark me-1"></i>Baja por caducidad: -${fmtStock(cantidadReal)} ${unidadCorta(p)} de "${p.nombre}"`, 'err');
+
+        await registrarAuditoria({
+          accion: 'ajuste_stock',
+          tabla: 'inventario',
+          registroId: p.id,
+          descripcion: `Baja por ${motivo.label.toLowerCase()}: ${stockAntes} → ${stockDespues}${detalle ? ' (' + detalle + ')' : ''}`,
+          cambios: { stock: { antes: stockAntes, despues: stockDespues } },
+          seccion: 'inventario',
+          referencia: p.nombre
+        });
+
+        toast(`<i class="fa-solid ${motivo.icono} me-1"></i>Baja por ${motivo.label.toLowerCase()}: -${fmtStock(cantidad)} ${unidadCorta(p)} de "${p.nombre}"`, 'err');
+        cerrarModal('modalBajaStock');
+        bajaStockProductoActual = null;
         cargarDatos();
       } catch (e) {
-        toast('Error: ' + e.message, 'err');
+        toast('Error al registrar la baja: ' + e.message, 'err');
       }
     }
 
@@ -24664,8 +24754,9 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         return `<strong>${d.cliente || '—'}</strong> — ${productos}${d.total != null ? ` — Total: ${fmt(d.total)}` : ''}`;
       }
       if (tipo === 'inventario') {
-        if (d.accion === 'caducidad') {
-          return `<strong>${d.producto || '—'}</strong> — <span style="color:#c47a00;font-weight:700"><i class="fa-solid fa-calendar-xmark"></i> BAJA POR CADUCIDAD</span>: -${fmtStock(d.cantidad)} uds. (stock: ${d.stock_antes} → ${d.stock_despues})${d.motivo ? ' — ' + d.motivo : ''}${d.valor_perdido != null ? ' — Pérdida: ' + fmt(d.valor_perdido) : ''}`;
+        if (d.accion === 'caducidad' || d.accion === 'baja') {
+          const m = MOTIVOS_BAJA_STOCK[d.motivo_tipo || 'caducidad'] || MOTIVOS_BAJA_STOCK.otro;
+          return `<strong>${d.producto || '—'}</strong> — <span style="color:${m.color};font-weight:700"><i class="fa-solid ${m.icono}"></i> ${m.label.toUpperCase()}</span>: -${fmtStock(d.cantidad)} (stock: ${d.stock_antes} → ${d.stock_despues})${d.motivo ? ' — ' + d.motivo : ''}${d.valor_perdido != null ? ' — Valor: ' + fmt(d.valor_perdido) : ''}`;
         }
         const signo = d.accion === 'resta' ? '-' : '+';
         return `<strong>${d.producto || '—'}</strong> — ${signo}${d.cantidad} uds. (stock: ${d.stock_antes} → ${d.stock_despues})`;
@@ -24703,8 +24794,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       const tipo = window._historialTipo;
       const esInventario = tipo === 'inventario';
 
-      const bajasCaducidad = registrosHist.filter(h => h.detalle && h.detalle.accion === 'caducidad');
-      const totalUnidadesCaducadas = bajasCaducidad.reduce((s, h) => s + (parseFloat(h.detalle.cantidad) || 0), 0);
+      const bajasCaducidad = registrosHist.filter(h => h.detalle && (h.detalle.accion === 'caducidad' || h.detalle.accion === 'baja')); const totalUnidadesCaducadas = bajasCaducidad.reduce((s, h) => s + (parseFloat(h.detalle.cantidad) || 0), 0);
       const conValor = bajasCaducidad.filter(h => h.detalle.valor_perdido != null);
       const totalValorPerdido = conValor.reduce((s, h) => s + (parseFloat(h.detalle.valor_perdido) || 0), 0);
       const sinValor = bajasCaducidad.length - conValor.length;

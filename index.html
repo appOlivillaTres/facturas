@@ -1768,6 +1768,44 @@
       align-items: flex-start;
     }
 
+    /* Botón X para cerrar modales (fijo arriba aunque se haga scroll) */
+    .modal-box,
+    .modal-box-sm {
+      position: relative;
+    }
+
+    .modal-x-wrap {
+      position: sticky;
+      top: 1.9rem;
+      height: 0;
+      z-index: 30;
+    }
+
+    .modal-x {
+      position: absolute;
+      top: -1.4rem;
+      right: -1.4rem;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1.5px solid #ede5f5;
+      background: #fff;
+      color: #888;
+      font-size: .95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(74, 59, 104, .15);
+      transition: all .15s;
+    }
+
+    .modal-x:hover {
+      background: #b53987;
+      border-color: #b53987;
+      color: #fff;
+    }
+
     .modal-nueva-wrap .modal-box {
       flex: 1 1 640px;
       min-width: 640px;
@@ -25168,6 +25206,81 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         renderListaUsuariosGestion();
       } catch (e) { toast('Error al eliminar: ' + e.message, 'err'); }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // ── BOTÓN X EN TODOS LOS MODALES ─────────────────────────
+    // Algunos modales tienen su propia función de cierre
+    const CIERRE_MODAL_ESPECIAL = {
+      modalCita: 'cerrarModalCita',
+      modalAjusteStock: 'cerrarModalAjusteStock',
+      modalCamaraLector: 'cerrarLectorCamara'
+    };
+
+    function cerrarModalPorId(id) {
+      if (id === 'modalNueva' && !confirm('¿Cerrar sin guardar? Se perderán los datos no guardados.')) return;
+      const fn = CIERRE_MODAL_ESPECIAL[id];
+      if (fn && typeof window[fn] === 'function') window[fn]();
+      else cerrarModal(id);
+    }
+
+    function anadirBotonCerrarModales() {
+      document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        const box = overlay.querySelector('.modal-box, .modal-box-sm');
+        if (!box || box.querySelector(':scope > .modal-x-wrap')) return;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'modal-x-wrap';
+        wrap.innerHTML = `<button type="button" class="modal-x" title="Cerrar" aria-label="Cerrar"
+      onclick="cerrarModalPorId('${overlay.id}')"><i class="fa-solid fa-xmark"></i></button>`;
+        box.prepend(wrap);
+      });
+    }
+    anadirBotonCerrarModales();
+
+    // Tecla Escape: cierra el último modal abierto
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      const abiertos = [...document.querySelectorAll('.modal-overlay.visible')];
+      if (abiertos.length) cerrarModalPorId(abiertos[abiertos.length - 1].id);
+    });
   </script>
 
 

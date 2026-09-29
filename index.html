@@ -4011,6 +4011,29 @@
       </div>
     </div>
   </div>
+  <!-- MODAL EDITAR PERMISOS DE USUARIO -->
+  <div class="modal-overlay" id="modalEditarPermisos">
+    <div class="modal-box" style="max-width:640px">
+      <h3><i class="fa-solid fa-user-lock" style="color:#b53987"></i>Permisos de <span id="ep_titulo_nombre"></span>
+      </h3>
+
+      <label
+        style="display:flex;gap:8px;align-items:center;font-size:.88rem;font-weight:600;color:#6a1b9a;background:#f7f0f5;border:1.5px solid #ede5f5;border-radius:8px;padding:10px 14px;margin-bottom:12px;cursor:pointer">
+        <input type="checkbox" id="ep_todo" style="width:auto" onchange="toggleEditarPermisosTodo(this.checked)">
+        Acceso total (todas las secciones, incluidas las que se añadan en el futuro)
+      </label>
+
+      <div class="form-seccion" style="border-top:none;padding-top:0;margin-top:0">Secciones con acceso</div>
+      <div id="ep_secciones_grid"
+        style="display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:320px;overflow-y:auto;padding:8px"></div>
+
+      <div class="modal-btns">
+        <button class="btn-cancelar" onclick="cerrarModal('modalEditarPermisos')">Cancelar</button>
+        <button class="btn-guardar" onclick="guardarPermisosUsuario()"><i
+            class="fa-solid fa-floppy-disk me-1"></i>Guardar permisos</button>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL DETALLE -->
   <div class="modal-overlay" id="modalDetalle">
@@ -25193,7 +25216,10 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       <td>${dashboardEscape(u.persona)}</td>
       <td><span class="badge-estado ${u.activo ? 'badge-pagado' : 'badge-vencido'}">${u.activo ? 'ACTIVO' : 'DESACTIVADO'}</span></td>
       <td style="white-space:nowrap">
-        ${u.persona === 'emilio' ? '' : `
+                ${u.persona === 'emilio' ? '' : `
+          <button class="btn-toggle-pago pagado" onclick="abrirModalEditarPermisos('${u.persona}')" title="Editar secciones con acceso">
+            <i class="fa-solid fa-user-lock me-1"></i>Permisos
+          </button>
           <button class="btn-toggle-pago pendiente" onclick="toggleActivoUsuario('${u.persona}', ${!!u.activo})">
             ${u.activo ? 'Desactivar' : 'Activar'}
           </button>
@@ -25236,6 +25262,58 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         await cargarUsuariosPermisosCache();
         renderListaUsuariosGestion();
       } catch (e) { toast('Error al eliminar: ' + e.message, 'err'); }
+    }
+    let permisosEditPersona = null;
+
+    function abrirModalEditarPermisos(persona) {
+      if (currentPersona !== 'emilio') { toast('Solo Emilio puede editar permisos', 'err'); return; }
+      const u = usuariosPermisosDB.find(x => x.persona === persona);
+      if (!u) { toast('Usuario no encontrado', 'err'); return; }
+
+      permisosEditPersona = persona;
+      const secs = u.secciones || [];
+      const total = secs.includes('__todo__');
+
+      document.getElementById('ep_titulo_nombre').textContent = u.nombre || u.persona;
+      document.getElementById('ep_todo').checked = total;
+      document.getElementById('ep_secciones_grid').innerHTML = Object.entries(SECCIONES_INFO).map(([k, [tit]]) =>
+        `<label style="display:flex;gap:6px;align-items:center;font-size:.85rem">
+          <input type="checkbox" class="ep-seccion" value="${k}" ${(total || secs.includes(k)) ? 'checked' : ''} ${total ? 'disabled' : ''}> ${tit}
+        </label>`
+      ).join('');
+
+      document.getElementById('modalEditarPermisos').classList.add('visible');
+    }
+
+    function toggleEditarPermisosTodo(marcado) {
+      document.querySelectorAll('.ep-seccion').forEach(c => {
+        c.disabled = marcado;
+        if (marcado) c.checked = true;
+      });
+    }
+
+    async function guardarPermisosUsuario() {
+      if (currentPersona !== 'emilio' || !permisosEditPersona) return;
+      const u = usuariosPermisosDB.find(x => x.persona === permisosEditPersona);
+      if (!u) return;
+
+      const todo = document.getElementById('ep_todo').checked;
+      const secciones = todo
+        ? ['__todo__']
+        : [...document.querySelectorAll('.ep-seccion:checked')].map(c => c.value);
+
+      if (!secciones.length) { toast('Marca al menos una sección (o desactiva el usuario)', 'err'); return; }
+
+      try {
+        await apiPatch('usuarios_permisos', u.id, { secciones });
+        await cargarUsuariosPermisosCache();
+        renderListaUsuariosGestion();
+        cerrarModal('modalEditarPermisos');
+        permisosEditPersona = null;
+        toast(`Permisos de ${u.nombre || u.persona} actualizados`);
+      } catch (e) {
+        toast('Error al guardar los permisos: ' + e.message, 'err');
+      }
     }
 
 

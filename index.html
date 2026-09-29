@@ -14534,6 +14534,13 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       }
     }
 
+    async function ajustarStockAtomico(prod, delta) {
+      const { data, error } = await supabaseClient.rpc('ajustar_stock', { p_producto_id: prod.id, p_delta: delta });
+      if (error) throw new Error(error.message);
+      prod.stock = data;   // refresca la caché con el valor real
+      return data;
+    }
+
     function unidadProducto(p) { return (p && p.unidad === 'metros') ? 'metros' : 'unidades'; }
     function recalcPrecioDesdeMargen() {
       const costoReal = parseFloat(document.getElementById('f_costo')?.value || 0);
@@ -16509,15 +16516,8 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         let prod = buscarProductoPorNombre(l.nombre);
         const unidadSeleccionada = document.getElementById(`lav_unidadnueva_${l.idx}`)?.value || 'unidades';
         if (!prod) {
-          try {
-            const [nuevo] = await apiPost('inventario', { nombre: l.nombre, stock: 0, unidad: unidadSeleccionada, puntos_por_unidad: 0 });
-            inventarioDB.push(nuevo);
-            actualizarDatalistProductos();
-            prod = nuevo;
-          } catch (e) {
-            toast(`No se pudo crear el producto "${l.nombre}": ` + e.message, 'err');
-            return;
-          }
+          toast(`"${l.nombre}" no existe en el inventario. Elígelo de la lista o créalo con el botón +`, 'err');
+          return;
         }
         const subtotal = l.cantidad * l.precio;
         let importeConDto = +(subtotal - (subtotal * l.dto / 100)).toFixed(2);
@@ -16586,21 +16586,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
             if (delta === 0) continue; // nada cambió para este producto: no se toca
             const prod = inventarioDB.find(p => p.id == pid);
             if (prod) {
-              const stockAnterior = Number(prod.stock);
-              const nuevoStockProd = stockAnterior + delta;
-
-              await apiPatch('inventario', pid, { stock: nuevoStockProd });
-
-              await registrarAuditoria({
-                accion: 'ajuste_stock',
-                tabla: 'inventario',
-                registroId: prod.id,
-                descripcion: `Ajuste de stock: ${stockAnterior} → ${nuevoStockProd}`,
-                cambios: { stock: { antes: stockAnterior, despues: nuevoStockProd } },
-                seccion: 'inventario'
-              });
-
-              prod.stock = nuevoStockProd;
+              const nuevoStockProd = await ajustarStockAtomico(prod, delta);
 
               if (nuevoStockProd < 0) {
                 avisosStockNegativoAV.push(`${prod.nombre} (${fmtStock(nuevoStockProd)} ${unidadCorta(prod)})`);
@@ -16661,9 +16647,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
 
           for (const l of lineasFinales) {
             const prod = inventarioDB.find(p => p.id == l.producto_id);
-            const nuevoStock = Number(prod.stock) + efectoStock(l.cantidad, esDevolucion);
-            await apiPatch('inventario', l.producto_id, { stock: nuevoStock });
-            prod.stock = nuevoStock;
+            const nuevoStock = await ajustarStockAtomico(prod, efectoStock(l.cantidad, esDevolucion));
             if (nuevoStock < 0) avisosStockNegativoAV.push(`${prod.nombre} (${fmtStock(nuevoStock)} ${unidadCorta(prod)})`);
           }
 
@@ -22578,8 +22562,8 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
 
           const antiguos = await apiGet('facturas_venta_albaranes', `factura_venta_id=eq.${facturaId}`);
           for (const a of antiguos) await apiDelete('facturas_venta_albaranes', a.id);
-          directasAntiguas = itemsAntiguos.filter(it => !it.albaran_venta_id && !it.alquiler_id && it.producto_id);
           const itemsAntiguos = await apiGet('facturas_venta_items', `factura_venta_id=eq.${facturaId}`);
+          directasAntiguas = itemsAntiguos.filter(it => !it.albaran_venta_id && !it.alquiler_id && it.producto_id);
           for (const it of itemsAntiguos) await apiDelete('facturas_venta_items', it.id);
 
           const liberar = antiguos.filter(a => {

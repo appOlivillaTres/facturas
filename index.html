@@ -25291,7 +25291,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         if (marcado) c.checked = true;
       });
     }
-
+    // funcion que da permisos a un usuario para acceder a ciertas secciones de la aplicacion cuando se crea o ya creado editar las que tiene
     async function guardarPermisosUsuario() {
       if (currentPersona !== 'emilio' || !permisosEditPersona) return;
       const u = usuariosPermisosDB.find(x => x.persona === permisosEditPersona);

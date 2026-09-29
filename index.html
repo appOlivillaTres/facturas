@@ -7681,7 +7681,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
 
       const filasConsumos = consumosDelDia.map(c => `<tr>
         <td><span style="font-size:.72rem;color:#888">Consumo interno</span></td>
-        <td>${c.empleado || '—'}</td>
+        <td>${c.notas || '—'}</td>
         <td style="text-align:right"><strong>${fmt(c.total)}</strong></td>
         <td><button class="btn-toggle-pago pendiente" onclick="imprimirConsumoInterno(${c.id})" title="Imprimir"><i class="fa-solid fa-print"></i></button></td>
       </tr>`).join('');
@@ -12487,7 +12487,12 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         }).join('');
       } else if (tablaActual === 'consumo_interno') {
         hdr.innerHTML = `<tr><th>Fecha</th><th>Productos</th><th class="num-cell">Total</th><th>Registrado por</th><th>Detalle</th><th></th><th></th></tr>`;
-        const lista = registros.filter(f => (f.empleado || '').toLowerCase().includes(q));
+        const lista = registros.filter(f => {
+          const enNotas = (f.notas || '').toLowerCase().includes(q);
+          const enProductos = [...(f.consumo_interno_items || []), ...(f.consumo_interno_items_exclusivos || [])]
+            .some(i => (i.producto_nombre || '').toLowerCase().includes(q));
+          return enNotas || enProductos;
+        });
         if (!lista.length) { bdy.innerHTML = emptyRow(7, 'No hay consumos internos registrados'); return; }
         bdy.innerHTML = lista.map(f => {
           const items = f.consumo_interno_items || [];
@@ -21280,14 +21285,14 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
           for (const a of antiguasExcl) await apiDelete('consumo_interno_items_exclusivos', a.id);
 
           await apiPatch('consumo_interno', consumoInternoEditId, {
-            empleado, fecha, total, notas,
-            cliente_id: clienteConsumoSelId || null
+            fecha, total, notas,
+            cliente_id: null
           });
           headerId = consumoInternoEditId;
         } else {
           const [header] = await apiPost('consumo_interno', {
-            empleado, fecha, total, notas,
-            cliente_id: clienteConsumoSelId || null,
+            fecha, total, notas,
+            cliente_id: null,
             creado_por: currentPersona
           });
           headerId = header.id;
@@ -21347,7 +21352,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       const items = reg.consumo_interno_items || [];
       const itemsExcl = reg.consumo_interno_items_exclusivos || [];
       document.getElementById('modalDetalleTitulo').innerHTML =
-        `<i class="fa-solid fa-user-check" style="color:#b53987"></i>Consumo — ${reg.empleado || '—'}${esDevolucion ? ' <span class="badge-estado badge-vencido" style="margin-left:6px"><i class="fa-solid fa-rotate-left"></i> DEVOLUCIÓN</span>' : ''}`;
+        `<i class="fa-solid fa-user-check" style="color:#b53987"></i>Consumo interno — ${fmtF(reg.fecha)}${esDevolucion ? ' <span class="badge-estado badge-vencido" style="margin-left:6px"><i class="fa-solid fa-rotate-left"></i> DEVOLUCIÓN</span>' : ''}`;
       const tablaNormal = !items.length ? '' : `
     <table class="mini-table"><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Total</th></tr></thead><tbody>
     ${items.map(i => `<tr><td>${i.producto_nombre || '—'}</td><td>${i.cantidad}</td><td>${fmt(i.precio_unitario)}</td><td><strong>${fmt(i.importe_total)}</strong></td></tr>`).join('')}
@@ -21472,9 +21477,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       consumoInternoEditId = id || null;
       const reg = id ? registros.find(r => r.id === id) : null;
 
-      document.getElementById('ci_empleado').value = reg?.empleado || '';
-      document.getElementById('ci_cliente_id').value = reg?.cliente_id || '';
-      clienteConsumoSelId = reg?.cliente_id || null;
+      clienteConsumoSelId = null;
       document.getElementById('ci_fecha').value = reg?.fecha || hoy();
       document.getElementById('ci_notas').value = reg?.notas || '';
       document.getElementById('ci_es_devolucion').checked = reg ? parseFloat(reg.total || 0) < 0 : false;
@@ -21515,7 +21518,6 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         `<i class="fa-solid fa-floppy-disk me-1"></i>${id ? 'Guardar cambios' : 'Guardar'}`;
 
       document.getElementById('modalConsumoInterno').classList.add('visible');
-      setTimeout(() => setupClienteConsumoAC('ci_empleado', 'ci_cliente_id'), 50);
       setTimeout(() => {
         activarInputEscaner('ci_scan', escanearLineaConsumoInterno);
         document.getElementById('ci_scan')?.focus();

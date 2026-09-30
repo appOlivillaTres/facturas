@@ -21304,7 +21304,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       const fecha = document.getElementById('ci_fecha').value;
       const esDevolucion = document.getElementById('ci_es_devolucion')?.checked || false;
       const notas = document.getElementById('ci_notas').value.trim() || null;
-      if (!empleado || !fecha) { toast('Indica quién se lo lleva y la fecha', 'err'); return; }
+      if (!fecha) { toast('Indica la fecha', 'err'); return; }
 
       const lineas = [];
       let ok = true;

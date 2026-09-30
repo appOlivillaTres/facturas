@@ -8905,8 +8905,8 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
             const [facturasObra, facturasCsg, repartos, albaranesTodos] = await Promise.all([
               apiGetAll('facturas_obra', 'select=nombre_obra,total'),
               apiGetAll('facturas_csg', 'select=nombre_obra,total'),
-              apiGetAll('facturas_reparto_obras', 'select=nombre_obra,importe'),
-              apiGetAll('albaranes', 'select=nombre_obra')
+              apiGetAll('facturas_reparto_obras', 'select=nombre_obra,importe&factura_tabla=neq.albaranes'),
+              apiGetAll('albaranes', 'select=id,nombre_obra')
             ]);
 
             const totalPorObra = {};
@@ -8932,6 +8932,11 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
               if (!a.nombre_obra) return;
               numAlbaranesPorObra[a.nombre_obra] = (numAlbaranesPorObra[a.nombre_obra] || 0) + 1;
             });
+            const repartosAlb = await apiGetAll('facturas_reparto_obras', 'select=nombre_obra&factura_tabla=eq.albaranes');
+            repartosAlb.forEach(r => {
+              if (!r.nombre_obra) return;
+              numAlbaranesPorObra[r.nombre_obra] = (numAlbaranesPorObra[r.nombre_obra] || 0) + 1;
+            });
 
             registros.forEach(o => {
               o._total_facturado = totalPorObra[o.nombre] || 0;
@@ -8947,7 +8952,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
           const alquileres = await apiGetAll('alquileres', 'select=*,alquileres_items(*)&order=fecha.desc');
           registros = [...registros, ...(alquileres || []).map(a => ({ ...a, _esAlquiler: true, _tipoAlquiler: a.tipo === 'baja' ? 'baja' : 'alta' }))];
         }
-        if (tablaActual === 'facturas_obra' || tablaActual === 'facturas_csg') {
+        if (tablaActual === 'facturas_obra' || tablaActual === 'facturas_csg' || tablaActual === 'albaranes') {
           try {
             const repartoTodos = await apiGetAll('facturas_reparto_obras', `factura_tabla=eq.${tablaActual}`);
             const repartoPorFactura = {};
@@ -10405,7 +10410,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
 
           apiGetAll(
             'facturas_reparto_obras',
-            `nombre_obra=eq.${encodeURIComponent(nombreObra)}`
+            `nombre_obra=eq.${encodeURIComponent(nombreObra)}&factura_tabla=neq.albaranes`
           ),
 
           apiGetAll(
@@ -12008,7 +12013,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
         const lista = registros.filter(f => {
           const mQ = [f.numero_albaran, f.empresa, f.nif].some(v => (v || '').toLowerCase().includes(q));
           const mE = !fEst || (fEst === 'si' ? f.facturado : !f.facturado);
-          const mObra = !fObraAlb || f.nombre_obra === fObraAlb;
+          const mObra = !fObraAlb || f.nombre_obra === fObraAlb || (f._reparto && f._reparto.some(r => r.nombre_obra === fObraAlb));
           return mQ && mE && mObra;
         });
         if (!lista.length) { bdy.innerHTML = emptyRow(12, 'No se encontraron albaranes'); return; }
@@ -12019,7 +12024,7 @@ ${puedeGestionar ? `<button class="btn-eliminar" style="padding:8px 14px" onclic
         <td><strong>${f.numero_albaran || '—'}</strong></td>
         <td class="td-nombre">${f.empresa || '—'}</td>
         <td style="font-size:.8rem;color:#888">${f.nif || '—'}</td>
-        <td>${f.nombre_obra || '—'}</td>
+        <td class="td-nombre">${(f._reparto && f._reparto.length) ? `<span class="link-badge factura" onclick="verRepartoObrasFactura(${f.id})" title="Ver reparto"><i class="fa-solid fa-code-branch"></i> ${f._reparto.length} obras</span>` : (f.nombre_obra || '—')}</td>
         <td>${fmtF(f.fecha)}</td>
         <td class="td-total">${fmt(f.total)}${parseFloat(f.total || 0) < 0 ? '<br><span class="badge-estado badge-vencido" style="margin-top:4px;display:inline-block"><i class="fa-solid fa-rotate-left"></i> DEVOLUCIÓN</span>' : ''}</td>
         <td><span class="badge-estado ${fact ? 'badge-pagado' : 'badge-vencido'}">${fact ? 'SÍ' : 'NO'}</span></td>
@@ -13271,12 +13276,15 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       document.querySelectorAll('[id^="lro_base_"]').forEach(inp => {
         suma += parseFloat(inp.value || 0);
       });
-      const totalBase = parseFloat(document.getElementById('f_base1')?.value || 0);
-      const restante = +(totalBase - suma).toFixed(2);
+      // En facturas se reparte la base imponible; en albaranes, el total
+      const refEl = document.getElementById('f_base1') || document.getElementById('f_total');
+      const etiqueta = document.getElementById('f_base1') ? 'de base imponible' : 'del total';
+      const totalRef = parseFloat(refEl?.value || 0);
+      const restante = +(totalRef - suma).toFixed(2);
       txt.style.color = Math.abs(restante) < 0.01 ? '#2d7a4f' : '#c0392b';
       txt.textContent = Math.abs(restante) < 0.01
-        ? `Repartido correctamente: ${fmt(suma)} de ${fmt(totalBase)} de base imponible`
-        : `Repartido ${fmt(suma)} de ${fmt(totalBase)} de base imponible — quedan ${fmt(restante)} por asignar`;
+        ? `Repartido correctamente: ${fmt(suma)} de ${fmt(totalRef)} ${etiqueta}`
+        : `Repartido ${fmt(suma)} de ${fmt(totalRef)} ${etiqueta} — quedan ${fmt(restante)} por asignar`;
     }
 
     function _leerLineasRepartoObras() {
@@ -13912,6 +13920,18 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
           const empresa = document.getElementById('f_empresa').value.trim();
           const fecha = document.getElementById('f_fecha').value;
           if (!empresa || !fecha) { toast('Empresa y fecha son obligatorios', 'err'); return; }
+          const repartoActivoAlb = document.getElementById('f_reparto_activo')?.checked;
+          let lineasRepartoAlb = [];
+          if (repartoActivoAlb) {
+            lineasRepartoAlb = _leerLineasRepartoObras();
+            if (lineasRepartoAlb.length < 2) { toast('Añade al menos dos obras para repartir el albarán', 'err'); return; }
+            const sumaRepartoAlb = lineasRepartoAlb.reduce((s, l) => s + l.importe, 0);
+            const totalRepartoAlb = parseFloat(document.getElementById('f_total').value || 0);
+            if (Math.abs(sumaRepartoAlb - totalRepartoAlb) > 0.01) {
+              toast(`El reparto (${fmt(sumaRepartoAlb)}) no coincide con el total del albarán (${fmt(totalRepartoAlb)})`, 'err');
+              return;
+            }
+          }
 
           const numAlbaran = document.getElementById('f_num').value.trim() || null;
           const nifAlb = document.getElementById('f_nif').value.trim() || null;
@@ -13938,7 +13958,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
             nif: nifAlb,
             total: totalAlb,
             numero_pedido: document.getElementById('f_num_pedido').value.trim() || null,
-            nombre_obra: document.getElementById('f_obra_alb').value.trim() || null
+            nombre_obra: repartoActivoAlb ? null : (document.getElementById('f_obra_alb').value.trim() || null)
           };
           if (archivosAlbaranSeleccionados.length) {
             payload.archivo_url = archivosAlbaranSeleccionados[0].url;
@@ -13947,13 +13967,14 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
             payload.archivo_url = null;
             payload.archivos_urls = [];
           }
-
+          let albaranIdGuardado = modalEditId;
           if (modalEditId) {
             await apiPatch('albaranes', modalEditId, payload);
           } else {
             payload.facturado = false;
             try {
-              await apiPost('albaranes', payload);
+              const [nuevoAlb] = await apiPost('albaranes', payload);
+              albaranIdGuardado = nuevoAlb.id;
             } catch (e) {
               if (esErrorDuplicado(e.message)) {
                 await registrarDuplicado({ tabla: 'albaranes', id: null }, {
@@ -13965,6 +13986,20 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
               }
               throw e;
             }
+          }
+
+          // Reparto entre obras
+          try {
+            const antiguas = await apiGet('facturas_reparto_obras', `factura_tabla=eq.albaranes&factura_id=eq.${albaranIdGuardado}`);
+            for (const a of antiguas) await apiDelete('facturas_reparto_obras', a.id);
+            if (repartoActivoAlb) {
+              await apiPost('facturas_reparto_obras', lineasRepartoAlb.map(l => ({
+                factura_tabla: 'albaranes', factura_id: albaranIdGuardado,
+                nombre_obra: l.nombre_obra, importe: l.importe
+              })));
+            }
+          } catch (e) {
+            toast('El albarán se guardó, pero hubo un error guardando el reparto entre obras: ' + e.message, 'err');
           }
           modalEditId = null;
 
@@ -14376,6 +14411,10 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
     async function eliminar(id) {
       if (!confirm('¿Seguro que deseas eliminar este registro?')) return;
       try {
+        if (tablaActual === 'albaranes') {
+          const rep = await apiGet('facturas_reparto_obras', `factura_tabla=eq.albaranes&factura_id=eq.${id}`);
+          for (const r of rep) await apiDelete('facturas_reparto_obras', r.id);
+        }
         await apiDelete(tablaReal(tablaActual), id);
         toast('Eliminado correctamente');
         cargarDatos();
@@ -15237,6 +15276,24 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         set('f_total', f.total);
         set('f_num_pedido', f.numero_pedido);
         setSelectObraValue('f_obra_alb', f.nombre_obra);
+        apiGet('facturas_reparto_obras', `factura_tabla=eq.albaranes&factura_id=eq.${f.id}`).then(reparto => {
+          const chk = document.getElementById('f_reparto_activo');
+          const wrapUnica = document.getElementById('obraUnicaWrap');
+          const wrapReparto = document.getElementById('bloqueRepartoObras');
+          document.getElementById('lineasRepartoObras').innerHTML = '';
+          lineasRepartoObraCount = 0;
+          if (reparto && reparto.length) {
+            if (chk) chk.checked = true;
+            if (wrapUnica) wrapUnica.style.display = 'none';
+            if (wrapReparto) wrapReparto.style.display = '';
+            reparto.forEach(r => addLineaRepartoObra(r.nombre_obra, r.importe));
+            recalcRepartoRestante();
+          } else {
+            if (chk) chk.checked = false;
+            if (wrapUnica) wrapUnica.style.display = '';
+            if (wrapReparto) wrapReparto.style.display = 'none';
+          }
+        }).catch(() => { });
 
         archivosAlbaranSeleccionados = (f.archivos_urls && f.archivos_urls.length)
           ? f.archivos_urls.map((url, i) => ({ url, nombre: `Archivo ${i + 1}` }))
@@ -20379,9 +20436,10 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
     <label>NIF <span style="font-size:.72rem;color:#b53987">(se rellena automáticamente)</span></label>
     <input type="text" id="f_nif" placeholder="Se rellena al elegir proveedor">
   </div>
-  <div class="form-group"><label>Total (€)</label><input type="number" id="f_total" value="0" step="0.01" min="0"></div>
+  <div class="form-group"><label>Total (€)</label><input type="number" id="f_total" value="0" step="0.01" min="0" oninput="recalcRepartoRestante()"></div>
   <div class="form-group"><label>Nº Pedido</label><input type="text" id="f_num_pedido" placeholder="Se usa para cruzar con la factura"></div>
-<div class="form-group span2"><label>Obra <span style="font-size:.72rem;color:#888">(opcional)</span></label>${htmlSelectObras('f_obra_alb', 'Sin obra')}</div>
+<div class="form-group span2" id="obraUnicaWrap"><label>Obra <span style="font-size:.72rem;color:#888">(opcional)</span></label>${htmlSelectObras('f_obra_alb', 'Sin obra')}</div>
+<div class="span2" style="grid-column:span 2">${htmlRepartoObras()}</div>
   <div class="form-group span2"><label>Archivos (PDF o imagen) <span style="font-size:.72rem;color:#888">(puedes seleccionar varios)</span></label><input type="file" id="f_archivo_albaran" accept="application/pdf,image/*" multiple onchange="_leerArchivosAlbaran(this)">
     <div class="archivos-lista" id="archivosAlbaranLista"></div>
   </div>
@@ -20392,6 +20450,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
           setupProveedorAC('f_empresa', 'f_nif');
           setupObraAC('f_obra_alb');
           _aplicarPrellenadoAlbaran();
+          lineasRepartoObraCount = 0;
         }, 50);
 
         // ── CLIENTE ──

@@ -23049,20 +23049,50 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       if (!f) throw new Error('Factura no encontrada');
       const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
 
-      const items = await apiGet('facturas_venta_items', `factura_venta_id=eq.${id}`);
-      const filas = items.map(i => `
+      const items = await apiGet('facturas_venta_items', `factura_venta_id=eq.${id}&order=id.asc`);
+      const albaranes = f.facturas_venta_albaranes || [];
+
+      const filaProducto = i => `
     <tr>
       <td>${i.producto_nombre || ''}</td>
       <td style="text-align:right">${fmtStock(i.cantidad)}</td>
       <td style="text-align:right">${fmtN(i.precio_unitario)}</td>
       <td style="text-align:right">${i.dto_pct ? i.dto_pct + '%' : '—'}</td>
       <td style="text-align:right">${fmtN(i.importe_total)}</td>
-    </tr>`).join('');
+    </tr>`;
 
-      const albaranes = f.facturas_venta_albaranes || [];
-      const filaAlbaranes = albaranes.length
-        ? `<p style="font-size:.75rem;color:#888;margin-top:10px"><b>Albaranes incluidos:</b> ${albaranes.map(a => a.numero_albaran).filter(Boolean).join(', ')}</p>`
-        : '';
+      const cabeceraGrupo = (titulo, subtotal) => `
+    <tr>
+      <td colspan="4" style="background:#f7f0f5;font-weight:700;border-top:2px solid #b53987">${titulo}</td>
+      <td style="background:#f7f0f5;font-weight:700;border-top:2px solid #b53987;text-align:right">${fmtN(subtotal)}</td>
+    </tr>`;
+
+      const yaPintados = new Set();
+      let filas = '';
+
+      // Un bloque por albarán, con sus productos debajo
+      albaranes.forEach(a => {
+        const delAlbaran = items.filter(i =>
+          (a.albaran_venta_id && i.albaran_venta_id === a.albaran_venta_id) ||
+          (a.alquiler_id && i.alquiler_id === a.alquiler_id)
+        );
+        if (!delAlbaran.length) return;
+        delAlbaran.forEach(i => yaPintados.add(i.id));
+        const subtotal = delAlbaran.reduce((s, i) => s + (parseFloat(i.importe_total) || 0), 0);
+        const tipo = a.alquiler_id ? 'Albarán de alquiler' : 'Albarán';
+        filas += cabeceraGrupo(`${tipo} ${a.numero_albaran || 's/n'}`, subtotal);
+        filas += delAlbaran.map(filaProducto).join('');
+      });
+
+      // Líneas directas (sin albarán) al final
+      const sueltas = items.filter(i => !yaPintados.has(i.id));
+      if (sueltas.length) {
+        const subtotal = sueltas.reduce((s, i) => s + (parseFloat(i.importe_total) || 0), 0);
+        if (albaranes.length) filas += cabeceraGrupo('Otras líneas (sin albarán)', subtotal);
+        filas += sueltas.map(filaProducto).join('');
+      }
+
+      const filaAlbaranes = '';
 
       return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Factura ${f.numero_factura || ''}</title>
   <style>

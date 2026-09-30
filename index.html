@@ -4215,7 +4215,8 @@
       <div class="form-grid">
         <div class="form-group"><label>Nº Factura</label><input type="text" id="fv_num" readonly
             style="background:#f7f0f5;font-weight:600" placeholder="Se asigna al guardar"></div>
-        <div class="form-group"><label>Fecha *</label><input type="date" id="fv_fecha"></div>
+        <div class="form-group"><label>Fecha *</label><input type="date" id="fv_fecha"
+            onchange="aplicarVencimientoCliente()"></div>
         <div class="form-group"><label>Vencimiento</label><input type="date" id="fv_venc"></div>
 
         <div class="form-group span2 ac-wrap">
@@ -4741,6 +4742,9 @@
         <button class="btn-guardar" onclick="guardarClienteRapido()"><i class="fa-solid fa-floppy-disk me-1"></i>Guardar
           cliente</button>
       </div>
+      <div class="form-group"><label>Días de vencimiento <span
+            style="font-size:.72rem;color:#888">(opcional)</span></label><input type="number" id="cr_dias_venc" min="0"
+          placeholder="Ej: 30"></div>
     </div>
   </div>
   <!-- MODAL DESCARGAR ARCHIVOS POR FECHA -->
@@ -14036,7 +14040,9 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
             poblacion: document.getElementById('f_poblacion').value.trim() || null,
             codigo_postal: document.getElementById('f_cp').value.trim() || null,
             provincia: document.getElementById('f_provincia').value.trim() || null,
-            aviso_albaran: document.getElementById('f_aviso_albaran').value.trim() || null
+            aviso_albaran: document.getElementById('f_aviso_albaran').value.trim() || null,
+            dias_vencimiento: document.getElementById('f_dias_venc').value !== ''
+              ? parseInt(document.getElementById('f_dias_venc').value) : null
           };
 
           if (modalEditId) {
@@ -19465,6 +19471,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
           document.getElementById("f_cp").value = f.codigo_postal || "";
           document.getElementById("f_provincia").value = f.provincia || "";
           document.getElementById("f_aviso_albaran").value = f.aviso_albaran || "";
+          document.getElementById("f_dias_venc").value = f.dias_vencimiento != null ? f.dias_vencimiento : "";
         }, 100);
         return;
       }
@@ -20492,6 +20499,10 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       <div class="form-group span2">
   <label>Aviso al hacer albarán de venta <span style="font-size:.72rem;color:#888">(opcional — salta como recordatorio al seleccionar este cliente)</span></label>
   <input type="text" id="f_aviso_albaran" placeholder="Ej: Poner obra, nombre de quien recoge y DNI">
+        <div class="form-group span2">
+        <label>Días de vencimiento de sus facturas <span style="font-size:.72rem;color:#888">(opcional — se aplica solo al hacerle una factura de venta)</span></label>
+        <input type="number" id="f_dias_venc" min="0" step="1" placeholder="Ej: 30">
+      </div>
 </div>
     </div>`;
         document.getElementById('modalNueva').classList.add('visible');
@@ -21154,6 +21165,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       document.getElementById('cr_cp').value = '';
       document.getElementById('cr_provincia').value = '';
       document.getElementById('modalClienteRapido').classList.add('visible');
+      document.getElementById('cr_dias_venc').value = '';
       setTimeout(() => setupMunicipioAC('cr_poblacion', 'cr_cp'), 50);
     }
 
@@ -21171,7 +21183,8 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         provincia: document.getElementById('cr_provincia').value.trim() || null,
         aviso_albaran: document.getElementById('cr_aviso_albaran').value.trim() || null,
         puntos: 0,
-        ultima_compra: new Date().toISOString()
+        ultima_compra: new Date().toISOString(),
+        dias_vencimiento: document.getElementById('cr_dias_venc').value !== '' ? parseInt(document.getElementById('cr_dias_venc').value) : null
       };
 
       try {
@@ -22550,6 +22563,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         inpN.value = c.nombre || ''; inpF.value = c.nif || ''; inpId.value = c.id;
         fvClienteSelId = c.id;
         lista.style.display = 'none';
+        aplicarVencimientoCliente();
         await cargarAlbaranesSinFacturarCliente(c.id);
       }
       function render(items, textoEscrito) {
@@ -22698,6 +22712,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
             document.getElementById('fv_nif').value = alb.nif || '';
             document.getElementById('fv_cliente_id').value = alb.cliente_id;
             fvClienteSelId = alb.cliente_id;
+            aplicarVencimientoCliente();
             await cargarAlbaranesSinFacturarCliente(alb.cliente_id, [`venta:${albaranPreseleccionadoId}`]);
           }
         } else if (alquilerPreseleccionadoId) {
@@ -22708,10 +22723,22 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
             document.getElementById('fv_nif').value = alq.nif || '';
             document.getElementById('fv_cliente_id').value = alq.cliente_id;
             fvClienteSelId = alq.cliente_id;
+            aplicarVencimientoCliente();
             await cargarAlbaranesSinFacturarCliente(alq.cliente_id, [`alquiler:${alquilerPreseleccionadoId}`]);
           }
         }
       }, 50);
+    }
+
+    // Calcula el vencimiento = fecha de factura + días de vencimiento del cliente
+    function aplicarVencimientoCliente() {
+      const cliente = clientesDB.find(c => c.id === fvClienteSelId);
+      const fecha = document.getElementById('fv_fecha').value;
+      const inpVenc = document.getElementById('fv_venc');
+      if (!cliente || cliente.dias_vencimiento == null || !fecha) return;
+      const d = new Date(fecha + 'T00:00:00');
+      d.setDate(d.getDate() + parseInt(cliente.dias_vencimiento));
+      inpVenc.value = d.toISOString().split('T')[0];
     }
 
     function abrirModalEditarFacturaVenta(id) {
@@ -23129,10 +23156,11 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
     <div class="caja" style="max-width:320px">
       <b>OLIVILLA TRES S.L.U</b><br>Avenida de Madrid, 41<br>45003 TOLEDO<br>B45813284<br>925233454<br>almacen@olivillatres.com
     </div>
-    <div class="doc-info">
+        <div class="doc-info">
       <div>DOCUMENTO<br><b>Factura</b></div>
       <div>NÚMERO<br><b>${f.numero_factura || '—'}</b></div>
       <div>FECHA<br><b>${fmtF(f.fecha)}</b></div>
+      ${f.fecha_vencimiento ? `<div>VENCIMIENTO<br><b>${fmtF(f.fecha_vencimiento)}</b></div>` : ''}
     </div>
   </div>
   <h1>FACTURA</h1>
@@ -24713,6 +24741,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       document.getElementById('facturaVentaTitulo').textContent = 'Nueva Factura de Venta';
       document.getElementById('fv_num').value = '';
       document.getElementById('fv_fecha').value = hoy();
+      aplicarVencimientoCliente();
       document.getElementById('fv_venc').value = '';
       document.getElementById('fv_cliente').value = cliente.nombre || '';
       document.getElementById('fv_nif').value = cliente.nif || '';

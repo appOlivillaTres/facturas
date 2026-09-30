@@ -13240,6 +13240,11 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         addLineaRepartoObra();
         addLineaRepartoObra();
       }
+      const baseWrap = document.getElementById('baseAlbWrap');
+      if (baseWrap) {
+        baseWrap.style.display = activo ? '' : 'none';
+        if (activo) onTotalAlbaranInput();
+      }
       recalcRepartoRestante();
     }
 
@@ -13277,14 +13282,23 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         suma += parseFloat(inp.value || 0);
       });
       // En facturas se reparte la base imponible; en albaranes, el total
-      const refEl = document.getElementById('f_base1') || document.getElementById('f_total');
-      const etiqueta = document.getElementById('f_base1') ? 'de base imponible' : 'del total';
+      const refEl = document.getElementById('f_base1') || document.getElementById('f_base_alb');
+      const etiqueta = 'de base imponible';
       const totalRef = parseFloat(refEl?.value || 0);
       const restante = +(totalRef - suma).toFixed(2);
       txt.style.color = Math.abs(restante) < 0.01 ? '#2d7a4f' : '#c0392b';
       txt.textContent = Math.abs(restante) < 0.01
         ? `Repartido correctamente: ${fmt(suma)} de ${fmt(totalRef)} ${etiqueta}`
         : `Repartido ${fmt(suma)} de ${fmt(totalRef)} ${etiqueta} — quedan ${fmt(restante)} por asignar`;
+    }
+
+    function onTotalAlbaranInput() {
+      const base = document.getElementById('f_base_alb');
+      if (base && !base.dataset.manual) {
+        const total = parseFloat(document.getElementById('f_total').value || 0);
+        base.value = (total / 1.21).toFixed(2);
+      }
+      recalcRepartoRestante();
     }
 
     function _leerLineasRepartoObras() {
@@ -13926,9 +13940,9 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
             lineasRepartoAlb = _leerLineasRepartoObras();
             if (lineasRepartoAlb.length < 2) { toast('Añade al menos dos obras para repartir el albarán', 'err'); return; }
             const sumaRepartoAlb = lineasRepartoAlb.reduce((s, l) => s + l.importe, 0);
-            const totalRepartoAlb = parseFloat(document.getElementById('f_total').value || 0);
-            if (Math.abs(sumaRepartoAlb - totalRepartoAlb) > 0.01) {
-              toast(`El reparto (${fmt(sumaRepartoAlb)}) no coincide con el total del albarán (${fmt(totalRepartoAlb)})`, 'err');
+            const baseRepartoAlb = parseFloat(document.getElementById('f_base_alb').value || 0);
+            if (Math.abs(sumaRepartoAlb - baseRepartoAlb) > 0.01) {
+              toast(`El reparto (${fmt(sumaRepartoAlb)}) no coincide con la base imponible del albarán (${fmt(baseRepartoAlb)})`, 'err');
               return;
             }
           }
@@ -15283,6 +15297,13 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
           document.getElementById('lineasRepartoObras').innerHTML = '';
           lineasRepartoObraCount = 0;
           if (reparto && reparto.length) {
+            const baseWrap = document.getElementById('baseAlbWrap');
+            const baseInp = document.getElementById('f_base_alb');
+            if (baseWrap) baseWrap.style.display = '';
+            if (baseInp) {
+              baseInp.value = reparto.reduce((s, r) => s + (parseFloat(r.importe) || 0), 0).toFixed(2);
+              baseInp.dataset.manual = '1';
+            }
             if (chk) chk.checked = true;
             if (wrapUnica) wrapUnica.style.display = 'none';
             if (wrapReparto) wrapReparto.style.display = '';
@@ -19915,9 +19936,9 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
           activarInputEscaner('lav_scan', escanearLineaAlbaranVenta);
           document.getElementById('lav_scan')?.focus();
           addLineaAlbaranVenta();
-          lineasAlbaranVentaExclusivoCount = 0;         // 👈 nuevo
-          document.getElementById('lineasAlbaranVentaExclusivo').innerHTML = ''; // 👈 nuevo
-          addLineaAlbaranVentaExclusivo();              // 👈 nuevo
+          lineasAlbaranVentaExclusivoCount = 0;
+          document.getElementById('lineasAlbaranVentaExclusivo').innerHTML = '';
+          addLineaAlbaranVentaExclusivo();
           ocultarPdfModal();
 
           document.querySelector('#modalNueva .modal-btns').innerHTML = `
@@ -20436,7 +20457,8 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
     <label>NIF <span style="font-size:.72rem;color:#b53987">(se rellena automáticamente)</span></label>
     <input type="text" id="f_nif" placeholder="Se rellena al elegir proveedor">
   </div>
-  <div class="form-group"><label>Total (€)</label><input type="number" id="f_total" value="0" step="0.01" min="0" oninput="recalcRepartoRestante()"></div>
+  <div class="form-group"><label>Total (€)</label><input type="number" id="f_total" value="0" step="0.01" min="0" oninput="onTotalAlbaranInput()"></div>
+<div class="form-group" id="baseAlbWrap" style="display:none"><label>Base imponible (€) <span style="font-size:.72rem;color:#888">(referencia del reparto)</span></label><input type="number" id="f_base_alb" step="0.01" min="0" oninput="this.dataset.manual='1'; recalcRepartoRestante()"></div>
   <div class="form-group"><label>Nº Pedido</label><input type="text" id="f_num_pedido" placeholder="Se usa para cruzar con la factura"></div>
 <div class="form-group span2" id="obraUnicaWrap"><label>Obra <span style="font-size:.72rem;color:#888">(opcional)</span></label>${htmlSelectObras('f_obra_alb', 'Sin obra')}</div>
 <div class="span2" style="grid-column:span 2">${htmlRepartoObras()}</div>

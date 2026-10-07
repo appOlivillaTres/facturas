@@ -16396,11 +16396,12 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         inpN.value = c.nombre || '';
         inpF.value = c.nif || '';
         inpId.value = c.id;
-        clienteVentaSelId = c.id;
+        clienteAltaSelId = c.id;
+        document.getElementById('aa_direccion').value = c.domicilio || '';
+        document.getElementById('aa_poblacion').value = c.poblacion || '';
+        document.getElementById('aa_cp').value = c.codigo_postal || '';
+        document.getElementById('aa_provincia').value = c.provincia || '';
         lista.style.display = 'none';
-        if (c.aviso_albaran) {
-          alert(c.aviso_albaran);
-        }
       }
       function render(items, textoEscrito) {
         if (!items.length) {

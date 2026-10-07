@@ -18556,8 +18556,8 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         <tbody><tr>
           <td>${fmtN(f.pct_iva)}</td>
           <td>${fmtN(f.base_imponible)}</td>
-          <td>—</td>
-          <td>${fmtN(f.base_imponible)}</td>
+          <td>${fmtN(f.descuento)}</td>
+          <td>${fmtN(f.base_imponible - f.descuento)}</td>
           <td>${fmtN(f.importe_iva)}</td>
         </tr></tbody>
       </table>
@@ -19083,8 +19083,8 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         <tbody><tr>
           <td>${fmtN(f.pct_iva)}</td>
           <td>${fmtN(f.base_imponible)}</td>
-          <td>—</td>
-          <td>${fmtN(f.base_imponible)}</td>
+          <td>${fmtN(f.descuento)}</td>
+          <td>${fmtN(f.base_imponible - f.descuento)}</td>
           <td>${fmtN(f.importe_iva)}</td>
         </tr></tbody>
       </table>
@@ -19231,8 +19231,8 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         <tbody><tr>
           <td>${fmtN(f.pct_iva)}</td>
           <td>${fmtN(f.base_imponible)}</td>
-          <td>—</td>
-          <td>${fmtN(f.base_imponible)}</td>
+          <td>${fmtN(f.descuento)}</td>
+          <td>${fmtN(f.base_imponible - f.descuento)}</td>
           <td>${fmtN(f.importe_iva)}</td>
           <td>${fmt(f.total)}</td>
         </tr></tbody>
@@ -19330,9 +19330,9 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         <thead><tr><th>IVA</th><th>IMPORTE</th><th>DESCUENTO</th><th>BASE</th><th>IMPORTE IVA</th><th>TOTAL</th></tr></thead>
         <tbody><tr>
           <td>${fmtN(f.pct_iva)}</td>
-          <td>${fmtN(f.base_imponible)}</td>
-          <td>—</td>
-          <td>${fmtN(f.base_imponible)}</td>
+          <td>${fmtN(f.base_imponible )}</td>
+          <td>${fmtN(f.descuento)}</td>
+          <td>${fmtN(f.base_imponible- f.descuento)}</td>
           <td>${fmtN(f.importe_iva)}</td>
           <td>${fmt(f.total)}</td>
         </tr></tbody>

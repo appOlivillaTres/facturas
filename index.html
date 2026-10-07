@@ -16396,12 +16396,11 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         inpN.value = c.nombre || '';
         inpF.value = c.nif || '';
         inpId.value = c.id;
-        clienteAltaSelId = c.id;
-        document.getElementById('aa_direccion').value = c.domicilio || '';
-        document.getElementById('aa_poblacion').value = c.poblacion || '';
-        document.getElementById('aa_cp').value = c.codigo_postal || '';
-        document.getElementById('aa_provincia').value = c.provincia || '';
+        clienteVentaSelId = c.id;
         lista.style.display = 'none';
+        if (c.aviso_albaran) {
+          alert(c.aviso_albaran);
+        }
       }
       function render(items, textoEscrito) {
         if (!items.length) {
@@ -16454,18 +16453,12 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         inpN.value = c.nombre || '';
         inpF.value = c.nif || '';
         inpId.value = c.id;
-        clienteBajaSelId = c.id;
-        document.getElementById('ba_direccion').value = c.domicilio || '';
-        document.getElementById('ba_poblacion').value = c.poblacion || '';
-        document.getElementById('ba_cp').value = c.codigo_postal || '';
-        document.getElementById('ba_provincia').value = c.provincia || '';
+        clienteAltaSelId = c.id;
+        document.getElementById('aa_direccion').value = c.domicilio || '';
+        document.getElementById('aa_poblacion').value = c.poblacion || '';
+        document.getElementById('aa_cp').value = c.codigo_postal || '';
+        document.getElementById('aa_provincia').value = c.provincia || '';
         lista.style.display = 'none';
-
-        // Solo en baja NUEVA (no al editar una ya existente): muestra el
-        // selector con las altas abiertas de este cliente.
-        if (!bajaAlquilerEditId) {
-          cargarAltasClienteParaBaja(c.id);
-        }
       }
       function render(items, textoEscrito) {
         if (!items.length) {
@@ -19330,9 +19323,9 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         <thead><tr><th>IVA</th><th>IMPORTE</th><th>DESCUENTO</th><th>BASE</th><th>IMPORTE IVA</th><th>TOTAL</th></tr></thead>
         <tbody><tr>
           <td>${fmtN(f.pct_iva)}</td>
-          <td>${fmtN(f.base_imponible )}</td>
+          <td>${fmtN(f.base_imponible)}</td>
           <td>${fmtN(f.descuento)}</td>
-          <td>${fmtN(f.base_imponible- f.descuento)}</td>
+          <td>${fmtN(f.base_imponible - f.descuento)}</td>
           <td>${fmtN(f.importe_iva)}</td>
           <td>${fmt(f.total)}</td>
         </tr></tbody>

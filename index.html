@@ -18336,7 +18336,21 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       const fecha = document.getElementById('aa_fecha').value;
       const cliente_nombre = document.getElementById('aa_cliente').value.trim();
       if (!fecha || !cliente_nombre) { toast('Fecha y cliente son obligatorios', 'err'); return; }
-      if (!clienteAltaSelId) { toast('Selecciona un cliente de la lista (créalo primero en Clientes si es nuevo)', 'err'); return; }
+      // Recuperar el cliente por el campo oculto o, si no, por el nombre escrito
+      const idCampo = document.getElementById('aa_cliente_id').value;
+      if (!clienteAltaSelId && idCampo) clienteAltaSelId = parseInt(idCampo);
+      if (!clienteAltaSelId) {
+        const norm = s => (s || '').toLowerCase().trim();
+        const c = clientesDB.find(c => norm(c.nombre) === norm(cliente_nombre));
+        if (c) {
+          clienteAltaSelId = c.id;
+          document.getElementById('aa_cliente_id').value = c.id;
+        }
+      }
+      if (!clienteAltaSelId) {
+        toast('Selecciona un cliente de la lista (créalo primero en Clientes si es nuevo)', 'err');
+        return;
+      }
 
       const lineas = _leerLineasAlta();
       if (!lineas.length) { toast('Añade al menos un artículo', 'err'); return; }

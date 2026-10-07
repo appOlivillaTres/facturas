@@ -14775,6 +14775,28 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       const n = parseFloat(v || 0);
       return (n % 1 === 0) ? n.toString() : n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
+    // Descuento de una línea. Si no está guardado (albaranes antiguos), lo deduce del importe.
+    function dtoLineaVenta(i) {
+      const dto = parseFloat(i.dto_pct) || 0;
+      if (dto > 0) return dto;
+      const bruto = Math.abs((parseFloat(i.precio_unitario) || 0) * (parseFloat(i.cantidad) || 0));
+      const neto = Math.abs(parseFloat(i.importe_total ?? i.total_linea));
+      if (bruto > 0 && !isNaN(neto) && neto < bruto - 0.005) return +((1 - neto / bruto) * 100).toFixed(2);
+      return 0;
+    }
+
+    // Importe bruto, neto y descuento total de un conjunto de líneas
+    function resumenImportes(items, campoTotal = 'importe_total') {
+      let bruto = 0, neto = 0;
+      items.forEach(i => {
+        const b = (parseFloat(i.precio_unitario) || 0) * (parseFloat(i.cantidad) || 0);
+        const n = parseFloat(i[campoTotal]);
+        const t = isNaN(n) ? b * (1 - (parseFloat(i.dto_pct) || 0) / 100) : n;
+        bruto += (t < 0 ? -1 : 1) * b;
+        neto += t;
+      });
+      return { bruto: +bruto.toFixed(2), neto: +neto.toFixed(2), descuento: +Math.abs(bruto - neto).toFixed(2) };
+    }
     function actualizarUnidadLinea(prefijo, idx) {
       const inpNombre = document.getElementById(`${prefijo}_prod_${idx}`);
       const spanUni = document.getElementById(`${prefijo}_uni_${idx}`);
@@ -16853,7 +16875,8 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
 
           await apiPost('albaranes_venta_items', lineasFinales.map(l => ({
             albaran_venta_id: headerId, producto_id: l.producto_id, producto_nombre: l.producto_nombre,
-            cantidad: l.cantidad, precio_unitario: l.precio_unitario, unidad: l.unidad, importe_total: l.importe_total
+            cantidad: l.cantidad, precio_unitario: l.precio_unitario, unidad: l.unidad,
+            dto_pct: l.dto_pct, importe_total: l.importe_total
           })));
           if (lineasExclusivasFinales.length) {
             await apiPost('albaranes_venta_items_exclusivos', lineasExclusivasFinales.map(l => ({ ...l, albaran_venta_id: headerId })));
@@ -16872,7 +16895,8 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
 
           await apiPost('albaranes_venta_items', lineasFinales.map(l => ({
             albaran_venta_id: headerId, producto_id: l.producto_id, producto_nombre: l.producto_nombre,
-            cantidad: l.cantidad, precio_unitario: l.precio_unitario, importe_total: l.importe_total
+            cantidad: l.cantidad, precio_unitario: l.precio_unitario, unidad: l.unidad,
+            dto_pct: l.dto_pct, importe_total: l.importe_total
           })));
           if (lineasExclusivasFinales.length) {
             await apiPost('albaranes_venta_items_exclusivos', lineasExclusivasFinales.map(l => ({ ...l, albaran_venta_id: headerId })));
@@ -17025,6 +17049,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         document.getElementById('f_av_nif').value = f.nif || '';
         document.getElementById('f_av_cliente_id').value = f.cliente_id || '';
         clienteVentaSelId = f.cliente_id || null;
+        document.getElementById(`lav_dto_${lineasAlbaranVentaCount}`).value = dtoLineaVenta(item);
         document.getElementById('f_av_base').value = (f.base_imponible || 0) + (f.importe_descuento || 0);
         document.getElementById('f_av_pct_iva').value = f.pct_iva != null ? f.pct_iva : 21;
         const chkOcultarPrecios = document.getElementById('f_av_ocultar_precios');
@@ -17042,7 +17067,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
             document.getElementById(`lav_prod_${lineasAlbaranVentaCount}`).value = item.producto_nombre || '';
             document.getElementById(`lav_cant_${lineasAlbaranVentaCount}`).value = item.cantidad;
             document.getElementById(`lav_precio_${lineasAlbaranVentaCount}`).value = item.precio_unitario || 0;
-            document.getElementById(`lav_dto_${lineasAlbaranVentaCount}`).value = item.dto_pct || 0;
+            document.getElementById(`lav_dto_${lineasAlbaranVentaCount}`).value = dtoLineaVenta(item);   // <-- cambiada
             actualizarUnidadLinea('lav', lineasAlbaranVentaCount);
             if (item.unidad) {
               const selUni = document.getElementById(`lav_unidadnueva_${lineasAlbaranVentaCount}`);
@@ -17119,7 +17144,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         const precio = i.precio_unitario != null ? parseFloat(i.precio_unitario) : 0;
         const cantidad = parseFloat(i.cantidad) || 0;
         const subtotalBruto = precio * cantidad;
-        const dto = i.dto_pct != null ? parseFloat(i.dto_pct) : 0;
+        const dto = dtoLineaVenta(i);
         const total = i.importe_total != null ? parseFloat(i.importe_total) : (subtotalBruto - (subtotalBruto * dto / 100));
         let unidadTxt;
         if (i.unidad) {
@@ -17150,7 +17175,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       const domicilioCliente = cliente.domicilio || '';
       const poblacionCliente = [cliente.codigo_postal, cliente.poblacion].filter(Boolean).join('   ');
       const provinciaCliente = cliente.provincia || '';
-
+      const res = resumenImportes(items);
       const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Albarán ${f.numero_albaran || ''}</title>
   <style>
     @page{ margin-bottom: 110px; }
@@ -17217,12 +17242,12 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       <table>
         <thead><tr><th>TIPO</th><th>IMPORTE</th><th>DESCUENTO</th><th>BASE</th><th>I.V.A.</th></tr></thead>
         <tbody><tr>
-          <td>${f.pct_iva != null ? fmtN(f.pct_iva) : '21,00'}</td>
-          <td>${fmtN(f.base_imponible)}</td>
-          <td>${f.descuento_pct ? f.descuento_pct + '% (' + fmtN(f.importe_descuento) + '€)' : '—'}</td>
-          <td>${fmtN(f.base_imponible)}</td>
-          <td>${fmtN(f.importe_iva)}</td>
-        </tr></tbody>
+  <td>${f.pct_iva != null ? fmtN(f.pct_iva) : '21,00'}</td>
+  <td>${fmtN(Math.abs(res.bruto))}</td>
+  <td>${res.descuento ? fmtN(res.descuento) + ' €' : '—'}</td>
+  <td>${fmtN(f.base_imponible)}</td>
+  <td>${fmtN(f.importe_iva)}</td>
+</tr></tbody>
       </table>
     </div>
     <div class="total-box"><span>TOTAL:</span><span>${fmt(f.total)}</span></div>
@@ -18446,6 +18471,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         if (!reg) { toast('No se ha encontrado el alta', 'err'); return; }
         f = reg;
         f._items = await apiGet('alquileres_items', `alquiler_id=eq.${id}`);
+        const res = resumenImportes(f._items || [], 'total_linea');
 
       } catch (e) { toast('Error al cargar: ' + e.message, 'err'); return; }
       const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
@@ -18456,7 +18482,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       <td style="text-align:right">${fmtStock(i.cantidad)}</td>
       <td style="text-align:right">${fmtN(i.precio_unitario)}</td>
       <td style="text-align:right">${fmtN(i.cantidad * i.precio_unitario)}</td>
-      <td style="text-align:right">${i.dto_pct ? i.dto_pct + '%' : '—'}</td>
+      <td style="text-align:right">${dtoLineaVenta(i) ? dtoLineaVenta(i) + '%' : '—'}</td>
       <td style="text-align:right">${fmtN(i.total_linea)}</td>
     </tr>`).join('');
 
@@ -18998,6 +19024,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         if (!reg) { toast('No se ha encontrado la baja', 'err'); return; }
         f = reg;
         f._items = await apiGet('alquileres_items', `alquiler_id=eq.${id}`);
+        const res = resumenImportes(f._items || [], 'total_linea');
 
       } catch (e) { toast('Error al cargar: ' + e.message, 'err'); return; }
       const cliente = clientesDB.find(c => c.id === f.cliente_id) || {};
@@ -19008,7 +19035,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       <td style="text-align:right">${fmtStock(i.cantidad)}</td>
       <td style="text-align:right">${fmtN(i.precio_unitario)}</td>
       <td style="text-align:right">${fmtN(i.cantidad * i.precio_unitario)}</td>
-      <td style="text-align:right">${i.dto_pct ? i.dto_pct + '%' : '—'}</td>
+      <td style="text-align:right">${dtoLineaVenta(i) ? dtoLineaVenta(i) + '%' : '—'}</td>
       <td style="text-align:right">${fmtN(i.total_linea)}</td>
     </tr>`).join('');
 
@@ -19125,6 +19152,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       if (!reg) throw new Error('No se ha encontrado el alta');
       const f = reg;
       f._items = await apiGet('alquileres_items', `alquiler_id=eq.${id}`);
+      const res = resumenImportes(f._items || [], 'total_linea');
 
       const filas = (f._items || []).map(i => `
     <tr>
@@ -19133,7 +19161,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       <td style="text-align:right">${fmtStock(i.cantidad)}</td>
       <td style="text-align:right">${fmtN(i.precio_unitario)}</td>
       <td style="text-align:right">${fmtN(i.cantidad * i.precio_unitario)}</td>
-      <td style="text-align:right">${i.dto_pct ? i.dto_pct + '%' : '—'}</td>
+      <td style="text-align:right">${dtoLineaVenta(i) ? dtoLineaVenta(i) + '%' : '—'}</td>
       <td style="text-align:right">${fmtN(i.total_linea)}</td>
     </tr>`).join('');
 
@@ -19250,6 +19278,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       if (!reg) throw new Error('No se ha encontrado la baja');
       const f = reg;
       f._items = await apiGet('alquileres_items', `alquiler_id=eq.${id}`);
+      const res = resumenImportes(f._items || [], 'total_linea');
 
       const filas = (f._items || []).map(i => `
     <tr>
@@ -19258,7 +19287,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       <td style="text-align:right">${fmtStock(i.cantidad)}</td>
       <td style="text-align:right">${fmtN(i.precio_unitario)}</td>
       <td style="text-align:right">${fmtN(i.cantidad * i.precio_unitario)}</td>
-      <td style="text-align:right">${i.dto_pct ? i.dto_pct + '%' : '—'}</td>
+      <td style="text-align:right">${dtoLineaVenta(i) ? dtoLineaVenta(i) + '%' : '—'}</td>
       <td style="text-align:right">${fmtN(i.total_linea)}</td>
     </tr>`).join('');
 
@@ -22873,7 +22902,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
               producto_nombre: it.producto_nombre,
               cantidad: it.cantidad,
               precio_unitario: it.precio_unitario,
-              dto_pct: it.dto_pct || 0,
+              dto_pct: dtoLineaVenta(it),
               importe_total: it.importe_total
             }));
 
@@ -22883,7 +22912,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
               producto_nombre: it.producto_nombre,
               cantidad: it.cantidad,
               precio_unitario: it.precio_unitario,
-              dto_pct: it.dto_pct || 0,
+              dto_pct: dtoLineaVenta(it),
               importe_total: it.importe_total
             }));
 
@@ -22903,7 +22932,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
                 producto_nombre: it.descripcion,
                 cantidad: it.cantidad,
                 precio_unitario: it.precio_unitario,
-                dto_pct: it.dto_pct || 0,
+                dto_pct: dtoLineaVenta(it),
                 importe_total: it.total_linea
               })));
             }
@@ -22976,7 +23005,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
     </div>
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Dto. %</label>
-      <input type="number" id="fvl_dto_${idx}" value="${item?.dto_pct ?? 0}" step="0.01" min="0" max="100" style="text-align:right" oninput="recalcTotalFacturaVenta()">
+      <input type="number" id="fvl_dto_${idx}" value="${item ? dtoLineaVenta(item) : 0}" step="0.01" min="0" max="100" style="text-align:right" oninput="recalcTotalFacturaVenta()">
     </div>
     <div class="form-group" style="margin:0">
       <label style="font-size:.75rem">Total (€)</label>
@@ -23091,14 +23120,17 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       const items = await apiGet('facturas_venta_items', `factura_venta_id=eq.${id}&order=id.asc`);
       const albaranes = f.facturas_venta_albaranes || [];
 
-      const filaProducto = i => `
+      const filaProducto = i => {
+        const dto = dtoLineaVenta(i);
+        return `
     <tr>
       <td>${i.producto_nombre || ''}</td>
       <td style="text-align:right">${fmtStock(i.cantidad)}</td>
       <td style="text-align:right">${fmtN(i.precio_unitario)}</td>
-      <td style="text-align:right">${i.dto_pct ? i.dto_pct + '%' : '—'}</td>
+      <td style="text-align:right">${dto ? dto + '%' : '—'}</td>
       <td style="text-align:right">${fmtN(i.importe_total)}</td>
     </tr>`;
+      };
 
       const cabeceraGrupo = (titulo, subtotal) => `
     <tr>
@@ -23369,9 +23401,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
           ? parseFloat(it.precio_unitario) || 0
           : 0;
 
-        const dto = it.dto_pct != null
-          ? parseFloat(it.dto_pct) || 0
-          : 0;
+        const dto = dtoLineaVenta(it);
 
         const total = it.importe_total != null
           ? parseFloat(it.importe_total) || 0
@@ -24050,7 +24080,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
         const precio = i.precio_unitario != null ? parseFloat(i.precio_unitario) : 0;
         const cantidad = parseFloat(i.cantidad) || 0;
         const subtotalBruto = precio * cantidad;
-        const dto = i.dto_pct != null ? parseFloat(i.dto_pct) : 0;
+        const dto = dtoLineaVenta(i);
         const total = i.importe_total != null ? parseFloat(i.importe_total) : (subtotalBruto - (subtotalBruto * dto / 100));
         let unidadTxt;
         if (i.unidad) {
@@ -24080,7 +24110,7 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       const domicilioCliente = cliente.domicilio || '';
       const poblacionCliente = [cliente.codigo_postal, cliente.poblacion].filter(Boolean).join('   ');
       const provinciaCliente = cliente.provincia || '';
-
+      const res = resumenImportes(items);
       return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Albarán ${f.numero_albaran || ''}</title>
   <style>
     html,body{background:#fff}
@@ -24138,13 +24168,12 @@ ${(!factAlq && !esAlta) ? `<button class="btn-toggle-pago" style="background:#b5
       <table>
         <thead><tr><th>IVA</th><th>IMPORTE</th><th>DESCUENTO</th><th>BASE</th><th>IMPORTE IVA</th><th>TOTAL</th></tr></thead>
         <tbody><tr>
-          <td>${f.pct_iva != null ? fmtN(f.pct_iva) : '21,00%'}</td>
-          <td>${fmtN(f.base_imponible)}</td>
-          <td>${f.descuento_pct ? f.descuento_pct + '% (' + fmtN(f.importe_descuento) + '€)' : '—'}</td>
-          <td>${fmtN(f.base_imponible)}</td>
-          <td>${fmtN(f.importe_iva)}</td>
-          <td>${fmt(f.total)}</td>
-        </tr></tbody>
+  <td>${f.pct_iva != null ? fmtN(f.pct_iva) : '21,00'}</td>
+  <td>${fmtN(Math.abs(res.bruto))}</td>
+  <td>${res.descuento ? fmtN(res.descuento) + ' €' : '—'}</td>
+  <td>${fmtN(f.base_imponible)}</td>
+  <td>${fmtN(f.importe_iva)}</td>
+</tr></tbody>
       </table>
     </div>
   </div>`}
